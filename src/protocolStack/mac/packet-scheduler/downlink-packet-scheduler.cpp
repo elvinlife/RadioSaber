@@ -342,7 +342,8 @@ DownlinkPacketScheduler::RBsAllocation ()
 			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
 	  for (int jj = 0; jj < nbOfRBs; jj++)
 	    {
-		  std::cout << " " << metrics[jj][ii];
+		  std::cout << " (" << metrics[jj][ii] << ", " << flows->at(ii)->GetSpectralEfficiency().at(jj) << ")";
+		  //std::cout << " (" << metrics[jj][ii] << ", " << flows->at(ii)->GetCqiFeedbacks().at(jj) << ")";
 	    }
 	  std::cout << std::endl;
     }
@@ -389,9 +390,9 @@ DownlinkPacketScheduler::RBsAllocation ()
           scheduledFlow->GetListOfAllocatedRBs()->push_back (s); // the s RB has been allocated to that flow!
 
 #ifdef SCHEDULER_DEBUG
-          std::cout << "\t *** RB " << s << " assigned to the "
-                  " flow " << scheduledFlow->GetBearer ()->GetApplication ()->GetApplicationID ()
-                  << std::endl;
+        //   std::cout << "\t *** RB " << s << " assigned to the "
+        //           " flow " << scheduledFlow->GetBearer ()->GetApplication ()->GetApplicationID ()
+        //           << std::endl;
 #endif
           double sinr = amc->GetSinrFromCQI (scheduledFlow->GetCqiFeedbacks ().at (s));
           l_bFlowScheduledSINR[l_iScheduledFlowIndex].push_back(sinr);
@@ -418,6 +419,13 @@ DownlinkPacketScheduler::RBsAllocation ()
   for (FlowsToSchedule::iterator it = flows->begin (); it != flows->end (); it++)
     {
       FlowToSchedule *flow = (*it);
+
+	  std::cout << "Flow" << flow->GetBearer()->GetApplication()->GetApplicationID() << " :";
+	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
+		  std::cout << " " << flow->GetListOfAllocatedRBs()->at(rb);
+	  }
+	  std::cout << std::endl;
+
       if (flow->GetListOfAllocatedRBs ()->size () > 0)
         {
           //this flow has been scheduled
@@ -450,7 +458,8 @@ DownlinkPacketScheduler::RBsAllocation ()
 				  "\n\t\t\t nb of RBs " << flow->GetListOfAllocatedRBs ()->size () <<
 				  "\n\t\t\t effectiveSinr " << effectiveSinr <<
 				  "\n\t\t\t tbs " << transportBlockSize <<
-				  "\n\t\t\t bitsToTransmit " << bitsToTransmit
+				  "\n\t\t\t bitsToTransmit " << bitsToTransmit <<
+				  "\n\t\t\t mcs " << mcs
 				  << std::endl;
 #endif
 

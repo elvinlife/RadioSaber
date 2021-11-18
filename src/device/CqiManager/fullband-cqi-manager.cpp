@@ -53,6 +53,7 @@ FullbandCqiManager::CreateCqiFeedbacks (std::vector<double> sinr)
   std::cout << std::endl;
 #endif
 
+  // subband cqi feedbacks generated here
   UserEquipment* thisNode = (UserEquipment*) GetDevice ();
   NetworkNode* targetNode = thisNode->GetTargetNode ();
 

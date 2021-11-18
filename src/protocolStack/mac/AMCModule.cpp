@@ -32,6 +32,7 @@ int CQIIndex[15] = {
 		10, 11, 12, 13, 14, 15 //16QAM
 };
 
+// CQI -> MCS Index
 int MapCQIToMCS[15] = {
 		0, 2, 4, 6, 8, 10, //QAM
 		12, 14, 16, //4-QAM
@@ -91,13 +92,14 @@ double SINRForCQIIndex[15] = {
 };
 */
 
+// CQI->SINR
 double SINRForCQIIndex[15] = {
  -4.63, -2.6, -0.12, 2.26, 4.73,
  7.53, 8.67, 11.32,
  14.24, 15.21, 18.63, 21.32, 23.47, 28.49, 34.6
  };
 
-
+// MCS Index -> TBS
 int TransportBlockSize[32] = {
                0,
                18, 23, 28, 37, 45, 59, 72, 89, 105, 123, 141,
@@ -108,6 +110,7 @@ int TransportBlockSize[32] = {
 };
 
 // Table 7.1.7.1-1 of 3GPP TS 36.213 v8.8.0
+// MCS Index -> Itbs
 int McsToItbs[29] = {
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 10, 11, 12, 13, 14, 15, 15, 16, 17, 18,
   19, 20, 21, 22, 23, 24, 25, 26

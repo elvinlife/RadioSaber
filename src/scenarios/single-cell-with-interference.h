@@ -65,7 +65,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
 
 
   int cluster = 4;
-  double bandwidth = 5;
+  double bandwidth = 20;
 
   // CREATE COMPONENT MANAGER
   Simulator *simulator = Simulator::Init();

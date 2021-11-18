@@ -45,7 +45,9 @@ Interference::ComputeInterference (UserEquipment *ue)
   std::vector<ENodeB*> *eNBs = NetworkManager::Init ()->GetENodeBContainer ();
   std::vector<ENodeB*>::iterator it;
 
-  //std::cout << "Compute interference for UE " << ue->GetIDNetworkNode () << " ,target node " << ue->GetTargetNode ()->GetIDNetworkNode ()<< std::endl;
+  #ifdef UE_DEBUG
+  std::cout << "Compute interference for UE " << ue->GetIDNetworkNode () << " ,target node " << ue->GetTargetNode ()->GetIDNetworkNode ()<< std::endl;
+  #endif
 
   for (it = eNBs->begin (); it != eNBs->end (); it++)
     {
@@ -65,13 +67,13 @@ Interference::ComputeInterference (UserEquipment *ue)
 
           interference += nodeInterference;
 
-          /*
+          #ifdef UE_DEBUG
 		  std::cout << "\t add interference from eNB " << node->GetIDNetworkNode ()
 				  << " " << powerTXForSubBandwidth << " "  << ComputePathLossForInterference (node, ue)
 				  << " " << nodeInterference_db << " " << nodeInterference
 				  << " --> tot: " << interference
 				  << std::endl;
-		  */
+		  #endif
 	    }
     }
 
@@ -79,7 +81,9 @@ Interference::ComputeInterference (UserEquipment *ue)
   std::vector<HeNodeB*>::iterator it2;
   HeNodeB *henb;
 
-  //std::cout << "Compute interference for UE " << ue->GetIDNetworkNode () << " ,target node " << ue->GetTargetNode ()->GetIDNetworkNode ()<< std::endl;
+  #ifdef UE_DEBUG
+  std::cout << "Compute interference for UE " << ue->GetIDNetworkNode () << " ,target node " << ue->GetTargetNode ()->GetIDNetworkNode ()<< std::endl;
+  #endif
 
   for (it2 = HeNBs->begin (); it2 != HeNBs->end (); it2++)
     {
@@ -100,13 +104,13 @@ Interference::ComputeInterference (UserEquipment *ue)
 
           interference += nodeInterference;
 
-          /*
+          #ifdef UE_DEBUG
 		  std::cout << "\t add interference from eNB " << node->GetIDNetworkNode ()
 				  << " " << powerTXForSubBandwidth << " "  << ComputePathLossForInterference (node, ue)
 				  << " " << nodeInterference_db << " " << nodeInterference
 				  << " --> tot: " << interference
 				  << std::endl;
-		  */
+		  #endif
 	    }
     }
 

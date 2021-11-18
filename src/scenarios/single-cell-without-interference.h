@@ -65,7 +65,7 @@ static void SingleCellWithoutInterference (double radius,
   double flow_duration = 20;
 
 
-  double bandwidth = 10;
+  double bandwidth = 20;
 
   // CREATE COMPONENT MANAGER
   Simulator *simulator = Simulator::Init();
