@@ -29,6 +29,7 @@ public:
 	FullbandCqiManager();
 	virtual ~FullbandCqiManager();
 
+	virtual std::vector<double> GenSubbandSINR (std::vector<double> sinr);
 	virtual void CreateCqiFeedbacks (std::vector<double> sinr);
 };
 

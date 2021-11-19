@@ -50,7 +50,7 @@ static double beta_value [20] = {
 };
 
 static double
-GetEesmEffectiveSinr (std::vector <double> sinr)
+GetEesmEffectiveSinr (std::vector <double> &sinr)
 {
   double eff_sinr;
   double sum_I_sinr = 0;
@@ -67,6 +67,39 @@ GetEesmEffectiveSinr (std::vector <double> sinr)
   eff_sinr = 10 * log10 (eff_sinr); //convert in dB
 
   return eff_sinr;
+}
+
+static int
+get_subband_size(int nof_prb)
+{
+  if (nof_prb <= 26) {
+    return 4;
+  }
+  else if (nof_prb <= 63) {
+    return 6;
+  }
+  else if (nof_prb <= 110) {
+    return 8;
+  }
+  else {
+    throw std::runtime_error("Num of physical RBs above 110");
+  }
+}
+
+static int
+get_rbg_size(int nof_prb)
+{
+  if (nof_prb <= 10)
+    return 1;
+  else if (nof_prb <= 26)
+    return 2;
+  else if (nof_prb <= 63)
+    return 3;
+  else if (nof_prb <= 110)
+    return 4;
+  else {
+    throw std::runtime_error("Num of physical RBs above 110");
+  }
 }
 
 #endif /* EESM_EFFECTIVE_SINR_H_ */

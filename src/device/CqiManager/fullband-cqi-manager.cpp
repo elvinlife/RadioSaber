@@ -29,6 +29,8 @@
 #include "../../phy/lte-phy.h"
 #include "../../core/spectrum/bandwidth-manager.h"
 #include "../../load-parameters.h"
+#include <exception>
+#include "../../utility/eesm-effective-sinr.h"
 
 
 FullbandCqiManager::FullbandCqiManager()
@@ -36,6 +38,27 @@ FullbandCqiManager::FullbandCqiManager()
 
 FullbandCqiManager::~FullbandCqiManager()
 {}
+
+
+
+std::vector<double>
+FullbandCqiManager::GenSubbandSINR( std::vector<double> sinr )
+{
+  int subband_size = get_subband_size(sinr.size());
+  std::vector<double> subbands_sinr(sinr.size(), 0);
+  int l = 0, r = 0;
+  while (l < sinr.size()) {
+    r = l + subband_size - 1;
+    if (r >= sinr.size()) r = sinr.size() - 1;
+    std::vector<double> subset(sinr.cbegin() + l, sinr.cbegin() + r);
+    double effective_sinr = GetEesmEffectiveSinr(subset);
+    for (int i = l; i <= r; i++) {
+      subbands_sinr[i] = effective_sinr;
+    }
+    l = r+1;
+  }
+  return subbands_sinr;
+}
 
 void
 FullbandCqiManager::CreateCqiFeedbacks (std::vector<double> sinr)
@@ -58,6 +81,8 @@ FullbandCqiManager::CreateCqiFeedbacks (std::vector<double> sinr)
   NetworkNode* targetNode = thisNode->GetTargetNode ();
 
   AMCModule *amc = GetDevice ()->GetProtocolStack ()->GetMacEntity ()->GetAmcModule ();
+
+  sinr = GenSubbandSINR(sinr);
   std::vector<int> cqi = amc->CreateCqiFeedbacks (sinr);
 
   CqiIdealControlMessage *msg = new CqiIdealControlMessage ();

@@ -318,7 +318,7 @@ AMCModule::GetEfficiencyFromCQI (int cqi)
 }
 
 std::vector<int>
-AMCModule::CreateCqiFeedbacks (std::vector<double> sinr)
+AMCModule::CreateCqiFeedbacks (std::vector<double>& sinr)
 {
 #ifdef TEST_CQI_FEEDBACKS
   std::cout << "Creating CQI feedbacks" << std::endl;

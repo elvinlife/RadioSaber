@@ -53,7 +53,7 @@ public:
 	double
 	GetSinrFromCQI (int cqi);
 
-    std::vector<int> CreateCqiFeedbacks (std::vector<double> sinr);
+    std::vector<int> CreateCqiFeedbacks (std::vector<double>& sinr);
 };
 
 #endif /* AMCModule_H_ */
