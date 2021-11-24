@@ -80,6 +80,24 @@ RadioBearer::GetApplication (void)
 }
 
 void
+RadioBearer::UpdateTXRBs (int rbs)
+{
+  m_transmittedRBs += rbs;
+}
+
+int
+RadioBearer::GetTXRBs (void) const
+{
+  return m_transmittedRBs;
+}
+
+void
+RadioBearer::ResetTXRBs (void)
+{
+  m_transmittedRBs = 0;
+}
+
+void
 RadioBearer::UpdateTransmittedBytes (int bytes)
 {
   m_transmittedBytes += bytes;

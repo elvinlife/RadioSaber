@@ -50,7 +50,9 @@ public:
 	double GetAverageTransmissionRate (void) const;
 	void SetLastUpdate (void);
 	double GetLastUpdate (void) const;
-
+	void UpdateTXRBs (int rbs);
+	int GetTXRBs (void) const;
+	void ResetTXRBs (void);
 
 	void Enqueue (Packet *packet);
 	bool HasPackets (void);
@@ -72,6 +74,7 @@ private:
 	// Scheduler Information
 	double m_averageTransmissionRate;
 	int m_transmittedBytes;
+	int m_transmittedRBs;
 	double m_lastUpdate;
 };
 

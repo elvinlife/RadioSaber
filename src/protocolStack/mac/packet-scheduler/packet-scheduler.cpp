@@ -121,6 +121,8 @@ PacketScheduler::ClearFlowsToSchedule ()
 {
   FlowsToSchedule*  records = GetFlowsToSchedule ();
   FlowsToSchedule::iterator iter;
+  if (records == NULL)
+    throw std::runtime_error("FLowstoSchedule is Null");
 
   for (iter = records->begin(); iter != records->end (); iter++)
     {

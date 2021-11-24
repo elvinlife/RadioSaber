@@ -112,6 +112,10 @@ static void SingleCellWithInterference (int nbCells, double radius,
   	    downlink_scheduler_type = ENodeB::DLScheduler_LOG_RULE;
   	    std::cout << "Scheduler LOG RULE "<< std::endl;
 	    break;
+      case 7:
+        downlink_scheduler_type = ENodeB::DLScheduler_NVS_WFQ;
+        std::cout << "Scheduler NVS-WFQ " << std::endl;
+		break;
 	  default:
 		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
 		break;

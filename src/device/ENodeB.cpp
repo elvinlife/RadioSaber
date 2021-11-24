@@ -34,6 +34,7 @@
 #include "../protocolStack/mac/packet-scheduler/log-rule-downlink-packet-scheduler.h"
 #include "../protocolStack/mac/packet-scheduler/enhanced-uplink-packet-scheduler.h"
 #include "../protocolStack/mac/packet-scheduler/roundrobin-uplink-packet-scheduler.h"
+#include "../protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.h"
 #include "../phy/enb-lte-phy.h"
 #include "../core/spectrum/bandwidth-manager.h"
 #include "../protocolStack/packet/packet-burst.h"
@@ -339,6 +340,12 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type)
       	scheduler->SetMacEntity (mac);
       	mac->SetDownlinkPacketScheduler (scheduler);
 		  break;
+
+      case ENodeB::DLScheduler_NVS_WFQ:
+        scheduler = new DownlinkNVSScheduler();
+        scheduler->SetMacEntity( mac );
+        mac->SetDownlinkPacketScheduler( scheduler );
+      break;
 
 	  default:
 	    std::cout << "ERROR: invalid scheduler type" << std::endl;

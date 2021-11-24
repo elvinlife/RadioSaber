@@ -21,7 +21,7 @@
  */
 
 
-#include "downlink-packet-scheduler.h"
+#include "downlink-nvs-scheduler.h"
 #include "../mac-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
@@ -36,16 +36,57 @@
 #include "../../../flows/MacQueue.h"
 #include "../../../utility/eesm-effective-sinr.h"
 #include <cstdio>
+#include <limits>
 
-DownlinkPacketScheduler::DownlinkPacketScheduler()
-{}
+double DownlinkNVSScheduler::APP_WEIGHT[] = {0.4, 0.2, 0.2, 0.2, 0.5, 0.5, 0.5, 0.5};
+int DownlinkNVSScheduler::APPID_TO_SLICEID[] = {0, 0, 0, 0, 1, 1, 2, 2};
 
-DownlinkPacketScheduler::~DownlinkPacketScheduler()
+DownlinkNVSScheduler::DownlinkNVSScheduler()
+: slices_exp_times_(num_slices_, 1),
+  slices_bytes_(num_slices_),
+  slices_rbs_(num_slices_),
+  slices_weights_(num_slices_, 1)
+{
+  SetMacEntity (0);
+  CreateFlowsToSchedule ();
+}
+
+DownlinkNVSScheduler::~DownlinkNVSScheduler()
 {
   Destroy ();
 }
 
-void DownlinkPacketScheduler::SelectFlowsToSchedule ()
+int DownlinkNVSScheduler::SelectSliceToServe()
+{
+  for(int i = 0; i < num_slices_; ++i) {
+    std::cout << "Slice Selection: weight: " << slices_weights_[i] << "time: " << slices_exp_times_[i] << std::endl;
+  }
+  int slice_id = 0;
+  double max_score = 0;
+  for (int i = 0; i < num_slices_; ++i) {
+    if (slices_exp_times_[i] == 0) {
+      max_score = std::numeric_limits<double>::max();
+      slice_id = i;
+      break;
+    }
+    else {
+      double score = slices_weights_[i] / slices_exp_times_[i];
+      if (score > max_score) {
+        max_score = score;
+        slice_id = i;
+      }
+    }
+  }
+  // update exp weighted average allocated time
+  for (int i = 0; i < num_slices_; ++i) {
+    slices_exp_times_[i] = (1-beta_) * slices_exp_times_[i];
+    if (i == slice_id)
+      slices_exp_times_[i] += beta_ * 1;
+  }
+  return slice_id;
+}
+
+void DownlinkNVSScheduler::SelectFlowsToSchedule ()
 {
 #ifdef SCHEDULER_DEBUG
 	std::cout << "\t Select Flows to schedule" << std::endl;
@@ -56,10 +97,19 @@ void DownlinkPacketScheduler::SelectFlowsToSchedule ()
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
+  // some logic to determine the slice to serve
+  int slice_serve = SelectSliceToServe();
+
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
 	  //SELECT FLOWS TO SCHEDULE
 	  RadioBearer *bearer = (*it);
+    int app_id = bearer->GetApplication()->GetApplicationID();
+
+    //std::cerr << "\t app_id: " << app_id << std::endl;
+    if (APPID_TO_SLICEID[app_id] != slice_serve)
+      continue;
+
 	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
 		{
 		  //compute data to transmit
@@ -94,7 +144,7 @@ void DownlinkPacketScheduler::SelectFlowsToSchedule ()
 }
 
 void
-DownlinkPacketScheduler::DoSchedule (void)
+DownlinkNVSScheduler::DoSchedule (void)
 {
 #ifdef SCHEDULER_DEBUG
 	std::cout << "Start DL packet scheduler for node "
@@ -115,7 +165,7 @@ DownlinkPacketScheduler::DoSchedule (void)
 }
 
 void
-DownlinkPacketScheduler::DoStopSchedule (void)
+DownlinkNVSScheduler::DoStopSchedule (void)
 {
 #ifdef SCHEDULER_DEBUG
   std::cout << "\t Creating Packet Burst" << std::endl;
@@ -183,49 +233,55 @@ DownlinkPacketScheduler::DoStopSchedule (void)
 }
 
 void
-DownlinkPacketScheduler::RBsAllocation ()
+DownlinkNVSScheduler::RBsAllocation ()
 {
 #ifdef SCHEDULER_DEBUG
-	std::cout << " ---- DownlinkPacketScheduler::RBsAllocation";
+	std::cout << " ---- DownlinkNVSScheduler::RBsAllocation";
 #endif
-
 
   FlowsToSchedule* flows = GetFlowsToSchedule ();
   int nbOfRBs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int rbg_size = get_rbg_size(nbOfRBs);
+  int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
 
-  //create a matrix of flow metrics
-  double metrics[nbOfRBs][flows->size ()];
-  for (int i = 0; i < nbOfRBs; i++)
-    {
-	  for (int j = 0; j < flows->size (); j++)
-	    {
-		  metrics[i][j] = ComputeSchedulingMetric (flows->at (j)->GetBearer (),
-				                                   flows->at (j)->GetSpectralEfficiency ().at (i),
-	    		                                   i);
-	    }
-    }
+  // calculate how many rbs for every flow
+  std::vector<int> max_rbs(flows->size(), 0);
+  std::cout << "\nMax allocation: ";
+  for (int i = 0; i < flows->size(); ++i) {
+    int app_id = flows->at(i)->GetBearer()->GetApplication()->GetApplicationID();
+    //alloc_rbs[i] = nbOfRBs;
+    max_rbs[i] = (int)(APP_WEIGHT[app_id] * nbOfRBs);
+    std::cout << "app: " << app_id << " index: " << i << ": " << max_rbs[i] << ";";
+  }
+  std::cout << std::endl;
+
+  // create a matrix of flow metrics
+  double metrics[nbOfGroups][flows->size ()];
+  for (int i = 0; i < nbOfGroups; i++) {
+	  for (int j = 0; j < flows->size (); j++) {
+		  metrics[i][j] = ComputeSchedulingMetric (
+        flows->at (j)->GetBearer (),
+        flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size), i);
+	  }
+  }
 
 #ifdef SCHEDULER_DEBUG
-  std::cout << ", available RBs " << nbOfRBs << ", flows " << flows->size () << std::endl;
+  //std::cout << ", available RBGs " << nbOfGroups << ", flows " << flows->size () << std::endl;
   for (int ii = 0; ii < flows->size (); ii++)
     {
 	  std::cout << "\t metrics for flow "
 			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
-	  for (int jj = 0; jj < nbOfRBs; jj++)
+	  for (int jj = 0; jj < nbOfGroups; jj++)
 	    {
-		  std::cout << " (" << metrics[jj][ii] << ", " << flows->at(ii)->GetSpectralEfficiency().at(jj) << ")";
-		  //std::cout << " (" << metrics[jj][ii] << ", " << flows->at(ii)->GetCqiFeedbacks().at(jj) << ")";
+        fprintf(stdout, " (%.3f, %d, %.3f)", metrics[jj][ii], 
+          flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size),
+          flows->at(ii)->GetSpectralEfficiency().at(jj * rbg_size));
 	    }
 	  std::cout << std::endl;
     }
 #endif
 
-
   AMCModule *amc = GetMacEntity ()->GetAmcModule ();
-  double l_dAllocatedRBCounter = 0;
-
-  int l_iNumberOfUsers = ((ENodeB*)this->GetMacEntity()->GetDevice())->GetNbOfUserEquipmentRecords();
-
   bool * l_bFlowScheduled = new bool[flows->size ()];
   int l_iScheduledFlows = 0;
   std::vector<double> * l_bFlowScheduledSINR = new std::vector<double>[flows->size ()];
@@ -233,13 +289,13 @@ DownlinkPacketScheduler::RBsAllocation ()
       l_bFlowScheduled[k] = false;
 
   //RBs allocation
-  for (int s = 0; s < nbOfRBs; s++)
+  for (int s = 0; s < nbOfGroups; s++)
     {
       if (l_iScheduledFlows == flows->size ())
           break;
 
       double targetMetric = 0;
-      bool RBIsAllocated = false;
+      bool SubbandAllocated = false;
       FlowToSchedule* scheduledFlow;
       int l_iScheduledFlowIndex = 0;
 
@@ -248,41 +304,39 @@ DownlinkPacketScheduler::RBsAllocation ()
           if (metrics[s][k] > targetMetric && !l_bFlowScheduled[k])
             {
               targetMetric = metrics[s][k];
-              RBIsAllocated = true;
+              SubbandAllocated = true;
               scheduledFlow = flows->at (k);
               l_iScheduledFlowIndex = k;
             }
         }
 
-      if (RBIsAllocated)
+      if (SubbandAllocated)
         {
-          l_dAllocatedRBCounter++;
-
-          scheduledFlow->GetListOfAllocatedRBs()->push_back (s); // the s RB has been allocated to that flow!
-
-#ifdef SCHEDULER_DEBUG
-        //   std::cout << "\t *** RB " << s << " assigned to the "
-        //           " flow " << scheduledFlow->GetBearer ()->GetApplication ()->GetApplicationID ()
-        //           << std::endl;
-#endif
-          double sinr = amc->GetSinrFromCQI (scheduledFlow->GetCqiFeedbacks ().at (s));
-          l_bFlowScheduledSINR[l_iScheduledFlowIndex].push_back(sinr);
+          // allocate the sth rbg
+          int l = s*rbg_size, r = (s+1)*rbg_size;
+          if (r > nbOfRBs) r = nbOfRBs;
+          for (int i = l; i < r; ++i) {
+            scheduledFlow->GetListOfAllocatedRBs()->push_back(i);
+            double sinr = amc->GetSinrFromCQI(scheduledFlow->GetCqiFeedbacks().at(i));
+            l_bFlowScheduledSINR[l_iScheduledFlowIndex].push_back(sinr);
+          }
 
           double effectiveSinr = GetEesmEffectiveSinr (l_bFlowScheduledSINR[l_iScheduledFlowIndex]);
           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
-          int transportBlockSize = amc->GetTBSizeFromMCS (mcs, scheduledFlow->GetListOfAllocatedRBs ()->size ());
-          if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8)
+          //assert(scheduledFlow->m_bearer->GetApplication()->GetApplicationID() == l_iScheduledFlowIndex);
+          int alloc_num = scheduledFlow->GetListOfAllocatedRBs()->size();
+          int transportBlockSize = amc->GetTBSizeFromMCS (mcs, alloc_num);
+          if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8 || alloc_num >= max_rbs[l_iScheduledFlowIndex])
           {
+              //std::cout << "flow index: " << l_iScheduledFlowIndex << " alloc_rbs:" << alloc_num << std::endl;
               l_bFlowScheduled[l_iScheduledFlowIndex] = true;
               l_iScheduledFlows++;
           }
-
         }
     }
 
   delete [] l_bFlowScheduled;
   delete [] l_bFlowScheduledSINR;
-
 
   //Finalize the allocation
   PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage ();
@@ -301,12 +355,9 @@ DownlinkPacketScheduler::RBsAllocation ()
         {
           //this flow has been scheduled
           std::vector<double> estimatedSinrValues;
-          for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
-
-            {
+          for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ ) {
               double sinr = amc->GetSinrFromCQI (
                       flow->GetCqiFeedbacks ().at (flow->GetListOfAllocatedRBs ()->at (rb)));
-
               estimatedSinrValues.push_back (sinr);
             }
 
@@ -314,14 +365,12 @@ DownlinkPacketScheduler::RBsAllocation ()
           double effectiveSinr = GetEesmEffectiveSinr (estimatedSinrValues);
 
           //get the MCS for transmission
-
           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
 
           //define the amount of bytes to transmit
           //int transportBlockSize = amc->GetTBSizeFromMCS (mcs);
           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
-          double bitsToTransmit = transportBlockSize;
-          flow->UpdateAllocatedBits (bitsToTransmit);
+          flow->UpdateAllocatedBits (transportBlockSize);
 
 #ifdef SCHEDULER_DEBUG
 		  std::cout << "\t\t --> flow "	<< flow->GetBearer ()->GetApplication ()->GetApplicationID ()
@@ -329,7 +378,7 @@ DownlinkPacketScheduler::RBsAllocation ()
 				  "\n\t\t\t nb of RBs " << flow->GetListOfAllocatedRBs ()->size () <<
 				  "\n\t\t\t effectiveSinr " << effectiveSinr <<
 				  "\n\t\t\t tbs " << transportBlockSize <<
-				  "\n\t\t\t bitsToTransmit " << bitsToTransmit <<
+          "\n\t\t\t data to transmit " << flow->GetDataToTransmit() <<
 				  "\n\t\t\t mcs " << mcs
 				  << std::endl;
 #endif
@@ -352,178 +401,15 @@ DownlinkPacketScheduler::RBsAllocation ()
   delete pdcchMsg;
 }
 
-// void
-// DownlinkPacketScheduler::RBsAllocation ()
-// {
-// #ifdef SCHEDULER_DEBUG
-// 	std::cout << " ---- DownlinkPacketScheduler::RBsAllocation";
-// #endif
-
-//   FlowsToSchedule* flows = GetFlowsToSchedule ();
-//   int nbOfRBs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
-//   int rbg_size = get_rbg_size(nbOfRBs);
-//   int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
-
-//   //create a matrix of flow metrics
-//   double metrics[nbOfGroups][flows->size ()];
-//   for (int i = 0; i < nbOfGroups; i++)
-//     {
-// 	  for (int j = 0; j < flows->size (); j++)
-// 	    {
-// 		  metrics[i][j] = ComputeSchedulingMetric (flows->at (j)->GetBearer (),
-// 				                                    flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
-// 	    		                                  i);
-// 	    }
-//     }
-
-// #ifdef SCHEDULER_DEBUG
-//   std::cout << ", available RBGs " << nbOfGroups << ", flows " << flows->size () << std::endl;
-//   for (int ii = 0; ii < flows->size (); ii++)
-//     {
-// 	  std::cout << "\t metrics for flow "
-// 			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
-// 	  for (int jj = 0; jj < nbOfGroups; jj++)
-// 	    {
-//         fprintf(stdout, " (%.3f, %d, %.3f)", metrics[jj][ii], 
-//           flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size),
-//           flows->at(ii)->GetSpectralEfficiency().at(jj * rbg_size));
-// 	    }
-// 	  std::cout << std::endl;
-//     }
-// #endif
-
-
-//   AMCModule *amc = GetMacEntity ()->GetAmcModule ();
-//   double l_dAllocatedRBCounter = 0;
-
-//   int l_iNumberOfUsers = ((ENodeB*)this->GetMacEntity()->GetDevice())->GetNbOfUserEquipmentRecords();
-
-//   bool * l_bFlowScheduled = new bool[flows->size ()];
-//   int l_iScheduledFlows = 0;
-//   std::vector<double> * l_bFlowScheduledSINR = new std::vector<double>[flows->size ()];
-//   for (int k = 0; k < flows->size (); k++)
-//       l_bFlowScheduled[k] = false;
-
-//   //RBs allocation
-//   for (int s = 0; s < nbOfGroups; s++)
-//     {
-//       if (l_iScheduledFlows == flows->size ())
-//           break;
-
-//       double targetMetric = 0;
-//       bool RBIsAllocated = false;
-//       FlowToSchedule* scheduledFlow;
-//       int l_iScheduledFlowIndex = 0;
-
-//       for (int k = 0; k < flows->size (); k++)
-//         {
-//           if (metrics[s][k] > targetMetric && !l_bFlowScheduled[k])
-//             {
-//               targetMetric = metrics[s][k];
-//               RBIsAllocated = true;
-//               scheduledFlow = flows->at (k);
-//               l_iScheduledFlowIndex = k;
-//             }
-//         }
-
-//       if (RBIsAllocated)
-//         {
-//           l_dAllocatedRBCounter++;
-
-//           // allocate the sth rbg
-//           int l = s*rbg_size, r = (s+1)*rbg_size;
-//           if (r > nbOfRBs) r = nbOfRBs;
-//           for (int i = l; i < r; ++i) {
-//             scheduledFlow->GetListOfAllocatedRBs()->push_back(i);
-//             double sinr = amc->GetSinrFromCQI(scheduledFlow->GetCqiFeedbacks().at(i));
-//             l_bFlowScheduledSINR[l_iScheduledFlowIndex].push_back(sinr);
-//           }
-
-//           double effectiveSinr = GetEesmEffectiveSinr (l_bFlowScheduledSINR[l_iScheduledFlowIndex]);
-//           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
-//           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, scheduledFlow->GetListOfAllocatedRBs ()->size ());
-//           if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8)
-//           {
-//               l_bFlowScheduled[l_iScheduledFlowIndex] = true;
-//               l_iScheduledFlows++;
-//           }
-
-//         }
-//     }
-
-//   delete [] l_bFlowScheduled;
-//   delete [] l_bFlowScheduledSINR;
-
-
-//   //Finalize the allocation
-//   PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage ();
-
-//   for (FlowsToSchedule::iterator it = flows->begin (); it != flows->end (); it++)
-//     {
-//       FlowToSchedule *flow = (*it);
-
-// 	  std::cout << "Flow" << flow->GetBearer()->GetApplication()->GetApplicationID() << " :";
-// 	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
-// 		  std::cout << " " << flow->GetListOfAllocatedRBs()->at(rb);
-// 	  }
-// 	  std::cout << std::endl;
-
-//       if (flow->GetListOfAllocatedRBs ()->size () > 0)
-//         {
-//           //this flow has been scheduled
-//           std::vector<double> estimatedSinrValues;
-//           for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
-
-//             {
-//               double sinr = amc->GetSinrFromCQI (
-//                       flow->GetCqiFeedbacks ().at (flow->GetListOfAllocatedRBs ()->at (rb)));
-
-//               estimatedSinrValues.push_back (sinr);
-//             }
-
-//           //compute the effective sinr
-//           double effectiveSinr = GetEesmEffectiveSinr (estimatedSinrValues);
-
-//           //get the MCS for transmission
-
-//           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
-
-//           //define the amount of bytes to transmit
-//           //int transportBlockSize = amc->GetTBSizeFromMCS (mcs);
-//           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
-//           flow->UpdateAllocatedBits (transportBlockSize);
-
-// #ifdef SCHEDULER_DEBUG
-// 		  std::cout << "\t\t --> flow "	<< flow->GetBearer ()->GetApplication ()->GetApplicationID ()
-// 				  << " has been scheduled: " <<
-// 				  "\n\t\t\t nb of RBs " << flow->GetListOfAllocatedRBs ()->size () <<
-// 				  "\n\t\t\t effectiveSinr " << effectiveSinr <<
-// 				  "\n\t\t\t tbs " << transportBlockSize <<
-//           "\n\t\t\t data to transmit " << flow->GetDataToTransmit() <<
-// 				  "\n\t\t\t mcs " << mcs
-// 				  << std::endl;
-// #endif
-
-// 		  //create PDCCH messages
-// 		  for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
-// 		    {
-// 			  pdcchMsg->AddNewRecord (PdcchMapIdealControlMessage::DOWNLINK,
-// 					  flow->GetListOfAllocatedRBs ()->at (rb),
-// 									  flow->GetBearer ()->GetDestination (),
-// 									  mcs);
-// 		    }
-// 	    }
-//     }
-
-//   if (pdcchMsg->GetMessage()->size () > 0)
-//     {
-//       GetMacEntity ()->GetDevice ()->GetPhy ()->SendIdealControlMessage (pdcchMsg);
-//     }
-//   delete pdcchMsg;
-// }
+double
+DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
+{
+  double metric = spectralEfficiency;
+  return metric;
+}
 
 void
-DownlinkPacketScheduler::UpdateAverageTransmissionRate (void)
+DownlinkNVSScheduler::UpdateAverageTransmissionRate (void)
 {
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
