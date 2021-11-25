@@ -29,14 +29,14 @@ static bool _channel_AWGN_ = false;
 //#define BEARER_DEBUG
 //#define RLC_DEBUG
 #define MAC_QUEUE_DEBUG
-#define FLOW_MANAGER_DEBUG
+//#define FLOW_MANAGER_DEBUG
 //#define FRAME_MANAGER_DEBUG
 //#define ENODEB_DEBUG
-#define UE_DEBUG
+//#define UE_DEBUG
 //#define PHY_DEBUG
 //#define SINR_DEBUG
 //#define BLER_DEBUG
-#define MOBILITY_DEBUG
+//#define MOBILITY_DEBUG
 //#define MOBILITY_DEBUG_TAB
 //#define HANDOVER_DEBUG
 //#define TRANSMISSION_DEBUG

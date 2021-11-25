@@ -76,7 +76,8 @@ public:
 	    DLScheduler_TYPE_EXP,
 	    DLScheduler_LOG_RULE,
 	    DLScheduler_EXP_RULE,
-		DLScheduler_NVS_WFQ,
+		DLScheduler_NVS,
+		DLScheduler_ORACLE,
 	  };
 	enum ULSchedulerType
 	  {

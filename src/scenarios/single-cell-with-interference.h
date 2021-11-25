@@ -104,18 +104,23 @@ static void SingleCellWithInterference (int nbCells, double radius,
 		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_FLS;
 		std::cout << "Scheduler FLS "<< std::endl;
 		break;
-      case 5:
-  	    downlink_scheduler_type = ENodeB::DLScheduler_EXP_RULE;
-  	    std::cout << "Scheduler EXP_RULE "<< std::endl;
-	    break;
-      case 6:
-  	    downlink_scheduler_type = ENodeB::DLScheduler_LOG_RULE;
-  	    std::cout << "Scheduler LOG RULE "<< std::endl;
-	    break;
-      case 7:
-        downlink_scheduler_type = ENodeB::DLScheduler_NVS_WFQ;
-        std::cout << "Scheduler NVS-WFQ " << std::endl;
+    case 5:
+  	downlink_scheduler_type = ENodeB::DLScheduler_EXP_RULE;
+  	std::cout << "Scheduler EXP_RULE "<< std::endl;
+	  break;
+    case 6:
+  	downlink_scheduler_type = ENodeB::DLScheduler_LOG_RULE;
+  	std::cout << "Scheduler LOG RULE "<< std::endl;
+	  break;
+    case 7:
+    downlink_scheduler_type = ENodeB::DLScheduler_NVS;
+    std::cout << "Scheduler NVS " << std::endl;
 		break;
+		case 8:
+		downlink_scheduler_type = ENodeB::DLScheduler_ORACLE;
+		std::cout << "Scheduler Oracle " << std::endl;
+		break;
+	
 	  default:
 		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
 		break;

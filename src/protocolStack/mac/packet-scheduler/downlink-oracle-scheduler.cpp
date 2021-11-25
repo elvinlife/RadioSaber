@@ -21,7 +21,7 @@
  */
 
 
-#include "downlink-nvs-scheduler.h"
+#include "downlink-oracle-scheduler.h"
 #include "../mac-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
@@ -36,57 +36,27 @@
 #include "../../../flows/MacQueue.h"
 #include "../../../utility/eesm-effective-sinr.h"
 #include <cstdio>
-#include <limits>
+#include <utility>
+#include <unordered_map>
 
-double DownlinkNVSScheduler::APP_WEIGHT[] = {0.4, 0.2, 0.2, 0.2, 0.5, 0.5, 0.5, 0.5};
-int DownlinkNVSScheduler::APPID_TO_SLICEID[] = {0, 0, 0, 0, 1, 1, 2, 2};
-
-DownlinkNVSScheduler::DownlinkNVSScheduler()
+DownlinkOracleScheduler::DownlinkOracleScheduler()
 : slices_exp_times_(num_slices_, 1),
   slices_bytes_(num_slices_),
   slices_rbs_(num_slices_),
-  slices_weights_(num_slices_, 1)
+  slices_weights_(num_slices_, 0.5),
+  slices_flows_(num_slices_)
 {
+  
   SetMacEntity (0);
   CreateFlowsToSchedule ();
 }
 
-DownlinkNVSScheduler::~DownlinkNVSScheduler()
+DownlinkOracleScheduler::~DownlinkOracleScheduler()
 {
   Destroy ();
 }
 
-int DownlinkNVSScheduler::SelectSliceToServe()
-{
-  for(int i = 0; i < num_slices_; ++i) {
-    std::cout << "Slice Selection: weight: " << slices_weights_[i] << "time: " << slices_exp_times_[i] << std::endl;
-  }
-  int slice_id = 0;
-  double max_score = 0;
-  for (int i = 0; i < num_slices_; ++i) {
-    if (slices_exp_times_[i] == 0) {
-      max_score = std::numeric_limits<double>::max();
-      slice_id = i;
-      break;
-    }
-    else {
-      double score = slices_weights_[i] / slices_exp_times_[i];
-      if (score > max_score) {
-        max_score = score;
-        slice_id = i;
-      }
-    }
-  }
-  // update exp weighted average allocated time
-  for (int i = 0; i < num_slices_; ++i) {
-    slices_exp_times_[i] = (1-beta_) * slices_exp_times_[i];
-    if (i == slice_id)
-      slices_exp_times_[i] += beta_ * 1;
-  }
-  return slice_id;
-}
-
-void DownlinkNVSScheduler::SelectFlowsToSchedule ()
+void DownlinkOracleScheduler::SelectFlowsToSchedule ()
 {
 #ifdef SCHEDULER_DEBUG
 	std::cout << "\t Select Flows to schedule" << std::endl;
@@ -97,18 +67,10 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule ()
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
-  // some logic to determine the slice to serve
-  int slice_serve = SelectSliceToServe();
-
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
 	  //SELECT FLOWS TO SCHEDULE
 	  RadioBearer *bearer = (*it);
-    int app_id = bearer->GetApplication()->GetApplicationID();
-
-    //std::cerr << "\t app_id: " << app_id << std::endl;
-    if (APPID_TO_SLICEID[app_id] != slice_serve)
-      continue;
 
 	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
 		{
@@ -144,7 +106,7 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule ()
 }
 
 void
-DownlinkNVSScheduler::DoSchedule (void)
+DownlinkOracleScheduler::DoSchedule (void)
 {
 #ifdef SCHEDULER_DEBUG
 	std::cout << "Start DL packet scheduler for node "
@@ -165,7 +127,7 @@ DownlinkNVSScheduler::DoSchedule (void)
 }
 
 void
-DownlinkNVSScheduler::DoStopSchedule (void)
+DownlinkOracleScheduler::DoStopSchedule (void)
 {
 #ifdef SCHEDULER_DEBUG
   std::cout << "\t Creating Packet Burst" << std::endl;
@@ -233,29 +195,34 @@ DownlinkNVSScheduler::DoStopSchedule (void)
 }
 
 void
-DownlinkNVSScheduler::RBsAllocation ()
+DownlinkOracleScheduler::RBsAllocation ()
 {
 #ifdef SCHEDULER_DEBUG
-	std::cout << " ---- DownlinkNVSScheduler::RBsAllocation";
+	std::cout << " ---- DownlinkOracleScheduler::RBsAllocation";
 #endif
-
   FlowsToSchedule* flows = GetFlowsToSchedule ();
   int nbOfRBs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
   int rbg_size = get_rbg_size(nbOfRBs);
   int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
+
+  std::vector<int> sliceMaxRBs(num_slices_);
+  for (int i = 0; i < num_slices_; ++i) {
+    sliceMaxRBs[i] = (int)(nbOfRBs * slices_weights_[i]);
+    slices_rbs_[i] = 0;
+  }
 
   // calculate how many rbs for every flow
   std::vector<int> max_rbs(flows->size(), 0);
   std::cout << "\nMax allocation: ";
   for (int i = 0; i < flows->size(); ++i) {
     int app_id = flows->at(i)->GetBearer()->GetApplication()->GetApplicationID();
-    //alloc_rbs[i] = nbOfRBs;
-    max_rbs[i] = (int)(APP_WEIGHT[app_id] * nbOfRBs);
+    //max_rbs[i] = (int)(APP_WEIGHT[app_id] * nbOfRBs);
+    max_rbs[i] = nbOfRBs;
     std::cout << "app: " << app_id << " index: " << i << ": " << max_rbs[i] << ";";
   }
   std::cout << std::endl;
 
-  // create a matrix of flow metrics
+  // create a matrix of flow metrics (RBG, flow index)
   double metrics[nbOfGroups][flows->size ()];
   for (int i = 0; i < nbOfGroups; i++) {
 	  for (int j = 0; j < flows->size (); j++) {
@@ -294,27 +261,52 @@ DownlinkNVSScheduler::RBsAllocation ()
       if (l_iScheduledFlows == flows->size ())
           break;
 
-      double targetMetric = 0;
+      //double targetMetric = 0;
       bool SubbandAllocated = false;
       FlowToSchedule* scheduledFlow;
       int l_iScheduledFlowIndex = 0;
+      int l_iScheduledSlice = 0;
 
+      std::unordered_map<int, double> max_ranks;
+      std::unordered_map<int, std::pair<int , FlowToSchedule*>> flow_to_serve;
       for (int k = 0; k < flows->size (); k++)
         {
-          if (metrics[s][k] > targetMetric && !l_bFlowScheduled[k])
-            {
-              targetMetric = metrics[s][k];
-              SubbandAllocated = true;
-              scheduledFlow = flows->at (k);
-              l_iScheduledFlowIndex = k;
-            }
+          int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
+          int slice_id = APPID_TO_SLICEID[app_id];
+          if (max_ranks.find(slice_id) == max_ranks.end() || metrics[s][k] > max_ranks[slice_id]) {
+            flow_to_serve[slice_id] = std::pair<int, FlowToSchedule*>(k, flows->at(k));
+            max_ranks[slice_id] = metrics[s][k];
+          }
+          // if (metrics[s][k] > targetMetric && !l_bFlowScheduled[k])
+          //   {
+          //     targetMetric = metrics[s][k];
+          //     SubbandAllocated = true;
+          //     scheduledFlow = flows->at (k);
+          //     l_iScheduledFlowIndex = k;
+          //   }
         }
+      int maxCQI = 0;
+      for (auto it = flow_to_serve.begin(); it != flow_to_serve.end(); ++it) {
+        int index = it->second.first;
+        FlowToSchedule* flow = it->second.second;
+        if (flow->GetCqiFeedbacks().at(s * rbg_size) > maxCQI 
+              && !l_bFlowScheduled[index]
+              && slices_rbs_[it->first] < sliceMaxRBs[it->first]) {
+          maxCQI = flow->GetCqiFeedbacks().at(s * rbg_size);
+          SubbandAllocated = true;
+          scheduledFlow = flow;
+          l_iScheduledFlowIndex = index;
+          l_iScheduledSlice = it->first;
+        }
+      }
 
       if (SubbandAllocated)
         {
           // allocate the sth rbg
           int l = s*rbg_size, r = (s+1)*rbg_size;
           if (r > nbOfRBs) r = nbOfRBs;
+
+          slices_rbs_[l_iScheduledSlice] += (r-l);
           for (int i = l; i < r; ++i) {
             scheduledFlow->GetListOfAllocatedRBs()->push_back(i);
             double sinr = amc->GetSinrFromCQI(scheduledFlow->GetCqiFeedbacks().at(i));
@@ -323,12 +315,10 @@ DownlinkNVSScheduler::RBsAllocation ()
 
           double effectiveSinr = GetEesmEffectiveSinr (l_bFlowScheduledSINR[l_iScheduledFlowIndex]);
           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
-          //assert(scheduledFlow->m_bearer->GetApplication()->GetApplicationID() == l_iScheduledFlowIndex);
           int alloc_num = scheduledFlow->GetListOfAllocatedRBs()->size();
           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, alloc_num);
           if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8 || alloc_num >= max_rbs[l_iScheduledFlowIndex])
           {
-              //std::cout << "flow index: " << l_iScheduledFlowIndex << " alloc_rbs:" << alloc_num << std::endl;
               l_bFlowScheduled[l_iScheduledFlowIndex] = true;
               l_iScheduledFlows++;
           }
@@ -368,7 +358,6 @@ DownlinkNVSScheduler::RBsAllocation ()
           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
 
           //define the amount of bytes to transmit
-          //int transportBlockSize = amc->GetTBSizeFromMCS (mcs);
           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
           flow->UpdateAllocatedBits (transportBlockSize);
 
@@ -402,7 +391,7 @@ DownlinkNVSScheduler::RBsAllocation ()
 }
 
 double
-DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
+DownlinkOracleScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
 {
   double metric = (spectralEfficiency * 180000.)
 					  /
@@ -411,7 +400,7 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectr
 }
 
 void
-DownlinkNVSScheduler::UpdateAverageTransmissionRate (void)
+DownlinkOracleScheduler::UpdateAverageTransmissionRate (void)
 {
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();

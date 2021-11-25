@@ -18,7 +18,8 @@ CPP_SRCS += \
 ../src/protocolStack/mac/packet-scheduler/packet-scheduler.cpp \
 ../src/protocolStack/mac/packet-scheduler/roundrobin-uplink-packet-scheduler.cpp \
 ../src/protocolStack/mac/packet-scheduler/uplink-packet-scheduler.cpp \
-../src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.cpp
+../src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.cpp \
+../src/protocolStack/mac/packet-scheduler/downlink-oracle-scheduler.cpp
 
 OBJS += \
 ./src/protocolStack/mac/packet-scheduler/delay-edd-rule-downlink-packet-scheduler.o \
@@ -35,7 +36,8 @@ OBJS += \
 ./src/protocolStack/mac/packet-scheduler/packet-scheduler.o \
 ./src/protocolStack/mac/packet-scheduler/roundrobin-uplink-packet-scheduler.o \
 ./src/protocolStack/mac/packet-scheduler/uplink-packet-scheduler.o \
-./src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.o
+./src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.o \
+./src/protocolStack/mac/packet-scheduler/downlink-oracle-scheduler.o
 
 CPP_DEPS += \
 ./src/protocolStack/mac/packet-scheduler/delay-edd-rule-downlink-packet-scheduler.d \
@@ -52,7 +54,8 @@ CPP_DEPS += \
 ./src/protocolStack/mac/packet-scheduler/packet-scheduler.d \
 ./src/protocolStack/mac/packet-scheduler/roundrobin-uplink-packet-scheduler.d \
 ./src/protocolStack/mac/packet-scheduler/uplink-packet-scheduler.d \
-./src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.d
+./src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.d \
+./src/protocolStack/mac/packet-scheduler/downlink-oracle-scheduler.d
 
 
 # Each subdirectory must supply rules for building sources it contributes
