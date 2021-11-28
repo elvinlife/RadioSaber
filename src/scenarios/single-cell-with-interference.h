@@ -104,17 +104,17 @@ static void SingleCellWithInterference (int nbCells, double radius,
 		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_FLS;
 		std::cout << "Scheduler FLS "<< std::endl;
 		break;
-    case 5:
-  	downlink_scheduler_type = ENodeB::DLScheduler_EXP_RULE;
-  	std::cout << "Scheduler EXP_RULE "<< std::endl;
-	  break;
-    case 6:
-  	downlink_scheduler_type = ENodeB::DLScheduler_LOG_RULE;
-  	std::cout << "Scheduler LOG RULE "<< std::endl;
-	  break;
-    case 7:
-    downlink_scheduler_type = ENodeB::DLScheduler_NVS;
-    std::cout << "Scheduler NVS " << std::endl;
+    	case 5:
+  		downlink_scheduler_type = ENodeB::DLScheduler_EXP_RULE;
+  		std::cout << "Scheduler EXP_RULE "<< std::endl;
+	  	break;
+    	case 6:
+  		downlink_scheduler_type = ENodeB::DLScheduler_LOG_RULE;
+  		std::cout << "Scheduler LOG RULE "<< std::endl;
+	  	break;
+    	case 7:
+   		downlink_scheduler_type = ENodeB::DLScheduler_NVS;
+    	std::cout << "Scheduler NVS " << std::endl;
 		break;
 		case 8:
 		downlink_scheduler_type = ENodeB::DLScheduler_ORACLE;
@@ -277,8 +277,10 @@ static void SingleCellWithInterference (int nbCells, double radius,
 
 
 	  // CREATE DOWNLINK APPLICATION FOR THIS UE
-	  double start_time = 0.1 + GetRandomVariable (5.);
-	  double duration_time = start_time + flow_duration;
+	  //double start_time = 0.1 + GetRandomVariable (5.);
+	  //double duration_time = start_time + flow_duration;
+	  double start_time = 0.1;
+	  double duration_time = flow_duration;
 
 	  // *** voip application
 	  for (int j = 0; j < nbVoIP; j++)

@@ -39,6 +39,7 @@
 #include "../load-parameters.h"
 
 RadioBearer::RadioBearer()
+ :m_cumulativeBytes(0), m_cumulativeRBs(0)
 {
   m_macQueue = new MacQueue ();
   m_application = NULL;
@@ -50,7 +51,7 @@ RadioBearer::RadioBearer()
   rlc->SetRadioBearer (this);
   SetRlcEntity(rlc);
 
-  m_averageTransmissionRate = 100000; //start value = 1kbps
+  m_averageTransmissionRate = 100000; //start value = 100kbps
   ResetTransmittedBytes ();
 }
 
@@ -80,27 +81,28 @@ RadioBearer::GetApplication (void)
 }
 
 void
-RadioBearer::UpdateTXRBs (int rbs)
+RadioBearer::UpdateCumulateRBs (int rbs)
 {
-  m_transmittedRBs += rbs;
+  m_cumulativeRBs += rbs;
 }
 
-int
-RadioBearer::GetTXRBs (void) const
+unsigned long
+RadioBearer::GetCumulateRBs (void) const
 {
-  return m_transmittedRBs;
+  return m_cumulativeRBs;
 }
 
-void
-RadioBearer::ResetTXRBs (void)
+unsigned long
+RadioBearer::GetCumulateBytes (void) const
 {
-  m_transmittedRBs = 0;
+  return m_cumulativeBytes;
 }
 
 void
 RadioBearer::UpdateTransmittedBytes (int bytes)
 {
   m_transmittedBytes += bytes;
+  m_cumulativeBytes += bytes;
 }
 
 int

@@ -176,6 +176,8 @@ DownlinkNVSScheduler::DoStopSchedule (void)
   //Create Packet Burst
   FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
 
+  UpdateTimeStamp();
+
   for (FlowsToSchedule::iterator it = flowsToSchedule->begin (); it != flowsToSchedule->end (); it++)
     {
 	  FlowToSchedule *flow = (*it);
@@ -184,8 +186,8 @@ DownlinkNVSScheduler::DoStopSchedule (void)
 
 	  if (availableBytes > 0)
 	    {
-
-		  flow->GetBearer ()->UpdateTransmittedBytes (availableBytes);
+		  flow->GetBearer()->UpdateTransmittedBytes (availableBytes);
+      flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
 
 #ifdef SCHEDULER_DEBUG
 	      std::cout << "\t  --> add packets for flow "
@@ -273,9 +275,9 @@ DownlinkNVSScheduler::RBsAllocation ()
 			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
 	  for (int jj = 0; jj < nbOfGroups; jj++)
 	    {
-        fprintf(stdout, " (%.3f, %d, %.3f)", metrics[jj][ii], 
-          flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size),
-          flows->at(ii)->GetSpectralEfficiency().at(jj * rbg_size));
+        fprintf(stdout, " (%d, %.3f, %d)",
+            jj, metrics[jj][ii], 
+            flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size));
 	    }
 	  std::cout << std::endl;
     }
@@ -345,9 +347,11 @@ DownlinkNVSScheduler::RBsAllocation ()
     {
       FlowToSchedule *flow = (*it);
 
-	  std::cout << "Flow" << flow->GetBearer()->GetApplication()->GetApplicationID() << " :";
+	  std::cout << "Flow: " << flow->GetBearer()->GetApplication()->GetApplicationID();
 	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
-		  std::cout << " " << flow->GetListOfAllocatedRBs()->at(rb);
+      int rbid = flow->GetListOfAllocatedRBs()->at(rb);
+      if (rbid % rbg_size == 0)
+        std::cout << " " << rbid / rbg_size;
 	  }
 	  std::cout << std::endl;
 
@@ -381,6 +385,12 @@ DownlinkNVSScheduler::RBsAllocation ()
           "\n\t\t\t data to transmit " << flow->GetDataToTransmit() <<
 				  "\n\t\t\t mcs " << mcs
 				  << std::endl;
+      
+      std::cerr << GetTimeStamp()
+          << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
+          << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
+          << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
+          << std::endl;
 #endif
 
 		  //create PDCCH messages

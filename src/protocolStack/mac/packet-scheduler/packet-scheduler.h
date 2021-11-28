@@ -100,10 +100,15 @@ public:
 
 	void CheckForDLDropPackets();
 
+	void UpdateTimeStamp();
+
+	unsigned long GetTimeStamp();
+
 
 private:
 	MacEntity *m_mac;
 	FlowsToSchedule *m_flowsToSchedule;
+	unsigned long m_ts;
 };
 
 #endif /* PACKETSCHEDULER_H_ */

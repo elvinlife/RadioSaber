@@ -36,6 +36,7 @@ PacketScheduler::PacketScheduler()
 {
   m_mac = NULL;
   m_flowsToSchedule = NULL;
+  m_ts = 0;
 }
 
 PacketScheduler::~PacketScheduler()
@@ -259,4 +260,16 @@ PacketScheduler::CheckForDLDropPackets ()
 				  (*it)->GetQoSParameters ()->GetMaxDelay (), (*it)->GetApplication ()->GetApplicationID ());
 	    }
     }
+}
+
+void
+PacketScheduler::UpdateTimeStamp()
+{
+  m_ts += 1;
+}
+
+unsigned long
+PacketScheduler::GetTimeStamp()
+{
+  return m_ts;
 }

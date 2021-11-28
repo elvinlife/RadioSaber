@@ -50,9 +50,10 @@ public:
 	double GetAverageTransmissionRate (void) const;
 	void SetLastUpdate (void);
 	double GetLastUpdate (void) const;
-	void UpdateTXRBs (int rbs);
-	int GetTXRBs (void) const;
-	void ResetTXRBs (void);
+	void UpdateCumulateRBs (int rbs);
+	unsigned long GetCumulateRBs (void) const;
+	unsigned long GetCumulateBytes (void) const;
+	
 
 	void Enqueue (Packet *packet);
 	bool HasPackets (void);
@@ -74,7 +75,8 @@ private:
 	// Scheduler Information
 	double m_averageTransmissionRate;
 	int m_transmittedBytes;
-	int m_transmittedRBs;
+	unsigned long m_cumulativeRBs;
+	unsigned long m_cumulativeBytes;
 	double m_lastUpdate;
 };
 
