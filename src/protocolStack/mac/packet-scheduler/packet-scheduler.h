@@ -61,6 +61,7 @@ public:
 	    std::vector<int> m_listOfAllocatedRBs;
 	    std::vector<int> m_listOfSelectedMCS;
 	    std::vector<int> m_cqiFeedbacks;
+		double				m_wideBandEfficiency;
 
 		RadioBearer* GetBearer (void);
 
@@ -70,13 +71,16 @@ public:
 		void SetDataToTransmit (int dataToTransmit);
 		int GetDataToTransmit (void) const;
 
-		void SetSpectralEfficiency (std::vector<double> s);
+		void SetSpectralEfficiency (std::vector<double>& s);
 		std::vector<double> GetSpectralEfficiency (void);
+
+		void SetWideBandEfficiency (double);
+		double GetWideBandEfficiency (void);
 
 		std::vector<int>* GetListOfAllocatedRBs ();
 		std::vector<int>* GetListOfSelectedMCS ();
 
-		void SetCqiFeedbacks (std::vector<int> cqiFeedbacks);
+		void SetCqiFeedbacks (std::vector<int>& cqiFeedbacks);
 		std::vector<int> GetCqiFeedbacks (void);
 	  };
 

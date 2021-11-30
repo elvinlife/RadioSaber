@@ -41,12 +41,9 @@
 
 DownlinkOracleScheduler::DownlinkOracleScheduler()
 : slices_exp_times_(num_slices_, 1),
-  slices_bytes_(num_slices_),
-  slices_rbs_(num_slices_),
   slices_weights_(num_slices_, 0.5),
-  slices_flows_(num_slices_)
+  slices_rbs_offset_(num_slices_, 0)
 {
-  
   SetMacEntity (0);
   CreateFlowsToSchedule ();
 }
@@ -208,10 +205,11 @@ DownlinkOracleScheduler::RBsAllocation ()
   int rbg_size = get_rbg_size(nbOfRBs);
   int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
 
-  std::vector<int> sliceMaxRBs(num_slices_);
+  std::vector<int> sliceTargetRBs(num_slices_);
+  std::vector<int> sliceRBs(num_slices_, 0);
   for (int i = 0; i < num_slices_; ++i) {
-    sliceMaxRBs[i] = (int)(nbOfRBs * slices_weights_[i]);
-    slices_rbs_[i] = 0;
+    sliceTargetRBs[i] = (int)(nbOfRBs * slices_weights_[i]) + slices_rbs_offset_[i];
+    sliceRBs[i] = 0;
   }
 
   // calculate how many rbs for every flow
@@ -231,7 +229,8 @@ DownlinkOracleScheduler::RBsAllocation ()
 	  for (int j = 0; j < flows->size (); j++) {
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
-        flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size), i);
+        flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
+        i, flows->at(j)->GetWideBandEfficiency());
 	  }
   }
 
@@ -280,13 +279,6 @@ DownlinkOracleScheduler::RBsAllocation ()
             flow_to_serve[slice_id] = std::pair<int, FlowToSchedule*>(k, flows->at(k));
             max_ranks[slice_id] = metrics[s][k];
           }
-          // if (metrics[s][k] > targetMetric && !l_bFlowScheduled[k])
-          //   {
-          //     targetMetric = metrics[s][k];
-          //     SubbandAllocated = true;
-          //     scheduledFlow = flows->at (k);
-          //     l_iScheduledFlowIndex = k;
-          //   }
         }
       int maxCQI = 0;
       for (auto it = flow_to_serve.begin(); it != flow_to_serve.end(); ++it) {
@@ -294,7 +286,7 @@ DownlinkOracleScheduler::RBsAllocation ()
         FlowToSchedule* flow = it->second.second;
         if (flow->GetCqiFeedbacks().at(s * rbg_size) > maxCQI 
               && !l_bFlowScheduled[index]
-              && slices_rbs_[it->first] < sliceMaxRBs[it->first]) {
+              && sliceRBs[it->first] < sliceTargetRBs[it->first]) {
           maxCQI = flow->GetCqiFeedbacks().at(s * rbg_size);
           SubbandAllocated = true;
           scheduledFlow = flow;
@@ -309,7 +301,7 @@ DownlinkOracleScheduler::RBsAllocation ()
           int l = s*rbg_size, r = (s+1)*rbg_size;
           if (r > nbOfRBs) r = nbOfRBs;
 
-          slices_rbs_[l_iScheduledSlice] += (r-l);
+          sliceRBs[l_iScheduledSlice] += (r-l);
           for (int i = l; i < r; ++i) {
             scheduledFlow->GetListOfAllocatedRBs()->push_back(i);
             double sinr = amc->GetSinrFromCQI(scheduledFlow->GetCqiFeedbacks().at(i));
@@ -327,6 +319,10 @@ DownlinkOracleScheduler::RBsAllocation ()
           }
         }
     }
+
+  for (int i = 0; i < num_slices_; ++i) {
+    slices_rbs_offset_[i] = sliceTargetRBs[i] - sliceRBs[i];
+  }
 
   delete [] l_bFlowScheduled;
   delete [] l_bFlowScheduledSINR;
@@ -402,11 +398,22 @@ DownlinkOracleScheduler::RBsAllocation ()
 }
 
 double
-DownlinkOracleScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
+DownlinkOracleScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
 {
-  double metric = (spectralEfficiency * 180000.)
-					  /
-					  bearer->GetAverageTransmissionRate();
+  double metric = 0;
+  switch (intra_sched_) {
+    case MT:
+      metric = spectralEfficiency;
+      break;
+    case PF:
+      metric = (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
+      break;
+    case TTA:
+      metric = spectralEfficiency / wbEff;
+      break;
+    default:
+      metric = spectralEfficiency;
+  }
   return metric;
 }
 

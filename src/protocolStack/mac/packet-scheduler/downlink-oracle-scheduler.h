@@ -25,17 +25,16 @@
 #include "packet-scheduler.h"
 
 class DownlinkOracleScheduler: public PacketScheduler {
+	enum Scheduler {MT, PF, TTA};
 private:
 	const int APPID_TO_SLICEID[8] = {0, 0, 0, 0, 1, 1, 2, 2};
-	const double APP_WEIGHT[8] = {0.4, 0.2, 0.2, 0.2, 0.5, 0.5, 0.5, 0.5};
+	Scheduler intra_sched_ = TTA;
 	
 	const int num_slices_ 		= 2;
 	const double beta_			= 0.1;
 	std::vector<double> slices_weights_;
 	std::vector<double> slices_exp_times_;
-	std::vector<int> slices_bytes_;
-	std::vector<int> slices_rbs_;
-	std::vector<FlowToSchedule*> slices_flows_;
+	std::vector<int> slices_rbs_offset_;
 
 public:
 	DownlinkOracleScheduler();
@@ -47,7 +46,10 @@ public:
 	virtual void DoStopSchedule (void);
 
 	virtual void RBsAllocation ();
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+	virtual double ComputeSchedulingMetric (RadioBearer *bearer,
+			double spectralEfficiency,
+			int subChannel,
+			double widebandEfficiency);
 
 	void UpdateAverageTransmissionRate (void);
 };

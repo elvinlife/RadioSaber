@@ -38,9 +38,6 @@
 #include <cstdio>
 #include <limits>
 
-double DownlinkNVSScheduler::APP_WEIGHT[] = {0.4, 0.2, 0.2, 0.2, 0.5, 0.5, 0.5, 0.5};
-int DownlinkNVSScheduler::APPID_TO_SLICEID[] = {0, 0, 0, 0, 1, 1, 2, 2};
-
 DownlinkNVSScheduler::DownlinkNVSScheduler()
 : slices_exp_times_(num_slices_, 1),
   slices_bytes_(num_slices_),
@@ -251,8 +248,8 @@ DownlinkNVSScheduler::RBsAllocation ()
   std::cout << "\nMax allocation: ";
   for (int i = 0; i < flows->size(); ++i) {
     int app_id = flows->at(i)->GetBearer()->GetApplication()->GetApplicationID();
-    //alloc_rbs[i] = nbOfRBs;
-    max_rbs[i] = (int)(APP_WEIGHT[app_id] * nbOfRBs);
+    //max_rbs[i] = (int)(APP_WEIGHT[app_id] * nbOfRBs);
+    max_rbs[i] = nbOfRBs;
     std::cout << "app: " << app_id << " index: " << i << ": " << max_rbs[i] << ";";
   }
   std::cout << std::endl;
@@ -263,7 +260,9 @@ DownlinkNVSScheduler::RBsAllocation ()
 	  for (int j = 0; j < flows->size (); j++) {
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
-        flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size), i);
+        flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
+        i,
+        flows->at (j)->GetWideBandEfficiency());
 	  }
   }
 
@@ -412,11 +411,22 @@ DownlinkNVSScheduler::RBsAllocation ()
 }
 
 double
-DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
+DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
 {
-  double metric = (spectralEfficiency * 180000.)
-					  /
-					  bearer->GetAverageTransmissionRate();
+  double metric = 0;
+  switch (intra_sched_) {
+    case MT:
+      metric = spectralEfficiency;
+      break;
+    case PF:
+      metric = (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
+      break;
+    case TTA:
+      metric = spectralEfficiency / wbEff;
+      break;
+    default:
+      metric = spectralEfficiency;
+  }
   return metric;
 }
 

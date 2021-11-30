@@ -25,9 +25,10 @@
 #include "packet-scheduler.h"
 
 class DownlinkNVSScheduler: public PacketScheduler {
+	enum Scheduler {MT, PF, TTA};
 private:
-	static int APPID_TO_SLICEID[];// = {0, 0, 0, 0, 1, 1, 2, 2};
-	static double APP_WEIGHT[];// = {0.4, 0.2, 0.2, 0.2, 0.5, 0.5, 0.5, 0.5};
+	const int APPID_TO_SLICEID[8] = {0, 0, 0, 0, 1, 1, 2, 2};
+	Scheduler intra_sched_ = TTA;
 
 	const int num_slices_ 		= 2;
 	const double beta_			= 0.1;
@@ -47,7 +48,9 @@ public:
 	virtual void DoStopSchedule (void);
 
 	virtual void RBsAllocation ();
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+	virtual double ComputeSchedulingMetric (
+		RadioBearer *bearer, double spectralEfficiency,
+		int subChannel, double wideBandEfficiency);
 
 	void UpdateAverageTransmissionRate (void);
 };

@@ -31,6 +31,7 @@
 #include "../../../flows/MacQueue.h"
 #include "../../../flows/QoS/QoSParameters.h"
 #include "../../rlc/am-rlc-entity.h"
+#include "../../../utility/eesm-effective-sinr.h"
 
 PacketScheduler::PacketScheduler()
 {
@@ -140,7 +141,7 @@ PacketScheduler::FlowToSchedule::GetBearer (void)
 }
 
 void
-PacketScheduler::FlowToSchedule::SetSpectralEfficiency (std::vector<double> s)
+PacketScheduler::FlowToSchedule::SetSpectralEfficiency (std::vector<double>& s)
 {
   m_spectralEfficiency = s;
 }
@@ -149,6 +150,18 @@ std::vector<double>
 PacketScheduler::FlowToSchedule::GetSpectralEfficiency (void)
 {
   return m_spectralEfficiency;
+}
+
+void
+PacketScheduler::FlowToSchedule::SetWideBandEfficiency (double s)
+{
+  m_wideBandEfficiency = s;
+}
+
+double
+PacketScheduler::FlowToSchedule::GetWideBandEfficiency(void)
+{
+  return m_wideBandEfficiency;
 }
 
 void
@@ -204,7 +217,7 @@ PacketScheduler::FlowToSchedule::GetListOfSelectedMCS ()
 }
 
 void
-PacketScheduler::FlowToSchedule::SetCqiFeedbacks (std::vector<int> cqiFeedbacks)
+PacketScheduler::FlowToSchedule::SetCqiFeedbacks (std::vector<int>& cqiFeedbacks)
 {
   m_cqiFeedbacks = cqiFeedbacks;
 }
@@ -225,7 +238,9 @@ PacketScheduler::InsertFlowToSchedule (RadioBearer* bearer, int dataToTransmit, 
 #endif
 
   FlowToSchedule *flowToSchedule = new FlowToSchedule(bearer, dataToTransmit);
+  flowToSchedule->SetWideBandEfficiency (GetEesmEffectiveSinr(specEff));
   flowToSchedule->SetSpectralEfficiency (specEff);
+  //flowToSchedule
   flowToSchedule->SetCqiFeedbacks (cqiFeedbacks);
 
   GetFlowsToSchedule ()->push_back(flowToSchedule);
