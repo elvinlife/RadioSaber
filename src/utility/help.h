@@ -55,7 +55,7 @@ static void Help (void)
 			"\n\t\t --> ./LTE-Sim SingleCellWithFemto 1 1 0 1 0 1 0 0 1 0 1 1 3 0 0.1 128"
 			"\n\n\n"
 			"\n\t legend:"
-			"\n\t\t schd_type: 1-> PF, 2-> M-LWDF, 3-> EXP, 4-> FLS, 5 -> Optimize EXP Rule, 6 -> Optimized LOG Rule, 7->NVS-WFQ"
+			"\n\t\t schd_type: 1-> PF, 2-> M-LWDF, 3-> EXP, 4-> FLS, 5 -> Optimize EXP Rule, 6 -> Optimized LOG Rule, 7->NVS Scheduler, 8->Greedy Scheduler"
 			"\n\t\t frame_struct: 1-> FDD, 2-> TDD"
 			"\n\t\t available video bit rate: 128, 242, 440 kbps"
 			"\n\t\t BuildingType: 0 -> 5x5 grid, 1 -> dualStripe"
