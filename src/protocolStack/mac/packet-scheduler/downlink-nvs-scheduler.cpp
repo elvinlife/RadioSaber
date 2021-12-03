@@ -37,13 +37,24 @@
 #include "../../../utility/eesm-effective-sinr.h"
 #include <cstdio>
 #include <limits>
+#include <fstream>
 
-DownlinkNVSScheduler::DownlinkNVSScheduler()
+DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
 : slices_exp_times_(num_slices_, 1),
   slices_bytes_(num_slices_),
-  slices_rbs_(num_slices_),
-  slices_weights_(num_slices_, 1)
+  slices_rbs_(num_slices_)
 {
+  std::ifstream ifs(config_fname, std::ifstream::in);
+  if (ifs.is_open()) {
+    int num_apps = 0;
+    ifs >> num_slices_ >> num_apps;
+    for (int i = 0; i < num_slices_; ++i)
+      ifs >> slices_weights_[i];
+    for (int i = 0; i < num_apps; ++i)
+      ifs >> appid_to_slice_[i];
+  }
+  ifs.close();
+
   SetMacEntity (0);
   CreateFlowsToSchedule ();
 }
@@ -104,7 +115,7 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule ()
     int app_id = bearer->GetApplication()->GetApplicationID();
 
     //std::cerr << "\t app_id: " << app_id << std::endl;
-    if (APPID_TO_SLICEID[app_id] != slice_serve)
+    if (appid_to_slice_[app_id] != slice_serve)
       continue;
 
 	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
@@ -295,7 +306,7 @@ DownlinkNVSScheduler::RBsAllocation ()
       if (l_iScheduledFlows == flows->size ())
           break;
 
-      double targetMetric = 0;
+      double targetMetric = std::numeric_limits<double>::min();
       bool SubbandAllocated = false;
       FlowToSchedule* scheduledFlow;
       int l_iScheduledFlowIndex = 0;

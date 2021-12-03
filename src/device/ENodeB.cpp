@@ -300,7 +300,7 @@ ENodeB::UserEquipmentRecord::GetUplinkChannelStatusIndicator (void) const
 }
 
 void
-ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type)
+ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
 {
   EnbMacEntity *mac = (EnbMacEntity*) GetProtocolStack ()->GetMacEntity ();
   PacketScheduler *scheduler;
@@ -343,13 +343,13 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type)
 		  break;
 
       case ENodeB::DLScheduler_NVS:
-        scheduler = new DownlinkNVSScheduler();
+        scheduler = new DownlinkNVSScheduler(config_fname);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
       break;
 
       case ENodeB::DLScheduler_ORACLE:
-        scheduler = new DownlinkOracleScheduler();
+        scheduler = new DownlinkOracleScheduler(config_fname);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
       break;

@@ -38,12 +38,23 @@
 #include <cstdio>
 #include <utility>
 #include <unordered_map>
+#include <fstream>
 
-DownlinkOracleScheduler::DownlinkOracleScheduler()
+DownlinkOracleScheduler::DownlinkOracleScheduler(std::string config_fname)
 : slices_exp_times_(num_slices_, 1),
-  slices_weights_(num_slices_, 0.5),
   slices_rbs_offset_(num_slices_, 0)
 {
+  std::ifstream ifs(config_fname);
+  if (ifs.is_open()) {
+    int num_apps = 0;
+    ifs >> num_slices_ >> num_apps;
+    for (int i = 0; i < num_slices_; ++i)
+      ifs >> slices_weights_[i];
+    for (int i = 0; i < num_apps; ++i)
+      ifs >> appid_to_slice_[i];
+  }
+  ifs.close();
+  
   SetMacEntity (0);
   CreateFlowsToSchedule ();
 }
@@ -205,10 +216,10 @@ DownlinkOracleScheduler::RBsAllocation ()
   int rbg_size = get_rbg_size(nbOfRBs);
   int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
 
-  std::vector<int> sliceTargetRBs(num_slices_);
+  std::vector<double> sliceTargetRBs(num_slices_);
   std::vector<int> sliceRBs(num_slices_, 0);
   for (int i = 0; i < num_slices_; ++i) {
-    sliceTargetRBs[i] = (int)(nbOfRBs * slices_weights_[i]) + slices_rbs_offset_[i];
+    sliceTargetRBs[i] = nbOfRBs * slices_weights_[i] + slices_rbs_offset_[i];
     sliceRBs[i] = 0;
   }
 
@@ -274,7 +285,7 @@ DownlinkOracleScheduler::RBsAllocation ()
       for (int k = 0; k < flows->size (); k++)
         {
           int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
-          int slice_id = APPID_TO_SLICEID[app_id];
+          int slice_id = appid_to_slice_[app_id];
           if (max_ranks.find(slice_id) == max_ranks.end() || metrics[s][k] > max_ranks[slice_id]) {
             flow_to_serve[slice_id] = std::pair<int, FlowToSchedule*>(k, flows->at(k));
             max_ranks[slice_id] = metrics[s][k];

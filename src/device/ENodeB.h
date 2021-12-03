@@ -100,7 +100,7 @@ public:
     UserEquipmentRecords* GetUserEquipmentRecords (void);
     UserEquipmentRecord* GetUserEquipmentRecord (int idUE);
 
-    void SetDLScheduler (DLSchedulerType type);
+    void SetDLScheduler (DLSchedulerType type, string config_fname="");
     PacketScheduler* GetDLScheduler (void) const;
     void SetULScheduler (ULSchedulerType type);
     PacketScheduler* GetULScheduler (void) const;

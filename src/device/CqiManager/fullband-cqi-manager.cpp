@@ -30,6 +30,7 @@
 #include "../../core/spectrum/bandwidth-manager.h"
 #include "../../load-parameters.h"
 #include <exception>
+#include <cassert>
 #include "../../utility/eesm-effective-sinr.h"
 
 
@@ -48,14 +49,15 @@ FullbandCqiManager::GenSubbandSINR( std::vector<double> sinr )
   std::vector<double> subbands_sinr(sinr.size(), 0);
   int l = 0, r = 0;
   while (l < sinr.size()) {
-    r = l + subband_size - 1;
-    if (r >= sinr.size()) r = sinr.size() - 1;
+    r = l + subband_size;
+    if (r >= sinr.size()) r = sinr.size();
     std::vector<double> subset(sinr.cbegin() + l, sinr.cbegin() + r);
+    //assert(subset.size() == subband_size);
     double effective_sinr = GetEesmEffectiveSinr(subset);
-    for (int i = l; i <= r; i++) {
+    for (int i = l; i < r; i++) {
       subbands_sinr[i] = effective_sinr;
     }
-    l = r+1;
+    l = r;
   }
   return subbands_sinr;
 }

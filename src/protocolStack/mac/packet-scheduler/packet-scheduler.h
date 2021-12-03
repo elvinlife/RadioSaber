@@ -24,7 +24,11 @@
 #define PACKETSCHEDULER_H_
 
 #include <vector>
+#include <string>
 #include "../../../core/idealMessages/ideal-control-messages.h"
+
+const int MAX_SLICES = 100;
+const int MAX_APPS = 1000;
 
 class MacEntity;
 class PacketBurst;

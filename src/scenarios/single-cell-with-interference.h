@@ -56,7 +56,8 @@ static void SingleCellWithInterference (int nbCells, double radius,
                                         int frame_struct,
                                         int speed,
 		                                double maxDelay, int videoBitRate,
-                                        int seed)
+                                        int seed,
+										string config_fname)
 {
 
   // define simulation times
@@ -187,7 +188,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
 	  enb->GetPhy ()->SetDlChannel (dlChannels->at (i));
 	  enb->GetPhy ()->SetUlChannel (ulChannels->at (i));
 
-	  enb->SetDLScheduler (downlink_scheduler_type);
+	  enb->SetDLScheduler (downlink_scheduler_type, config_fname);
 
 	  enb->GetPhy ()->SetBandwidthManager (spectrums.at (i));
 
