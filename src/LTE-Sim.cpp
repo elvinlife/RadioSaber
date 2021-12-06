@@ -130,9 +130,13 @@ main (int argc, char *argv[])
 		  int video_bit_rate = atoi(argv[13]);
 	      int seed;
 		  string config_fname;
-	      if (argc>=15) seed = atoi(argv[14]);
-		  if (argc==16) config_fname = string(argv[15]);
-	      else seed = -1;
+	      if (argc >= 15) {
+			seed = atoi(argv[14]);
+			if (argc==16)
+			config_fname = string(argv[15]);
+		  }
+		  else seed = -1;
+
 	      SingleCellWithInterference (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname);
 	    }
 	  if (strcmp(argv[1], "MultiCell")==0)

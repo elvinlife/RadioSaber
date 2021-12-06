@@ -84,6 +84,13 @@ FullbandCqiManager::CreateCqiFeedbacks (std::vector<double> sinr)
 
   AMCModule *amc = GetDevice ()->GetProtocolStack ()->GetMacEntity ()->GetAmcModule ();
 
+  //std::cout << "\t sinr: ";
+  //for (int i = 0; i < sinr.size (); i++)
+  //  {
+  //    std::cout << sinr.at (i) << " ";
+  //  }
+  //std::cout << std::endl;
+
   sinr = GenSubbandSINR(sinr);
   std::vector<int> cqi = amc->CreateCqiFeedbacks (sinr);
 
