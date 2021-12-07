@@ -35,6 +35,7 @@
 #define RBs_FOR_10_MHz 50
 #define RBs_FOR_15_MHz 75
 #define RBs_FOR_20_MHz 100
+#define RBs_FOR_100_MHz 500
 
 BandwidthManager::BandwidthManager()
 {
@@ -94,6 +95,11 @@ BandwidthManager::BandwidthManager(double ulBw, double dlBw, int ulOffset, int d
     	  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
         }
     }
+  else if (dlBw == 100) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_100_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  }
   else
     {
       for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++)
@@ -146,6 +152,11 @@ BandwidthManager::BandwidthManager(double ulBw, double dlBw, int ulOffset, int d
     	  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
         }
     }
+  else if (ulBw == 100) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_100_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  }
   else
     {
       for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++)

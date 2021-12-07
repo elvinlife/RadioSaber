@@ -143,6 +143,25 @@ RunFrequencyReuseTechniques(int nodes, int cluster, double bandwidth)
     	      if (counter == cluster) counter = 0;
             }
         }
+      
+      else if (bandwidth == 100) {
+        if (cluster > 3) {
+          std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER" << std::endl;
+          cluster = 3;
+        }
+        //int operateSubBands = 500;
+        int dlSubBands = 500;
+        int ulSubBands = 100;
+        int counter = 0;
+        for (int i = 0; i < nodes; i++) {
+          int dloffset = counter * dlSubBands;
+          int uloffset = counter * ulSubBands;
+          BandwidthManager *s = new BandwidthManager(20, bandwidth, uloffset, dloffset);
+          spectrum.push_back(s);
+          counter ++;
+          if (counter == cluster) counter = 0;
+        }
+      }
     }
   else //case TDD
     {

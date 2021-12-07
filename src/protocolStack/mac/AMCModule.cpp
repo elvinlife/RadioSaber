@@ -304,7 +304,14 @@ int
 AMCModule::GetTBSizeFromMCS (int mcs, int nbRBs)
 {
   int itbs = McsToItbs[mcs];
-  return (TransportBlockSizeTable[nbRBs - 1][itbs]);
+  if (nbRBs <= 110) {
+    return (TransportBlockSizeTable[nbRBs - 1][itbs]);
+  }
+  else {
+    int subRBs = nbRBs / 5;
+    int restRBs = nbRBs % 5;
+    return 5 * TransportBlockSizeTable[subRBs-1][itbs] + TransportBlockSizeTable[restRBs-1][itbs];
+  }
 }
 
 double

@@ -81,6 +81,9 @@ get_subband_size(int nof_prb)
   else if (nof_prb <= 110) {
     return 8;
   }
+  else if (nof_prb <= 500) {
+    return 32;
+  }
   else {
     throw std::runtime_error("Num of physical RBs above 110");
   }
@@ -97,6 +100,8 @@ get_rbg_size(int nof_prb)
     return 3;
   else if (nof_prb <= 110)
     return 4;
+  else if (nof_prb <= 500)
+    return 8;
   else {
     throw std::runtime_error("Num of physical RBs above 110");
   }

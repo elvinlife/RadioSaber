@@ -61,12 +61,12 @@ static void SingleCellWithInterference (int nbCells, double radius,
 {
 
   // define simulation times
-  double duration = 46;
-  double flow_duration = 40;
+  double duration = 12;
+  double flow_duration = 12;
 
 
   int cluster = 4;
-  double bandwidth = 20;
+  double bandwidth = 100;
 
   // CREATE COMPONENT MANAGER
   Simulator *simulator = Simulator::Init();
@@ -83,7 +83,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
 	{
 	  srand (time(NULL));
 	}
-  std::cout << "Simulation with SEED = " << seed << std::endl;
+  std::cerr << "Simulation with SEED = " << seed << std::endl;
 
   // SET SCHEDULING ALLOCATION SCHEME
   ENodeB::DLSchedulerType downlink_scheduler_type;
@@ -281,7 +281,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
 	  //double start_time = 0.1 + GetRandomVariable (5.);
 	  //double duration_time = start_time + flow_duration;
 	  double start_time = 0.1;
-	  double duration_time = flow_duration;
+	  double duration_time = start_time + flow_duration;
 
 	  // *** voip application
 	  for (int j = 0; j < nbVoIP; j++)

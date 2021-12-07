@@ -126,8 +126,6 @@ DownlinkPacketScheduler::DoStopSchedule (void)
   //Create Packet Burst
   FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
 
-  UpdateTimeStamp();
-
   for (FlowsToSchedule::iterator it = flowsToSchedule->begin (); it != flowsToSchedule->end (); it++)
     {
 	  FlowToSchedule *flow = (*it);
@@ -140,8 +138,13 @@ DownlinkPacketScheduler::DoStopSchedule (void)
       flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
 
 #ifdef SCHEDULER_DEBUG
-	      std::cout << "\t  --> add packets for flow "
-	    		  << flow->GetBearer ()->GetApplication ()->GetApplicationID () << std::endl;
+      std::cerr << GetTimeStamp()
+          << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
+          << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
+          << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
+          << std::endl;
+	    std::cout << "\t  --> add packets for flow "
+	    		<< flow->GetBearer ()->GetApplication ()->GetApplicationID () << std::endl;
 #endif
 
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
@@ -171,6 +174,7 @@ DownlinkPacketScheduler::DoStopSchedule (void)
 	  else
 	    {}
     }
+  UpdateTimeStamp();
 
   //UpdateAverageTransmissionRate ();
 
@@ -337,12 +341,6 @@ DownlinkPacketScheduler::RBsAllocation ()
           "\n\t\t\t data to transmit " << flow->GetDataToTransmit() <<
 				  "\n\t\t\t mcs " << mcs
 				  << std::endl;
-      
-      std::cerr << GetTimeStamp()
-          << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
-          << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
-          << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
-          << std::endl;
 #endif
 
 		  //create PDCCH messages
