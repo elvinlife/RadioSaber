@@ -46,12 +46,18 @@ DownlinkOracleScheduler::DownlinkOracleScheduler(std::string config_fname)
 {
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
-    int num_apps = 0;
-    ifs >> num_slices_ >> num_apps;
+    int begin_id = 0;
+    ifs >> num_slices_;
     for (int i = 0; i < num_slices_; ++i)
       ifs >> slices_weights_[i];
-    for (int i = 0; i < num_apps; ++i)
-      ifs >> appid_to_slice_[i];
+    for (int i = 0; i < num_slices_; ++i) {
+      int num_ue;
+      ifs >> num_ue;
+      for (int j = 0; j < num_ue; ++j) {
+        appid_to_slice_[begin_id + j] = i;
+      }
+      begin_id += num_ue;
+    }
   }
   ifs.close();
   
@@ -75,6 +81,7 @@ void DownlinkOracleScheduler::SelectFlowsToSchedule ()
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
+  //std::cerr << GetTimeStamp();
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
 	  //SELECT FLOWS TO SCHEDULE
@@ -97,20 +104,24 @@ void DownlinkOracleScheduler::SelectFlowsToSchedule ()
 		  ENodeB *enb = (ENodeB*) GetMacEntity ()->GetDevice ();
 		  ENodeB::UserEquipmentRecord *ueRecord = enb->GetUserEquipmentRecord (bearer->GetDestination ()->GetIDNetworkNode ());
 		  std::vector<double> spectralEfficiency;
+      std::vector<double> sinrs;
 		  std::vector<int> cqiFeedbacks = ueRecord->GetCQI ();
 		  int numberOfCqi = cqiFeedbacks.size ();
+      AMCModule *amc = GetMacEntity()->GetAmcModule();
 		  for (int i = 0; i < numberOfCqi; i++)
 			{
-			  double sEff = GetMacEntity ()->GetAmcModule ()->GetEfficiencyFromCQI (cqiFeedbacks.at (i));
-			  spectralEfficiency.push_back (sEff);
+        sinrs.push_back(amc->GetSinrFromCQI(cqiFeedbacks.at(i)));
+        spectralEfficiency.push_back(amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
 			}
-
+      double wideSINR = GetEesmEffectiveSinr(sinrs);
+      //std::cerr << "\t" << amc->GetCQIFromSinr(wideSINR);
 		  //create flow to scheduler record
 		  InsertFlowToSchedule(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
 		}
 	  else
 	    {}
 	}
+  //std::cerr << std::endl;
 }
 
 void
@@ -240,12 +251,13 @@ DownlinkOracleScheduler::RBsAllocation ()
 
   // create a matrix of flow metrics (RBG, flow index)
   double metrics[nbOfGroups][flows->size ()];
+
   for (int i = 0; i < nbOfGroups; i++) {
 	  for (int j = 0; j < flows->size (); j++) {
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
-        i, flows->at(j)->GetWideBandEfficiency());
+        i, flows->at(j)->GetAllEfficiency());
 	  }
   }
 
@@ -257,9 +269,10 @@ DownlinkOracleScheduler::RBsAllocation ()
 			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
 	  for (int jj = 0; jj < nbOfGroups; jj++)
 	    {
-        fprintf(stdout, " (%d, %.3f, %d)",
+        fprintf(stdout, " (%d, %.3f, %d, %.3f)",
             jj, metrics[jj][ii], 
-            flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size));
+            flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size),
+            flows->at(ii)->GetSpectralEfficiency().at(jj * rbg_size));
 	    }
 	  std::cout << std::endl;
     }

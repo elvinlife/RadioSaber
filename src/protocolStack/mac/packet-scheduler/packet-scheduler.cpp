@@ -153,15 +153,27 @@ PacketScheduler::FlowToSchedule::GetSpectralEfficiency (void)
 }
 
 void
-PacketScheduler::FlowToSchedule::SetWideBandEfficiency (double s)
+PacketScheduler::FlowToSchedule::SetWidebandCQI(int cqi)
 {
-  m_wideBandEfficiency = s;
+  m_wideBandCQI = cqi;
+}
+
+int
+PacketScheduler::FlowToSchedule::GetWidebandCQI()
+{
+  return m_wideBandCQI;
+}
+
+void
+PacketScheduler::FlowToSchedule::SetAllEfficiency (double s)
+{
+  m_allEfficiency = s;
 }
 
 double
-PacketScheduler::FlowToSchedule::GetWideBandEfficiency(void)
+PacketScheduler::FlowToSchedule::GetAllEfficiency(void)
 {
-  return m_wideBandEfficiency;
+  return m_allEfficiency;
 }
 
 void
@@ -238,7 +250,6 @@ PacketScheduler::InsertFlowToSchedule (RadioBearer* bearer, int dataToTransmit, 
 #endif
 
   FlowToSchedule *flowToSchedule = new FlowToSchedule(bearer, dataToTransmit);
-  flowToSchedule->SetWideBandEfficiency (GetEesmEffectiveSinr(specEff));
   flowToSchedule->SetSpectralEfficiency (specEff);
   //flowToSchedule
   flowToSchedule->SetCqiFeedbacks (cqiFeedbacks);

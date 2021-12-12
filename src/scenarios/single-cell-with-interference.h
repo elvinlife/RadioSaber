@@ -48,6 +48,10 @@
 #include <stdlib.h>
 #include <cstring>
 #include <iostream>
+#include <vector>
+#include <utility>
+using std::pair;
+//#define SLICE_CLUSTER 1
 
 static void SingleCellWithInterference (int nbCells, double radius,
                                         int nbUE,
@@ -66,7 +70,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
 
 
   int cluster = 4;
-  double bandwidth = 100;
+  double bandwidth = 20;
 
   // CREATE COMPONENT MANAGER
   Simulator *simulator = Simulator::Init();
@@ -233,13 +237,56 @@ static void SingleCellWithInterference (int nbCells, double radius,
 
   //Create UEs
   int idUE = nbCells;
+
+  #ifdef SLICE_CLUSTER
+	int num_slices = 0, num_ues = 0, slice;
+	std::vector<int> appid_to_slice;
+	//std::vector<pair<double, double>> slice_pos;
+	std::vector<double> slice_xpos;
+	std::vector<double> slice_ypos;
+	double temp;
+	std::ifstream ifs(config_fname);
+	if (!ifs.is_open()) {
+		throw std::runtime_error("Defined SLICE_CLUSTER without offering config_file");
+	}
+	if (ifs.is_open()) {
+    ifs >> num_slices >> num_ues;
+		//std::cout << num_slices << num_ues << std::endl;
+    for (int i = 0; i < num_slices; ++i) {
+			ifs >> temp;
+	  	double posX = (double)rand()/RAND_MAX;
+	  	posX = 0.95 * (((2*radius*1000)*posX) - (radius*1000));
+	  	double posY = (double)rand()/RAND_MAX;
+	  	posY = 0.95 * (((2*radius*1000)*posY) - (radius*1000));
+			//slice_pos.emplace_back(posX, posY);
+			slice_xpos.push_back(posX);
+			slice_ypos.push_back(posY);
+		}
+    for (int i = 0; i < num_ues; ++i) {
+			ifs >> slice;
+			appid_to_slice.push_back(slice);
+		}
+  }
+  ifs.close();
+  #endif
+
   for (int i = 0; i < nbUE; i++)
 	{
+		#ifdef SLICE_CLUSTER
+		int slice_id = appid_to_slice[i];
+		//double posX = slice_pos[slice_id].first + (rand() / RAND_MAX) * radius * 20;
+		//double posY = slice_pos[slice_id].second + (rand() / RAND_MAX) * radius * 20;
+		double posX = slice_xpos[slice_id] + (double)rand() / RAND_MAX * radius * 20;
+		double posY = slice_ypos[slice_id] + (double)rand() / RAND_MAX * radius * 20;
+
+		#else
+		double posX = (double)rand()/RAND_MAX;
+	  	posX = 0.95 * (((2*radius*1000)*posX) - (radius*1000));
+	  	double posY = (double)rand()/RAND_MAX;
+	  	posY = 0.95 * (((2*radius*1000)*posY) - (radius*1000));
+		#endif
 	  //ue's random position
-	  double posX = (double)rand()/RAND_MAX; posX = 0.95 *
-	  	  	  (((2*radius*1000)*posX) - (radius*1000));
-	  double posY = (double)rand()/RAND_MAX; posY = 0.95 *
-		  (((2*radius*1000)*posY) - (radius*1000));
+	  
 
 	  double speedDirection = GetRandomVariable (360.) * ((2.*3.14)/360.);
 
@@ -248,7 +295,8 @@ static void SingleCellWithInterference (int nbCells, double radius,
 											 cells->at (0),
 											 eNBs->at (0),
 			                                 0, //handover false!
-			                                 Mobility::RANDOM_DIRECTION);
+			                                 Mobility::MANHATTAN);
+											 //Mobility::RANDOM_DIRECTION);
 
 	  std::cout << "Created UE - id " << idUE << " position " << posX << " " << posY << " direction " << speedDirection << std::endl;
 
@@ -258,7 +306,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
 
       FullbandCqiManager *cqiManager = new FullbandCqiManager ();
       cqiManager->SetCqiReportingMode (CqiManager::PERIODIC);
-      cqiManager->SetReportingInterval (1);
+      cqiManager->SetReportingInterval (40);
       cqiManager->SetDevice (ue);
       ue->SetCqiManager (cqiManager);
 

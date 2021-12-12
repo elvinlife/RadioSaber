@@ -46,12 +46,18 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
 {
   std::ifstream ifs(config_fname, std::ifstream::in);
   if (ifs.is_open()) {
-    int num_apps = 0;
-    ifs >> num_slices_ >> num_apps;
+    int begin_id = 0;
+    ifs >> num_slices_;
     for (int i = 0; i < num_slices_; ++i)
       ifs >> slices_weights_[i];
-    for (int i = 0; i < num_apps; ++i)
-      ifs >> appid_to_slice_[i];
+    for (int i = 0; i < num_slices_; ++i) {
+      int num_ue;
+      ifs >> num_ue;
+      for (int j = 0; j < num_ue; ++j) {
+        appid_to_slice_[begin_id + j] = i;
+      }
+      begin_id += num_ue;
+    }
   }
   ifs.close();
 
@@ -277,7 +283,7 @@ DownlinkNVSScheduler::RBsAllocation ()
         flows->at (j)->GetBearer (),
         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
         i,
-        flows->at (j)->GetWideBandEfficiency());
+        flows->at (j)->GetAllEfficiency());
 	  }
   }
 
