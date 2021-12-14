@@ -123,13 +123,13 @@ PropagationLossModel::AddLossModel (NetworkNode* src,
     {
 	  double rxPower = rxSignalValues.at (i) + loss.at (i); // add propagation loss
 
-#ifdef TEST_PROPAGATION_LOSS_MODEL
-      std::cout << "\t\t sub channel = " << i
-		  << " rxSignalValues = " << rxSignalValues.at (i)
-          << " loss = " << loss.at (i)
-          << " rxPower = " << rxPower
-		  << std::endl;
-#endif
+// #ifdef TEST_PROPAGATION_LOSS_MODEL
+//       std::cout << "\t\t sub channel = " << i
+// 		  << " rxSignalValues = " << rxSignalValues.at (i)
+//           << " loss = " << loss.at (i)
+//           << " rxPower = " << rxPower
+// 		  << std::endl;
+// #endif
 
 	  rxSignalValues.at (i) = rxPower; // in W/Hz
     }

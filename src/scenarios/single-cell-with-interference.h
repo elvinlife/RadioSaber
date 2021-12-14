@@ -239,9 +239,8 @@ static void SingleCellWithInterference (int nbCells, double radius,
   int idUE = nbCells;
 
   #ifdef SLICE_CLUSTER
-	int num_slices = 0, num_ues = 0, slice;
+	int num_slices = 0, ue_id = 0;
 	std::vector<int> appid_to_slice;
-	//std::vector<pair<double, double>> slice_pos;
 	std::vector<double> slice_xpos;
 	std::vector<double> slice_ypos;
 	double temp;
@@ -250,21 +249,25 @@ static void SingleCellWithInterference (int nbCells, double radius,
 		throw std::runtime_error("Defined SLICE_CLUSTER without offering config_file");
 	}
 	if (ifs.is_open()) {
-    ifs >> num_slices >> num_ues;
-		//std::cout << num_slices << num_ues << std::endl;
-    for (int i = 0; i < num_slices; ++i) {
+    	ifs >> num_slices;
+    	for (int i = 0; i < num_slices; ++i) {
 			ifs >> temp;
-	  	double posX = (double)rand()/RAND_MAX;
-	  	posX = 0.95 * (((2*radius*1000)*posX) - (radius*1000));
-	  	double posY = (double)rand()/RAND_MAX;
-	  	posY = 0.95 * (((2*radius*1000)*posY) - (radius*1000));
-			//slice_pos.emplace_back(posX, posY);
+	  		double posX = (double)rand()/RAND_MAX;
+			double posY = (double)rand()/RAND_MAX;
+			int range = 300;
+	  		//posX = 0.95 * (((2*radius*1000) * posX) - (radius*1000));
+	  		//posY = 0.95 * (((2*radius*1000) * posY) - (radius*1000));
+			posX = 0.95 * ((2 * range * radius * posX) - (radius * range) + range * i);
+			posY = 0.95 * ((2 * range * radius * posY) - (radius * range) + range * i);
 			slice_xpos.push_back(posX);
 			slice_ypos.push_back(posY);
 		}
-    for (int i = 0; i < num_ues; ++i) {
-			ifs >> slice;
-			appid_to_slice.push_back(slice);
+		for (int i = 0; i < num_slices; ++i) {
+			int ue_num = 0;
+			ifs >> ue_num;
+			for (int j = 0; j < ue_num; ++j) {
+				appid_to_slice.push_back(i);
+			}
 		}
   }
   ifs.close();
@@ -274,10 +277,10 @@ static void SingleCellWithInterference (int nbCells, double radius,
 	{
 		#ifdef SLICE_CLUSTER
 		int slice_id = appid_to_slice[i];
-		//double posX = slice_pos[slice_id].first + (rand() / RAND_MAX) * radius * 20;
-		//double posY = slice_pos[slice_id].second + (rand() / RAND_MAX) * radius * 20;
-		double posX = slice_xpos[slice_id] + (double)rand() / RAND_MAX * radius * 20;
-		double posY = slice_ypos[slice_id] + (double)rand() / RAND_MAX * radius * 20;
+		//double posX = slice_xpos[slice_id] + (double)rand() / RAND_MAX * radius * 20;
+		//double posY = slice_ypos[slice_id] + (double)rand() / RAND_MAX * radius * 20;
+		double posX = slice_xpos[slice_id];
+		double posY = slice_ypos[slice_id];
 
 		#else
 		double posX = (double)rand()/RAND_MAX;
@@ -307,6 +310,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
       FullbandCqiManager *cqiManager = new FullbandCqiManager ();
       cqiManager->SetCqiReportingMode (CqiManager::PERIODIC);
       cqiManager->SetReportingInterval (40);
+	  //cqiManager->SetReportingInterval (1);
       cqiManager->SetDevice (ue);
       ue->SetCqiManager (cqiManager);
 

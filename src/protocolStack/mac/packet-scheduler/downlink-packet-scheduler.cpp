@@ -193,7 +193,7 @@ DownlinkPacketScheduler::RBsAllocation ()
 {
 
 #ifdef SCHEDULER_DEBUG
-	std::cout << " ---- DownlinkNVSScheduler::RBsAllocation";
+	std::cout << " ---- DownlinkPacketScheduler::RBsAllocation";
 #endif
 
   FlowsToSchedule* flows = GetFlowsToSchedule ();

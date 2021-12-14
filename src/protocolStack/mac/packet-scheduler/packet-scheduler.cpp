@@ -27,6 +27,7 @@
 #include "../../../device/NetworkNode.h"
 #include "../../../flows/radio-bearer.h"
 #include "../../../protocolStack/rrc/rrc-entity.h"
+#include "../../../protocolStack/mac/AMCModule.h"
 #include "../../../flows/application/Application.h"
 #include "../../../flows/MacQueue.h"
 #include "../../../flows/QoS/QoSParameters.h"
@@ -243,16 +244,27 @@ PacketScheduler::FlowToSchedule::GetCqiFeedbacks (void)
 void
 PacketScheduler::InsertFlowToSchedule (RadioBearer* bearer, int dataToTransmit, std::vector<double> specEff, std::vector<int> cqiFeedbacks)
 {
-#ifdef SCHEDULER_DEBUG
-	std::cout << "\t  --> selected flow: "
-			<< bearer->GetApplication ()->GetApplicationID ()
-			<< " " << dataToTransmit << std::endl;
-#endif
-
   FlowToSchedule *flowToSchedule = new FlowToSchedule(bearer, dataToTransmit);
   flowToSchedule->SetSpectralEfficiency (specEff);
   //flowToSchedule
   flowToSchedule->SetCqiFeedbacks (cqiFeedbacks);
+
+  std::vector<double> sinrs;
+	int numberOfCqi = cqiFeedbacks.size ();
+  AMCModule *amc = GetMacEntity()->GetAmcModule();
+	for (int i = 0; i < numberOfCqi; i++)
+	{
+    sinrs.push_back(amc->GetSinrFromCQI(cqiFeedbacks.at(i)));
+	}
+  double wideSINR = GetEesmEffectiveSinr(sinrs);
+  flowToSchedule->SetWidebandCQI(amc->GetCQIFromSinr(wideSINR));
+
+#ifdef SCHEDULER_DEBUG
+	std::cout << "\t  --> selected flow: "
+			<< bearer->GetApplication ()->GetApplicationID ()
+			<< " data:" << dataToTransmit
+      << " sinr:" << wideSINR << std::endl;
+#endif
 
   GetFlowsToSchedule ()->push_back(flowToSchedule);
 }

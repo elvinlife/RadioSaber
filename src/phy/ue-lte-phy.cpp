@@ -156,6 +156,9 @@ UeLtePhy::StartRx (PacketBurst* p, TransmittedSignal* txSignal)
           power = 0.;
         }
       m_measuredSinr.push_back (power - noise_interference);
+      #ifdef TEST_PROPAGATION_LOSS_MODEL
+      std::cout << "rxPower= " << power << " noise_interference= " << noise_interference << " sinr= " << m_measuredSinr.back() << std::endl;
+      #endif
     }
 
   //CHECK FOR PHY ERROR

@@ -104,17 +104,13 @@ void DownlinkOracleScheduler::SelectFlowsToSchedule ()
 		  ENodeB *enb = (ENodeB*) GetMacEntity ()->GetDevice ();
 		  ENodeB::UserEquipmentRecord *ueRecord = enb->GetUserEquipmentRecord (bearer->GetDestination ()->GetIDNetworkNode ());
 		  std::vector<double> spectralEfficiency;
-      std::vector<double> sinrs;
 		  std::vector<int> cqiFeedbacks = ueRecord->GetCQI ();
 		  int numberOfCqi = cqiFeedbacks.size ();
       AMCModule *amc = GetMacEntity()->GetAmcModule();
 		  for (int i = 0; i < numberOfCqi; i++)
 			{
-        sinrs.push_back(amc->GetSinrFromCQI(cqiFeedbacks.at(i)));
         spectralEfficiency.push_back(amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
 			}
-      double wideSINR = GetEesmEffectiveSinr(sinrs);
-      //std::cerr << "\t" << amc->GetCQIFromSinr(wideSINR);
 		  //create flow to scheduler record
 		  InsertFlowToSchedule(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
 		}
@@ -362,7 +358,7 @@ DownlinkOracleScheduler::RBsAllocation ()
     {
       FlowToSchedule *flow = (*it);
 
-	  std::cout << "Flow: " << flow->GetBearer()->GetApplication()->GetApplicationID();
+	  std::cout << "Flow(" << flow->GetBearer()->GetApplication()->GetApplicationID() << ")";
 	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
       int rbid = flow->GetListOfAllocatedRBs()->at(rb);
       if (rbid % rbg_size == 0)
