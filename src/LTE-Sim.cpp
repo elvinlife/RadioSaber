@@ -42,6 +42,7 @@
 #include "scenarios/multi-cell.h"
 #include "scenarios/single-cell-with-streets.h"
 #include "scenarios/multi-cell-sinrplot.h"
+#include "scenarios/single-cell-customize.h"
 #include "TEST/scalability-test-macro-with-femto.h"
 #include "TEST/test-sinr-femto.h"
 #include "TEST/test-throughput-macro-with-femto.h"
@@ -136,9 +137,33 @@ main (int argc, char *argv[])
 			config_fname = string(argv[15]);
 		  }
 		  else seed = -1;
-
-	      SingleCellWithInterference (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname);
+      SingleCellWithInterference (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname);
 	    }
+		if (strcmp(argv[1], "SingleCellCustomize") == 0)
+    {
+      int nbCells = atoi(argv[2]);
+		  double radius = atof(argv[3]);
+	    int nbUE = atoi(argv[4]);
+	    int nbVoIP = atoi(argv[5]);
+	    int nbVideo = atoi(argv[6]);
+	    int nbBE = atoi(argv[7]);
+	    int nbCBR = atoi(argv[8]);
+	    int sched_type = atoi(argv[9]);
+	    int frame_struct = atoi(argv[10]);
+	    int speed = atoi(argv[11]);
+	    double maxDelay = atof(argv[12]);
+		string video_trace = argv[13];
+		//int video_bit_rate = atoi(argv[13]);
+	    int seed;
+		  string config_fname = "";
+	    if (argc >= 15) {
+			  seed = atoi(argv[14]);
+			  if (argc==16)
+			  config_fname = string(argv[15]);
+		  }
+		  else seed = -1;
+	    SingleCellCustomize (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_trace, seed, config_fname);
+    }
 	  if (strcmp(argv[1], "MultiCell")==0)
 	    {
 		  int nbCells = atoi(argv[2]);

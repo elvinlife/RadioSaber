@@ -41,23 +41,37 @@
 #include <fstream>
 
 DownlinkOracleScheduler::DownlinkOracleScheduler(std::string config_fname)
-: slices_exp_times_(num_slices_, 1),
-  slices_rbs_offset_(num_slices_, 0)
 {
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
     int begin_id = 0;
-    ifs >> num_slices_;
-    for (int i = 0; i < num_slices_; ++i)
-      ifs >> slices_weights_[i];
-    for (int i = 0; i < num_slices_; ++i) {
+    ifs >> num_type1_slices_ >> num_type2_slices_;
+    for (int i = 0; i < num_type1_slices_; ++i)
+      ifs >> type1_bitrates_[i];
+    for (int i = 0; i < num_type1_slices_; ++i) {
       int num_ue;
       ifs >> num_ue;
       for (int j = 0; j < num_ue; ++j) {
-        appid_to_slice_[begin_id + j] = i;
+        type1_app_[begin_id + j] = i;
       }
       begin_id += num_ue;
     }
+    num_type1_apps_ = begin_id;
+
+    for (int i = 0; i < num_type2_slices_; ++i)
+      ifs >> type2_weights_[i];
+    for (int i = 0; i < num_type2_slices_; ++i) {
+      type2_rbs_offset_[i] = 0;
+      int num_ue;
+      ifs >> num_ue;
+      for (int j = 0; j < num_ue; ++j) {
+        type2_app_[begin_id + j] = i;
+      }
+      begin_id += num_ue;
+    }
+  }
+  else {
+    throw std::runtime_error("Fail to open configuration file");
   }
   ifs.close();
   
@@ -227,21 +241,14 @@ DownlinkOracleScheduler::RBsAllocation ()
   int rbg_size = get_rbg_size(nbOfRBs);
   int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
 
-  std::vector<double> sliceTargetRBs(num_slices_);
-  std::vector<int> sliceRBs(num_slices_, 0);
-  for (int i = 0; i < num_slices_; ++i) {
-    sliceTargetRBs[i] = nbOfRBs * slices_weights_[i] + slices_rbs_offset_[i];
+  std::vector<double> sliceTargetRBs(num_type2_slices_);
+  std::vector<int> sliceRBs(num_type2_slices_, 0);
+  std::cout << "\t slice quota:";
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    double quota = nbOfRBs * type2_weights_[i];
+    sliceTargetRBs[i] = quota + type2_rbs_offset_[i];
     sliceRBs[i] = 0;
-  }
-
-  // calculate how many rbs for every flow
-  std::vector<int> max_rbs(flows->size(), 0);
-  std::cout << "\nMax allocation: ";
-  for (int i = 0; i < flows->size(); ++i) {
-    int app_id = flows->at(i)->GetBearer()->GetApplication()->GetApplicationID();
-    //max_rbs[i] = (int)(APP_WEIGHT[app_id] * nbOfRBs);
-    max_rbs[i] = nbOfRBs;
-    std::cout << "app: " << app_id << " index: " << i << ": " << max_rbs[i] << ";";
+    std::cout << "\t" << sliceTargetRBs[i];
   }
   std::cout << std::endl;
 
@@ -293,30 +300,51 @@ DownlinkOracleScheduler::RBsAllocation ()
       int l_iScheduledFlowIndex = 0;
       int l_iScheduledSlice = 0;
 
-      std::unordered_map<int, double> max_ranks;
-      std::unordered_map<int, std::pair<int , FlowToSchedule*>> flow_to_serve;
-      for (int k = 0; k < flows->size (); k++)
-        {
-          int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
-          int slice_id = appid_to_slice_[app_id];
-          if (max_ranks.find(slice_id) == max_ranks.end() || metrics[s][k] > max_ranks[slice_id]) {
-            flow_to_serve[slice_id] = std::pair<int, FlowToSchedule*>(k, flows->at(k));
-            max_ranks[slice_id] = metrics[s][k];
+      std::vector<double> max_ranks(num_type2_slices_, -1);     // the highest flow metric in every slice
+      std::vector<int> flow_id(num_type2_slices_, -1);          // flow id with the highest metric in every slice
+      for (int k = 0; k < flows->size(); k++)
+      {
+        if (l_bFlowScheduled[k])
+          continue;
+        int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
+        int slice_id = type2_app_[app_id];
+        if (metrics[s][k] > max_ranks[slice_id]) {
+          max_ranks[slice_id] = metrics[s][k];
+          flow_id[slice_id] = k;
+        }
+      }
+
+      // reallocate the extra RBs of the slice with no transmission queue
+      double extra_quota = 0;
+      std::vector<int> slice_with_queue;
+      for (int i = 0; i < num_type2_slices_; ++i) {
+        if (flow_id[i] == -1) {
+          if (sliceRBs[i] < sliceTargetRBs[i]) {
+            extra_quota += (sliceTargetRBs[i] - sliceRBs[i]);
+            sliceTargetRBs[i] = sliceRBs[i];
           }
         }
-      int maxCQI = 0;
-      for (auto it = flow_to_serve.begin(); it != flow_to_serve.end(); ++it) {
-        int index = it->second.first;
-        FlowToSchedule* flow = it->second.second;
-        if (flow->GetCqiFeedbacks().at(s * rbg_size) > maxCQI 
-              && !l_bFlowScheduled[index]
-              && sliceRBs[it->first] < sliceTargetRBs[it->first]) {
-          maxCQI = flow->GetCqiFeedbacks().at(s * rbg_size);
-          SubbandAllocated = true;
-          scheduledFlow = flow;
-          l_iScheduledFlowIndex = index;
-          l_iScheduledSlice = it->first;
+        else {
+          slice_with_queue.push_back(i);
         }
+      }
+      int rand_slice = slice_with_queue[ rand() % slice_with_queue.size() ];
+      sliceTargetRBs[rand_slice] += extra_quota;
+
+      int maxCQI = 0;
+      for (int i = 0; i < num_type2_slices_; ++i) {
+        if (flow_id[i] == -1 ) {
+          continue;
+        }
+        FlowToSchedule* flow = flows->at(flow_id[i]);
+        if (flow->GetCqiFeedbacks().at(s * rbg_size) > maxCQI
+          && sliceRBs[i] < sliceTargetRBs[i]) {
+            maxCQI = flow->GetCqiFeedbacks().at(s * rbg_size);
+            SubbandAllocated = true;
+            scheduledFlow = flow;
+            l_iScheduledFlowIndex = flow_id[i];
+            l_iScheduledSlice = i;
+          }
       }
 
       if (SubbandAllocated)
@@ -336,7 +364,7 @@ DownlinkOracleScheduler::RBsAllocation ()
           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
           int alloc_num = scheduledFlow->GetListOfAllocatedRBs()->size();
           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, alloc_num);
-          if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8 || alloc_num >= max_rbs[l_iScheduledFlowIndex])
+          if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8)
           {
               l_bFlowScheduled[l_iScheduledFlowIndex] = true;
               l_iScheduledFlows++;
@@ -344,8 +372,8 @@ DownlinkOracleScheduler::RBsAllocation ()
         }
     }
 
-  for (int i = 0; i < num_slices_; ++i) {
-    slices_rbs_offset_[i] = sliceTargetRBs[i] - sliceRBs[i];
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    type2_rbs_offset_[i] = sliceTargetRBs[i] - sliceRBs[i];
   }
 
   delete [] l_bFlowScheduled;

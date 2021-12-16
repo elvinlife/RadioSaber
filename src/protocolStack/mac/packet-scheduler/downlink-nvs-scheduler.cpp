@@ -40,24 +40,38 @@
 #include <fstream>
 
 DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
-: slices_exp_times_(num_slices_, 1),
-  slices_bytes_(num_slices_),
-  slices_rbs_(num_slices_)
 {
   std::ifstream ifs(config_fname, std::ifstream::in);
   if (ifs.is_open()) {
     int begin_id = 0;
-    ifs >> num_slices_;
-    for (int i = 0; i < num_slices_; ++i)
-      ifs >> slices_weights_[i];
-    for (int i = 0; i < num_slices_; ++i) {
+    ifs >> num_type1_slices_ >> num_type2_slices_;
+    for (int i = 0; i < num_type1_slices_; ++i)
+      ifs >> type1_bitrates_[i];
+    for (int i = 0; i < num_type1_slices_; ++i) {
+      type1_exp_bitrates_[i] = type1_bitrates_[i];
       int num_ue;
       ifs >> num_ue;
       for (int j = 0; j < num_ue; ++j) {
-        appid_to_slice_[begin_id + j] = i;
+        type1_app_[begin_id + j] = i;
       }
       begin_id += num_ue;
     }
+    num_type1_apps_ = begin_id;
+
+    for (int i = 0; i < num_type2_slices_; ++i)
+      ifs >> type2_weights_[i];
+    for (int i = 0; i < num_type2_slices_; ++i) {
+      type2_exp_time_[i] = type2_weights_[i];
+      int num_ue;
+      ifs >> num_ue;
+      for (int j = 0; j < num_ue; ++j) {
+        type2_app_[begin_id + j] = i;
+      }
+      begin_id += num_ue;
+    }
+  }
+  else {
+    throw std::runtime_error("Fail to open configuration file");
   }
   ifs.close();
 
@@ -70,34 +84,45 @@ DownlinkNVSScheduler::~DownlinkNVSScheduler()
   Destroy ();
 }
 
-int DownlinkNVSScheduler::SelectSliceToServe()
+void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
 {
-  for(int i = 0; i < num_slices_; ++i) {
-    std::cout << "Slice Selection: weight: " << slices_weights_[i] << "time: " << slices_exp_times_[i] << std::endl;
+  for (int i = 0; i < num_type1_slices_; ++i) {
+    std::cout << i << ": gbr: " << type1_bitrates_[i] << " average: " << type1_exp_bitrates_[i] << std::endl;
   }
-  int slice_id = 0;
+  for(int i = 0; i < num_type2_slices_; ++i) {
+    std::cout << i << ": weight: " << type2_weights_[i] << " time: " << type2_exp_time_[i] << std::endl;
+  }
   double max_score = 0;
-  for (int i = 0; i < num_slices_; ++i) {
-    if (slices_exp_times_[i] == 0) {
-      max_score = std::numeric_limits<double>::max();
+  for (int i = 0; i < num_type1_slices_; ++i) {
+    if (type1_exp_bitrates_[i] == 0) {
       slice_id = i;
-      break;
+      is_type1 = true;
+      return;
     }
     else {
-      double score = slices_weights_[i] / slices_exp_times_[i];
+      double score = (double)type1_bitrates_[i] / type1_exp_bitrates_[i];
       if (score > max_score) {
         max_score = score;
         slice_id = i;
+        is_type1 = true;
       }
     }
   }
-  // update exp weighted average allocated time
-  for (int i = 0; i < num_slices_; ++i) {
-    slices_exp_times_[i] = (1-beta_) * slices_exp_times_[i];
-    if (i == slice_id)
-      slices_exp_times_[i] += beta_ * 1;
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    if (type2_exp_time_[i] == 0) {
+      slice_id = i;
+      is_type1 = false;
+      return;
+    }
+    else {
+      double score = type2_weights_[i] / type2_exp_time_[i];
+      if (score > max_score) {
+        max_score = score;
+        slice_id = i;
+        is_type1 = false;
+      }
+    }
   }
-  return slice_id;
 }
 
 void DownlinkNVSScheduler::SelectFlowsToSchedule ()
@@ -112,7 +137,9 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule ()
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
   // some logic to determine the slice to serve
-  int slice_serve = SelectSliceToServe();
+  int slice_serve = 0;
+  bool is_type1 = true;
+  SelectSliceToServe(slice_serve, is_type1);
 
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
@@ -121,7 +148,8 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule ()
     int app_id = bearer->GetApplication()->GetApplicationID();
 
     //std::cerr << "\t app_id: " << app_id << std::endl;
-    if (appid_to_slice_[app_id] != slice_serve)
+    if ( !(isType1(app_id) && is_type1 && type1_app_[app_id] == slice_serve)
+      && !(!isType1(app_id) && !is_type1 && type2_app_[app_id] == slice_serve) )
       continue;
 
 	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
@@ -189,12 +217,28 @@ DownlinkNVSScheduler::DoStopSchedule (void)
 
   //Create Packet Burst
   FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
+  
+  bool is_type1 = true;
+  int slice_id = -1;
+  int aggregate_bits = 0;
 
   for (FlowsToSchedule::iterator it = flowsToSchedule->begin (); it != flowsToSchedule->end (); it++)
     {
 	  FlowToSchedule *flow = (*it);
 
 	  int availableBytes = flow->GetAllocatedBits ()/8;
+
+    if (slice_id == -1) {
+      int app_id = flow->GetBearer()->GetApplication()->GetApplicationID();
+      if (isType1( app_id ) ){
+        slice_id = type1_app_[app_id];
+      }
+      else {
+        slice_id = type2_app_[app_id];
+        is_type1 = false;
+      }
+    }
+    aggregate_bits += flow->GetAllocatedBits();
 
 	  if (availableBytes > 0)
 	    {
@@ -238,6 +282,21 @@ DownlinkNVSScheduler::DoStopSchedule (void)
 	  else
 	    {}
     }
+
+  // update exp weighted average allocated time
+  for (int i = 0; i < num_type1_slices_; ++i) {
+     type1_exp_bitrates_[i] = (1-beta_) * type1_exp_bitrates_[i];
+  }
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    type2_exp_time_[i] = (1-beta_) * type2_exp_time_[i];
+  }
+  if (is_type1) {
+    type1_exp_bitrates_[slice_id] += beta_ * aggregate_bits;
+  }
+  else {
+    type2_exp_time_[slice_id] += beta_ * 1;
+  }
+
   UpdateTimeStamp();
 
   //UpdateAverageTransmissionRate ();

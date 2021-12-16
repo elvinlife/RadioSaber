@@ -27,21 +27,28 @@
 class DownlinkNVSScheduler: public PacketScheduler {
 	enum Scheduler {MT, PF, TTA};
 private:
-	int appid_to_slice_[MAX_APPS] 		= {0, 0, 1, 1, 2, 2, 3, 3};
-	double slices_weights_[MAX_SLICES]	= {0.25, 0.25, 0.25, 0.25};
-	int num_slices_ 			= 4;
+	int		type1_app_[MAX_APPS];
+	int		type2_app_[MAX_APPS];
+	int		type1_bitrates_[MAX_SLICES];
+	int		type1_exp_bitrates_[MAX_SLICES];
+	double	type2_weights_[MAX_SLICES];
+	double 	type2_exp_time_[MAX_SLICES];
+
+	int		num_type2_slices_		= 1;
+	int		num_type1_slices_		= 1;
+	int		num_type1_apps_			= 0;
+
 	const double beta_			= 0.1;
 
 	Scheduler intra_sched_ = PF;
-	std::vector<double> slices_exp_times_;
-	std::vector<int> slices_bytes_;
-	std::vector<int> slices_rbs_;
+
+
 
 public:
 	DownlinkNVSScheduler(std::string config_fname="");
 	virtual ~DownlinkNVSScheduler();
 
-	int SelectSliceToServe();
+	void SelectSliceToServe(int&, bool&);
 	void SelectFlowsToSchedule ();
 
 	virtual void DoSchedule (void);
@@ -53,6 +60,10 @@ public:
 		int subChannel, double wideBandEfficiency);
 
 	void UpdateAverageTransmissionRate (void);
+
+	bool isType1(int app_id) {
+		return app_id < num_type1_apps_;
+	}
 };
 
 #endif /* DOWNLINKPACKETSCHEDULER_H_ */
