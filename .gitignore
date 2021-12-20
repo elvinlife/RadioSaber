@@ -40,3 +40,5 @@ TOOLS/make_plr
 TOOLS/make_sum
 .vscode
 *.log
+*.error
+*.png
