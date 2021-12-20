@@ -37,8 +37,8 @@ RadioBearerSink::RadioBearerSink()
   SetDestination (NULL);
 
   //RlcEntity *rlc = new TmRlcEntity ();
-  RlcEntity *rlc = new AmRlcEntity ();
-  //RlcEntity *rlc = new UmRlcEntity ();
+  //RlcEntity *rlc = new AmRlcEntity ();
+  RlcEntity *rlc = new UmRlcEntity ();
 
   rlc->SetRadioBearer (this);
   SetRlcEntity(rlc);

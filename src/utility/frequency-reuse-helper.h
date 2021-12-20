@@ -125,7 +125,7 @@ RunFrequencyReuseTechniques(int nodes, int cluster, double bandwidth)
         {
           if (cluster > 3)
             {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"<< std::endl;
+    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER: "<< bandwidth << " -> " << cluster << std::endl;
     	      cluster = 3;
             }
 

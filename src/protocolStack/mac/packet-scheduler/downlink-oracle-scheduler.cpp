@@ -176,7 +176,7 @@ DownlinkOracleScheduler::DoStopSchedule (void)
 	  if (availableBytes > 0)
 	    {
 
-		  flow->GetBearer()->UpdateTransmittedBytes (availableBytes);
+		  flow->GetBearer()->UpdateTransmittedBytes (min(availableBytes, flow->GetDataToTransmit()));
       flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
 
 #ifdef SCHEDULER_DEBUG
@@ -185,16 +185,16 @@ DownlinkOracleScheduler::DoStopSchedule (void)
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
           << std::endl;
-	      std::cout << "\t  --> add packets for flow "
+	      std::cout << "\nTransmit packets for flow "
 	    		  << flow->GetBearer ()->GetApplication ()->GetApplicationID () << std::endl;
 #endif
 
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
 	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
 
-#ifdef SCHEDULER_DEBUG
-	      std::cout << "\t\t  nb of packets: " << pb2->GetNPackets () << std::endl;
-#endif
+// #ifdef SCHEDULER_DEBUG
+// 	      std::cout << "\t\t  nb of packets: " << pb2->GetNPackets () << std::endl;
+// #endif
 
 	      if (pb2->GetNPackets () > 0)
 	        {
@@ -202,11 +202,9 @@ DownlinkOracleScheduler::DoStopSchedule (void)
 	    	  std::list<Packet* >::iterator it;
 	    	  for (it = packets.begin (); it != packets.end (); it++)
 	    	    {
-#ifdef SCHEDULER_DEBUG
-	    		  std::cout << "\t\t  added packet of bytes " << (*it)->GetSize () << std::endl;
-	    		  //(*it)->Print ();
-#endif
-
+// #ifdef SCHEDULER_DEBUG
+// 	    		  std::cout << "\t\t  added packet of bytes " << (*it)->GetSize () << std::endl;
+// #endif
 	    		  Packet *p = (*it);
 	    		  pb->AddPacket (p->Copy ());
 	    	    }

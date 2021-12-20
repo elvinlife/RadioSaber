@@ -113,6 +113,13 @@ MacQueue::Enqueue (Packet *packet)
   UpdateQueueSize (element.GetSize ());
   UpdateNbDataPackets ();
 
+  #ifdef MAC_QUEUE_DEBUG
+  std::cout << "MAC_DEBUG: Enqueue(), packetSize = "
+    << element.GetSize() 
+    << " queueSize = "  << GetQueueSize()
+    << std::endl;
+  #endif
+
   return true;
 }
 
@@ -120,8 +127,9 @@ Packet*
 MacQueue::GetPacketToTramsit (int availableBytes)
 {
 #ifdef MAC_QUEUE_DEBUG
-  std::cout << " MAC_DEBUG: Dequeue(), availableBytes = " <<
-		  availableBytes << std::endl;
+  std::cout << "MAC_DEBUG: Dequeue() availableBytes: " <<
+		  availableBytes << " queueSize: " <<
+      GetQueueSize() << std::endl;
 #endif
 
 
@@ -142,7 +150,7 @@ MacQueue::GetPacketToTramsit (int availableBytes)
   if (element.GetFragmentation())
     {
 #ifdef MAC_QUEUE_DEBUG
-	  std::cout << " MAC_DEBUG: the packet is a fragment" <<  std::endl;
+	  std::cout << "MAC_DEBUG: the packet is a fragment" <<  std::endl;
 #endif
 	  dataToSend = element.GetSize() - element.GetFragmentOffset ();
 	  rlcHeader->SetAFragment(true);
@@ -152,7 +160,7 @@ MacQueue::GetPacketToTramsit (int availableBytes)
   else
     {
 #ifdef MAC_QUEUE_DEBUG
-	  std::cout << " MAC_DEBUG: the packet is NOT a fragment" <<  std::endl;
+	  std::cout << "MAC_DEBUG: the packet is NOT a fragment" <<  std::endl;
 #endif
 	  dataToSend = element.GetSize ();
 	  rlcHeader->SetStartByte (0);
@@ -192,7 +200,8 @@ MacQueue::GetPacketToTramsit (int availableBytes)
 	  std::cout << "\t packetSize = " << element.GetSize () <<
 	      "\n\t dataToSend = " << dataToSend <<
 	      "\n\t fragmentSize = " << fragmentSize <<
-	      "\n\t fragmentOffset = "<< GetPacketQueue ()->front().GetFragmentOffset ()
+        "\n\t queueSize = " << GetQueueSize()
+	      //"\n\t fragmentOffset = "<< GetPacketQueue ()->front().GetFragmentOffset ()
 	      << std::endl;
 #endif
 

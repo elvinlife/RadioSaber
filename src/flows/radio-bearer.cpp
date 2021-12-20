@@ -45,8 +45,8 @@ RadioBearer::RadioBearer()
   m_application = NULL;
 
   //RlcEntity *rlc = new TmRlcEntity ();
-  RlcEntity *rlc = new AmRlcEntity ();
-  //RlcEntity *rlc = new UmRlcEntity ();
+  //RlcEntity *rlc = new AmRlcEntity ();
+  RlcEntity *rlc = new UmRlcEntity ();
 
   rlc->SetRadioBearer (this);
   SetRlcEntity(rlc);
@@ -259,7 +259,10 @@ RadioBearer::GetQueueSize (void)
   if (GetRlcEntity ()->GetRlcModel () == RlcEntity::AM_RLC_MODE)
   {
     AmRlcEntity* amRlc = (AmRlcEntity*) GetRlcEntity ();
-    size += amRlc->GetSizeOfUnaknowledgedAmd ();
+    int unacked = amRlc->GetSizeOfUnaknowledgedAmd();
+    size += unacked;
+    if (unacked) 
+      std::cout << "AM_RLC: unacked size: " << amRlc->GetSizeOfUnaknowledgedAmd() << std::endl;
   }
 
   return size;
