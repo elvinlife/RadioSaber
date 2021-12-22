@@ -77,6 +77,7 @@ public:
 	    DLScheduler_LOG_RULE,
 	    DLScheduler_EXP_RULE,
 		DLScheduler_NVS,
+		DLScheduler_GREEDY,
 		DLScheduler_ORACLE,
 	  };
 	enum ULSchedulerType

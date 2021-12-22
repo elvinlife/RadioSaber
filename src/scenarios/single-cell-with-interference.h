@@ -122,9 +122,14 @@ static void SingleCellWithInterference (int nbCells, double radius,
     	std::cout << "Scheduler NVS " << std::endl;
 		break;
 		case 8:
+		downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
+		std::cout << "Scheduler Greedy " << std::endl;
+		break;
+		case 9:
 		downlink_scheduler_type = ENodeB::DLScheduler_ORACLE;
 		std::cout << "Scheduler Oracle " << std::endl;
 		break;
+
 	
 	  default:
 		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
