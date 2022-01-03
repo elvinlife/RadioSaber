@@ -24,7 +24,7 @@
 
 #include "packet-scheduler.h"
 
-class DownlinkOracleScheduler: public PacketScheduler {
+class DownlinkSubOptScheduler: public PacketScheduler {
 	enum Scheduler {MT, PF, TTA};
 private:
 	int		type1_app_[MAX_APPS];
@@ -45,8 +45,8 @@ private:
 
 
 public:
-	DownlinkOracleScheduler(std::string config_fname);
-	virtual ~DownlinkOracleScheduler();
+	DownlinkSubOptScheduler(std::string config_fname);
+	virtual ~DownlinkSubOptScheduler();
 
 	void SelectFlowsToSchedule ();
 

@@ -163,7 +163,7 @@ static void SingleCellCustomize (int nbCells, double radius,
       std::cout << "Scheduler NVS " << std::endl;
       break;
     case 8:
-      downlink_scheduler_type = ENodeB::DLScheduler_ORACLE;
+      downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
       std::cout << "Scheduler Oracle " << std::endl;
       break;
 

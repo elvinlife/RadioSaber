@@ -78,7 +78,8 @@ public:
 	    DLScheduler_EXP_RULE,
 		DLScheduler_NVS,
 		DLScheduler_GREEDY,
-		DLScheduler_ORACLE,
+		DLScheduler_SUBOPT,
+		DLScheduler_TRANS
 	  };
 	enum ULSchedulerType
 	  {

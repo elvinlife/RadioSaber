@@ -36,7 +36,8 @@
 #include "../protocolStack/mac/packet-scheduler/roundrobin-uplink-packet-scheduler.h"
 #include "../protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.h"
 #include "../protocolStack/mac/packet-scheduler/downlink-greedy-scheduler.h"
-#include "../protocolStack/mac/packet-scheduler/downlink-oracle-scheduler.h"
+#include "../protocolStack/mac/packet-scheduler/downlink-suboptimal-scheduler.h"
+#include "../protocolStack/mac/packet-scheduler/downlink-transport-scheduler.h"
 #include "../phy/enb-lte-phy.h"
 #include "../core/spectrum/bandwidth-manager.h"
 #include "../protocolStack/packet/packet-burst.h"
@@ -355,8 +356,14 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
         mac->SetDownlinkPacketScheduler( scheduler );
       break;
       
-      case ENodeB::DLScheduler_ORACLE:
-        scheduler = new DownlinkOracleScheduler(config_fname);
+      case ENodeB::DLScheduler_SUBOPT:
+        scheduler = new DownlinkSubOptScheduler(config_fname);
+        scheduler->SetMacEntity( mac );
+        mac->SetDownlinkPacketScheduler( scheduler );
+      break;
+
+      case ENodeB::DLScheduler_TRANS:
+        scheduler = new DownlinkTransportScheduler(config_fname);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
       break;

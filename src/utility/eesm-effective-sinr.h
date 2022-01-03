@@ -54,17 +54,30 @@ GetEesmEffectiveSinr (std::vector <double> &sinr)
 {
   double eff_sinr;
   double sum_I_sinr = 0;
+  double beta = 6;
   std::vector<double>::iterator it;
   for (it = sinr.begin (); it != sinr.end (); it++)
-    {
+  {
 	  //since sinr[] is expressed in dB we should convert it in natural unit!
 	  double s = pow (10, ((*it)/10));
-	  sum_I_sinr += exp (-s);
-    }
+	  sum_I_sinr += exp (-s / beta);
+  }
 
-  eff_sinr = - log (sum_I_sinr / sinr.size ());
-
+  eff_sinr = - beta * log (sum_I_sinr / sinr.size ());
   eff_sinr = 10 * log10 (eff_sinr); //convert in dB
+  return eff_sinr;
+
+  //double eff_sinr;
+  //double sum_I_sinr = 0;
+  //std::vector<double>::iterator it;
+  //for (it = sinr.begin (); it != sinr.end (); it++)
+  //  {
+	//  //since sinr[] is expressed in dB we should convert it in natural unit!
+	//  double s = pow (10, ((*it)/10));
+	//  sum_I_sinr += s;
+  //  }
+
+  //eff_sinr = 10 * log10 (sum_I_sinr / sinr.size()); //convert in dB
 
   return eff_sinr;
 }

@@ -69,7 +69,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
   double flow_duration = 12;
 
 
-  int cluster = 4;
+  int cluster = 3;
   double bandwidth = 20;
 
   // CREATE COMPONENT MANAGER
@@ -126,10 +126,13 @@ static void SingleCellWithInterference (int nbCells, double radius,
 		std::cout << "Scheduler Greedy " << std::endl;
 		break;
 		case 9:
-		downlink_scheduler_type = ENodeB::DLScheduler_ORACLE;
+		downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
 		std::cout << "Scheduler Oracle " << std::endl;
 		break;
-
+		case 10:
+		downlink_scheduler_type = ENodeB::DLScheduler_TRANS;
+		std::cout << "Scheduler Transport " << std::endl;
+		break;
 	
 	  default:
 		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
@@ -151,8 +154,6 @@ static void SingleCellWithInterference (int nbCells, double radius,
 		break;
 	}
   frameManager->SetFrameStructure(FrameManager::FRAME_STRUCTURE_FDD);
-
-
 
 
   //create cells
@@ -288,10 +289,14 @@ static void SingleCellWithInterference (int nbCells, double radius,
 		double posY = slice_ypos[slice_id];
 
 		#else
-		double posX = (double)rand()/RAND_MAX;
-	  	posX = 0.95 * (((2*radius*1000)*posX) - (radius*1000));
-	  	double posY = (double)rand()/RAND_MAX;
-	  	posY = 0.95 * (((2*radius*1000)*posY) - (radius*1000));
+		// double posX = (double)rand()/RAND_MAX;
+	  	// posX = 0.95 * (((2*radius*1000)*posX) - (radius*1000));
+	  	// double posY = (double)rand()/RAND_MAX;
+	  	// posY = 0.95 * (((2*radius*1000)*posY) - (radius*1000));
+		double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.6 + 200;
+		double posY = (double)rand() / RAND_MAX * radius * 1000 * 0.6 + 200;
+		posX = rand() % 2 == 0 ? posX : -posX;
+		posY = rand() % 2 == 0 ? posY : -posY;
 		#endif
 	  //ue's random position
 	  
@@ -303,8 +308,8 @@ static void SingleCellWithInterference (int nbCells, double radius,
 											 cells->at (0),
 											 eNBs->at (0),
 			                                 0, //handover false!
-			                                 Mobility::MANHATTAN);
-											 //Mobility::RANDOM_DIRECTION);
+			                                 //Mobility::CONSTANT_POSITION);
+											 Mobility::MANHATTAN);
 
 	  std::cout << "Created UE - id " << idUE << " position " << posX << " " << posY << " direction " << speedDirection << std::endl;
 

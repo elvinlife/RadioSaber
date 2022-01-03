@@ -21,7 +21,7 @@
  */
 
 
-#include "downlink-oracle-scheduler.h"
+#include "downlink-transport-scheduler.h"
 #include "../mac-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
@@ -37,11 +37,15 @@
 #include "../../../utility/eesm-effective-sinr.h"
 #include <cstdio>
 #include <utility>
-#include <unordered_map>
 #include <fstream>
 #include <cassert>
+#include <algorithm>
+using std::vector;
 
-DownlinkOracleScheduler::DownlinkOracleScheduler(std::string config_fname)
+using coord_t = std::pair<int, int>;
+using coord_cqi_t = std::pair<coord_t, int>;
+
+DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname)
 {
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
@@ -80,12 +84,12 @@ DownlinkOracleScheduler::DownlinkOracleScheduler(std::string config_fname)
   CreateFlowsToSchedule ();
 }
 
-DownlinkOracleScheduler::~DownlinkOracleScheduler()
+DownlinkTransportScheduler::~DownlinkTransportScheduler()
 {
   Destroy ();
 }
 
-void DownlinkOracleScheduler::SelectFlowsToSchedule ()
+void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 {
 #ifdef SCHEDULER_DEBUG
 	std::cout << "\t Select Flows to schedule" << std::endl;
@@ -127,8 +131,7 @@ void DownlinkOracleScheduler::SelectFlowsToSchedule ()
         spectralEfficiency.push_back(amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
 			}
 		  //create flow to scheduler record
-      if (dataToTransmit > 0)
-		    InsertFlowToSchedule(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
+		  InsertFlowToSchedule(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
 		}
 	  else
 	    {}
@@ -137,7 +140,7 @@ void DownlinkOracleScheduler::SelectFlowsToSchedule ()
 }
 
 void
-DownlinkOracleScheduler::DoSchedule (void)
+DownlinkTransportScheduler::DoSchedule (void)
 {
 #ifdef SCHEDULER_DEBUG
 	std::cout << "Start DL packet scheduler for node "
@@ -158,7 +161,7 @@ DownlinkOracleScheduler::DoSchedule (void)
 }
 
 void
-DownlinkOracleScheduler::DoStopSchedule (void)
+DownlinkTransportScheduler::DoStopSchedule (void)
 {
 #ifdef SCHEDULER_DEBUG
   std::cout << "\t Creating Packet Burst" << std::endl;
@@ -230,233 +233,223 @@ DownlinkOracleScheduler::DoStopSchedule (void)
   GetMacEntity ()->GetDevice ()->SendPacketBurst (pb);
 }
 
+static vector<int> MaximizeCell(int** flow_cqi, vector<int>& slice_quota_rbgs, int nb_rbgs, int nb_slices)
+{
+  // it's ok that the quota is negative
+  vector<coord_cqi_t> sorted_cqi;
+  vector<int>         slice_rbgs(nb_slices, 0);
+  vector<int>         rbg_to_slice(nb_rbgs, -1);
+  for (int i = 0; i < nb_rbgs; ++i)
+    for (int j = 0; j < nb_slices; ++j) {
+      sorted_cqi.emplace_back(coord_t(i, j), flow_cqi[i][j]);
+    }
+  std::sort(sorted_cqi.begin(), sorted_cqi.end(), [](coord_cqi_t a, coord_cqi_t b){return a.second > b.second; });
+  for (auto it = sorted_cqi.begin(); it != sorted_cqi.end(); ++it) {
+    int rbg_id = it->first.first;
+    int slice_id = it->first.second;
+    if (slice_rbgs[slice_id] < slice_quota_rbgs[slice_id] && rbg_to_slice[rbg_id] == -1) {
+      rbg_to_slice[rbg_id] = slice_id;
+      slice_rbgs[slice_id] += 1;
+    } 
+  }
+  return rbg_to_slice;
+}
+
+static vector<int> VogelApproximate(int** flow_cqi, vector<int>& slice_quota_rbgs, int nb_rbgs, int nb_slices)
+{
+  vector<int>   slice_rbgs(nb_slices, 0);
+  vector<int>   rbg_to_slice(nb_rbgs, -1);
+  for (int i = 0; i < nb_rbgs; ++i) {
+    int max_diff = -1;
+    coord_t coord_1st;
+    coord_t coord_2nd;
+    // horizonal search
+    for (int j = 0; j < nb_rbgs; ++j) {
+      // the rbg has been allocated
+      if (rbg_to_slice[j] != -1)
+        continue;
+      int cqi_1st = -1, cqi_2nd = -1;
+      int slice_1st, slice_2nd;
+
+      for (int k = 0; k < nb_slices; ++k) {
+        // the slice has reached quota
+        if (slice_rbgs[k] >= slice_quota_rbgs[k])
+          continue;
+        if (cqi_1st == -1 || flow_cqi[j][k] > cqi_1st) {
+          slice_1st = k;
+          cqi_1st = flow_cqi[j][k];
+          continue;
+        }
+        if (cqi_2nd == -1 || flow_cqi[j][k] > cqi_2nd) {
+          slice_2nd = k;
+          cqi_2nd = flow_cqi[j][k];
+          continue;
+        }
+      }
+      if (cqi_1st - cqi_2nd > max_diff) {
+        max_diff = cqi_1st - cqi_2nd;
+        coord_1st = coord_t(j, slice_1st);
+        coord_2nd = coord_t(j, slice_2nd);
+      }
+    }
+    // vertical search
+    for (int k = 0; k < nb_slices; ++k) {
+      // the slice has reached quota
+      if (slice_rbgs[k] >= slice_quota_rbgs[k])
+        continue;
+      int cqi_1st = -1, cqi_2nd = -1;
+      int rbg_1st, rbg_2nd;
+      for (int j = 0; j < nb_rbgs; ++j) {
+        if (rbg_to_slice[j] != -1)
+          continue;
+        if (cqi_1st == -1 || flow_cqi[j][k] > cqi_1st) {
+          rbg_1st = j;
+          cqi_1st = flow_cqi[j][k];
+          continue;
+        }
+        if (cqi_2nd == -1 || flow_cqi[j][k] > cqi_2nd) {
+          rbg_2nd = j;
+          cqi_2nd = flow_cqi[j][k];
+          continue;
+        }
+      }
+      if (cqi_1st - cqi_2nd > max_diff) {
+        max_diff = cqi_1st - cqi_2nd;
+        coord_1st = coord_t(rbg_1st, k);
+        coord_2nd = coord_t(rbg_2nd, k);
+      }
+    }
+    rbg_to_slice[coord_1st.first] = coord_1st.second;
+    slice_rbgs[coord_1st.second] += 1;
+  }
+  return rbg_to_slice;
+}
+
 void
-DownlinkOracleScheduler::RBsAllocation ()
+DownlinkTransportScheduler::RBsAllocation ()
 {
 #ifdef SCHEDULER_DEBUG
-	std::cout << " ---- DownlinkOracleScheduler::RBsAllocation";
+	std::cout << " ---- DownlinkTransportScheduler::RBsAllocation";
 #endif
   FlowsToSchedule* flows = GetFlowsToSchedule ();
-  int nbOfRBs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
-  int rbg_size = get_rbg_size(nbOfRBs);
-  int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
+  int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int rbg_size = get_rbg_size(nb_rbs);
+  // we only evaluate 20Mhz with 100rbs here
+  assert(rbg_size == 4 && nb_rbs == 100);
+  int nb_rbgs = (nb_rbs + rbg_size - 1) / rbg_size;
 
-  std::vector<double> sliceTargetRBs(num_type2_slices_);
-  std::cout << "\t slice quota:";
+  std::vector<double> slice_target_rbs(num_type2_slices_);
+  std::vector<int> slice_final_rbgs(num_type2_slices_, 0);
+  std::vector<int> slice_quota_rbgs(num_type2_slices_, 0);
+  int extra_rbgs = nb_rbgs;
+  std::cout << "\t slice target RBs:";
   for (int i = 0; i < num_type2_slices_; ++i) {
-    double quota = nbOfRBs * type2_weights_[i];
-    sliceTargetRBs[i] = quota + type2_rbs_offset_[i];
-    std::cout << "\t" << sliceTargetRBs[i];
+    double quota = nb_rbs * type2_weights_[i];
+    slice_target_rbs[i] = quota + type2_rbs_offset_[i];
+    slice_quota_rbgs[i] = (int)(slice_target_rbs[i] / rbg_size);
+    extra_rbgs -= slice_quota_rbgs[i];
+    std::cout << "\t" << slice_target_rbs[i];
   }
   std::cout << std::endl;
+  slice_quota_rbgs[rand() % num_type2_slices_] += extra_rbgs;
 
   // create a matrix of flow metrics (RBG, flow index)
-  double metrics[nbOfGroups][flows->size ()];
-  // create a matrix of slices information
-  int sliceFlow[nbOfGroups][num_type2_slices_];
-  double sliceMaxMetric[nbOfGroups][num_type2_slices_];
-  double sliceCQI[nbOfGroups][num_type2_slices_];
-  // initialize
-  for (int i = 0; i < nbOfGroups; ++i) {
-    for (int j = 0; j < num_type2_slices_; ++j) {
-      sliceFlow[i][j] = sliceMaxMetric[i][j] = sliceCQI[i][j] = -1;
-    }
-  }
+  double metrics[nb_rbgs][flows->size ()];
 
-  int rbgToSlice[nbOfGroups];
-  std::vector<int> sliceRBs(num_type2_slices_, 0);
-
-  for (int i = 0; i < nbOfGroups; i++) {
+  for (int i = 0; i < nb_rbgs; i++) {
 	  for (int j = 0; j < flows->size (); j++) {
-      int app_id = flows->at(j)->GetBearer()->GetApplication()->GetApplicationID();
-      int slice_id = type2_app_[app_id];
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
         i, flows->at(j)->GetAllEfficiency());
-      if (metrics[i][j] > sliceMaxMetric[i][slice_id]) {
-        sliceMaxMetric[i][slice_id] = metrics[i][j];
-        sliceFlow[i][slice_id] = j;
-        sliceCQI[i][slice_id] = flows->at(j)->GetSpectralEfficiency().at(i * rbg_size);
-      }
 	  }
-    
   }
-  for (int i = 0; i < nbOfGroups; ++i) {
-    double maxCQI = 0;
-    for (int j = 0; j < num_type2_slices_; ++j) {
-      //fprintf(stderr, "rb: %d slice: %d cqi: %.3f\n", i, j, sliceCQI[i][j]);
-      if (sliceCQI[i][j] > maxCQI) {
-        rbgToSlice[i] = j;
-        maxCQI = sliceCQI[i][j];
-      }
-    }
-    sliceRBs[rbgToSlice[i]] += rbg_size;
-  }
-
-  // the reallocation procedure
-  // fprintf(stderr, "reallocation begin\n");
-  std::unordered_map<int, double> slice_more;
-  std::unordered_map<int, double> slice_fewer;
-  for (int i = 0; i < num_type2_slices_; ++i) {
-    if (sliceRBs[i] >= sliceTargetRBs[i] + rbg_size) {
-      slice_more[i] = sliceRBs[i] - (sliceTargetRBs[i] > 0 ? sliceTargetRBs[i] : 0);
-    }
-    else if (sliceRBs[i] <= sliceTargetRBs[i] - rbg_size) {
-      slice_fewer[i] = sliceTargetRBs[i] - sliceRBs[i];
-    }
-  }
-  while (slice_more.size() > 0 && slice_fewer.size() > 0) {
-    std::cout << "more: ";
-    for (auto it = slice_more.begin(); it != slice_more.end(); ++it) {
-        std::cout << it->first << ", ";
-    }
-    std::cout << std::endl;
-    for (auto it = slice_fewer.begin(); it != slice_fewer.end(); ++it) {
-        std::cout << it->first << ", ";
-    }
-    std::cout << std::endl;
-    double min_tbs_reduce = 100;
-    int rb_id, from_slice = -1, to_slice;
-    for (int i = 0; i < nbOfGroups; ++i) {
-      if ( slice_more.find(rbgToSlice[i]) != slice_more.end() ) {
-        for (auto it = slice_fewer.begin(); it != slice_fewer.end(); ++it) {
-          if (sliceCQI[i][rbgToSlice[i]] < sliceCQI[i][it->first]) {
-            char error_log[200];
-            sprintf(error_log, "rb: %d optimal_s: %d %.3f abnormal_s: %d %.3f",
-                i, rbgToSlice[i], it->first, 
-                sliceCQI[i][rbgToSlice[i]], sliceCQI[i][it->first]);
-            throw std::runtime_error(std::string(error_log));
-          } 
-          if (sliceCQI[i][rbgToSlice[i]] - sliceCQI[i][it->first] < min_tbs_reduce) {
-            min_tbs_reduce = sliceCQI[i][rbgToSlice[i]] - sliceCQI[i][it->first];
-            rb_id = i;
-            from_slice = rbgToSlice[i];
-            to_slice = it->first;
-          }
-        }
-      }
-    }
-    if (from_slice == -1)
-      break;
-    sliceRBs[from_slice] -= rbg_size;
-    sliceRBs[to_slice] += rbg_size;
-    rbgToSlice[rb_id] = to_slice;
-    slice_more.at(from_slice) -= rbg_size;
-    slice_fewer.at(to_slice) -= rbg_size;
-    std::cout << "reallocate: " 
-        << from_slice << " -> " << to_slice << " "
-        << sliceRBs[from_slice] << " & " << sliceRBs[to_slice] << " "
-        << slice_more[from_slice] << " & " << slice_fewer[to_slice] << " "
-        << "rbg_size: " << rbg_size
-        << std::endl;
-    if (slice_more.at(from_slice) <= 0 || sliceRBs[from_slice] <= 0) {
-      slice_more.erase(from_slice);
-    }
-    if (slice_fewer.at(to_slice) <= 0) {
-      slice_fewer.erase(to_slice);
-    }
-  }
-  
 
 #ifdef SCHEDULER_DEBUG
-  //std::cout << ", available RBGs " << nbOfGroups << ", flows " << flows->size () << std::endl;
+  //std::cout << ", available RBGs " << nb_rbgs << ", flows " << flows->size () << std::endl;
   for (int ii = 0; ii < flows->size (); ii++)
-    {
-	  std::cout << "\t metrics for flow "
-			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
-	  for (int jj = 0; jj < nbOfGroups; jj++)
-	    {
-        fprintf(stdout, " (%d, %.3f, %d)",
-            jj, metrics[jj][ii], 
-            flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size));
-	    }
-	  std::cout << std::endl;
-    }
+  {
+	std::cout << "\t metrics for flow "
+		  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
+	for (int jj = 0; jj < nb_rbgs; jj++) {
+      fprintf(stdout, " (%d, %.3f, %d, %.3f)",
+          jj, metrics[jj][ii], 
+          flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size),
+          flows->at(ii)->GetSpectralEfficiency().at(jj * rbg_size));
+	  }
+	std::cout << std::endl;
+  }
 #endif
 
   AMCModule *amc = GetMacEntity ()->GetAmcModule ();
-  bool * l_bFlowScheduled = new bool[flows->size ()];
-  int l_iScheduledFlows = 0;
-  std::vector<double> * l_bFlowScheduledSINR = new std::vector<double>[flows->size ()];
-  for (int k = 0; k < flows->size (); k++)
-      l_bFlowScheduled[k] = false;
 
-  //RBs allocation
-  for (int s = 0; s < nbOfGroups; s++)
+  // Assumption: every slice has at least one flow
+  int **flow_id = new int*[nb_rbgs];
+  int **flow_cqi = new int*[nb_rbgs];
+
+  // Assign the flow_id and cqi to every slice in every rbg
+  for (int s = 0; s < nb_rbgs; s++)
+  {
+    flow_id[s] = new int[num_type2_slices_];
+    flow_cqi[s] = new int[num_type2_slices_];
+    std::vector<double> max_ranks(num_type2_slices_, -1);     // the highest flow metric in every slice
+    for (int k = 0; k < flows->size(); k++)
     {
-      bool SubbandAllocated = true;
-      FlowToSchedule* scheduledFlow;
-      int sliceServe = rbgToSlice[s];
-      int l_iScheduledFlowIndex = sliceFlow[s][sliceServe];
-      scheduledFlow = flows->at(l_iScheduledFlowIndex);
-
-      if (SubbandAllocated)
-        {
-          // allocate the sth rbg
-          int l = s*rbg_size, r = (s+1)*rbg_size;
-          if (r > nbOfRBs) r = nbOfRBs;
-
-          for (int i = l; i < r; ++i) {
-            scheduledFlow->GetListOfAllocatedRBs()->push_back(i);
-            double sinr = amc->GetSinrFromCQI(scheduledFlow->GetCqiFeedbacks().at(i));
-            l_bFlowScheduledSINR[l_iScheduledFlowIndex].push_back(sinr);
-          }
-
-          double effectiveSinr = GetEesmEffectiveSinr (l_bFlowScheduledSINR[l_iScheduledFlowIndex]);
-          int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
-          int alloc_num = scheduledFlow->GetListOfAllocatedRBs()->size();
-          int transportBlockSize = amc->GetTBSizeFromMCS (mcs, alloc_num);
-          if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8)
-          {
-              l_bFlowScheduled[l_iScheduledFlowIndex] = true;
-              l_iScheduledFlows++;
-          }
-        }
+      int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
+      int slice_id = type2_app_[app_id];
+      if (metrics[s][k] > max_ranks[slice_id]) {
+        max_ranks[slice_id] = metrics[s][k];
+        flow_id[s][slice_id] = k;
+        flow_cqi[s][slice_id] = flows->at(k)->GetSpectralEfficiency().at(s * rbg_size);
+      }
     }
-
-  for (int i = 0; i < num_type2_slices_; ++i) {
-    type2_rbs_offset_[i] = sliceTargetRBs[i] - sliceRBs[i];
   }
 
-  delete [] l_bFlowScheduled;
-  delete [] l_bFlowScheduledSINR;
+  vector<int> rbg_to_slice = MaximizeCell(flow_cqi, slice_quota_rbgs, nb_rbgs, num_type2_slices_);
+  for (int i = 0; i < rbg_to_slice.size(); ++i) {
+    int fid = flow_id[i][rbg_to_slice[i]];
+    int sid = type2_app_[flows->at(fid)->GetBearer()->GetApplication()->GetApplicationID()];
+    slice_final_rbgs[sid] += 1;
+    int l = i * rbg_size, r = (i+1) * rbg_size;
+    for (int j = l; j < r; ++j) {
+      flows->at(fid)->GetListOfAllocatedRBs()->push_back(j);
+    }
+  }
+
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    type2_rbs_offset_[i] = slice_target_rbs[i] - slice_final_rbgs[i] * rbg_size;
+  }
+
 
   //Finalize the allocation
   PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage ();
 
   for (FlowsToSchedule::iterator it = flows->begin (); it != flows->end (); it++)
-    {
-      FlowToSchedule *flow = (*it);
-
+  {
+    FlowToSchedule *flow = (*it);
 	  std::cout << "Flow(" << flow->GetBearer()->GetApplication()->GetApplicationID() << ")";
 	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
       int rbid = flow->GetListOfAllocatedRBs()->at(rb);
       if (rbid % rbg_size == 0)
-        std::cout << " " << rbid / rbg_size;
+      std::cout << " " << rbid / rbg_size;
 	  }
-	  std::cout << std::endl;
-
-      if (flow->GetListOfAllocatedRBs ()->size () > 0)
-        {
-          //this flow has been scheduled
-          std::vector<double> estimatedSinrValues;
-          for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ ) {
-              double sinr = amc->GetSinrFromCQI (
-                      flow->GetCqiFeedbacks ().at (flow->GetListOfAllocatedRBs ()->at (rb)));
-              estimatedSinrValues.push_back (sinr);
-            }
-
-          //compute the effective sinr
-          double effectiveSinr = GetEesmEffectiveSinr (estimatedSinrValues);
-
-          //get the MCS for transmission
-          int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
-
-          //define the amount of bytes to transmit
-          int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
-          flow->UpdateAllocatedBits (transportBlockSize);
-
+	std::cout << std::endl;
+  if (flow->GetListOfAllocatedRBs ()->size () > 0)
+  {
+    //this flow has been scheduled
+    std::vector<double> estimatedSinrValues;
+    for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ ) {
+        double sinr = amc->GetSinrFromCQI (
+                flow->GetCqiFeedbacks ().at (flow->GetListOfAllocatedRBs ()->at (rb)));
+        estimatedSinrValues.push_back (sinr);
+      }
+    //compute the effective sinr
+    double effectiveSinr = GetEesmEffectiveSinr (estimatedSinrValues);
+    //get the MCS for transmission
+    int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
+    //define the amount of bytes to transmit
+    int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
+    flow->UpdateAllocatedBits (transportBlockSize);
 #ifdef SCHEDULER_DEBUG
 		  std::cout << "\t\t --> flow "	<< flow->GetBearer ()->GetApplication ()->GetApplicationID ()
 				  << " has been scheduled: " <<
@@ -464,20 +457,19 @@ DownlinkOracleScheduler::RBsAllocation ()
 				  "\n\t\t\t effectiveSinr " << effectiveSinr <<
 				  "\n\t\t\t tbs " << transportBlockSize <<
           "\n\t\t\t data to transmit " << flow->GetDataToTransmit() <<
-				  "\n\t\t\t mcs " << mcs
+				  "\n\t\t\t cqi " << amc->GetCQIFromSinr(effectiveSinr)
 				  << std::endl;
 #endif
-
-		  //create PDCCH messages
-		  for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
-		    {
-			  pdcchMsg->AddNewRecord (PdcchMapIdealControlMessage::DOWNLINK,
-					  flow->GetListOfAllocatedRBs ()->at (rb),
-									  flow->GetBearer ()->GetDestination (),
-									  mcs);
-		    }
-	    }
-    }
+		//create PDCCH messages
+		for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
+		  {
+		  pdcchMsg->AddNewRecord (PdcchMapIdealControlMessage::DOWNLINK,
+				  flow->GetListOfAllocatedRBs ()->at (rb),
+								  flow->GetBearer ()->GetDestination (),
+								  mcs);
+		  }
+	  }
+  }
 
   if (pdcchMsg->GetMessage()->size () > 0)
     {
@@ -487,7 +479,7 @@ DownlinkOracleScheduler::RBsAllocation ()
 }
 
 double
-DownlinkOracleScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
+DownlinkTransportScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
 {
   double metric = 0;
   switch (intra_sched_) {
@@ -507,7 +499,7 @@ DownlinkOracleScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spe
 }
 
 void
-DownlinkOracleScheduler::UpdateAverageTransmissionRate (void)
+DownlinkTransportScheduler::UpdateAverageTransmissionRate (void)
 {
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();

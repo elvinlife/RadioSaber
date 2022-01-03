@@ -419,7 +419,7 @@ DownlinkGreedyScheduler::RBsAllocation ()
 				  "\n\t\t\t effectiveSinr " << effectiveSinr <<
 				  "\n\t\t\t tbs " << transportBlockSize <<
           "\n\t\t\t data to transmit " << flow->GetDataToTransmit() <<
-				  "\n\t\t\t mcs " << mcs
+				  "\n\t\t\t cqi " << amc->GetCQIFromSinr(effectiveSinr)
 				  << std::endl;
 #endif
 

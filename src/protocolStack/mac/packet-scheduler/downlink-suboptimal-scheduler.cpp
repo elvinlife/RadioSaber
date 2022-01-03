@@ -21,7 +21,7 @@
  */
 
 
-#include "downlink-nvs-scheduler.h"
+#include "downlink-suboptimal-scheduler.h"
 #include "../mac-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
@@ -36,19 +36,20 @@
 #include "../../../flows/MacQueue.h"
 #include "../../../utility/eesm-effective-sinr.h"
 #include <cstdio>
-#include <limits>
+#include <utility>
+#include <unordered_map>
 #include <fstream>
+#include <cassert>
 
-DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
+DownlinkSubOptScheduler::DownlinkSubOptScheduler(std::string config_fname)
 {
-  std::ifstream ifs(config_fname, std::ifstream::in);
+  std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
     int begin_id = 0;
     ifs >> num_type1_slices_ >> num_type2_slices_;
     for (int i = 0; i < num_type1_slices_; ++i)
       ifs >> type1_bitrates_[i];
     for (int i = 0; i < num_type1_slices_; ++i) {
-      type1_exp_bitrates_[i] = type1_bitrates_[i];
       int num_ue;
       ifs >> num_ue;
       for (int j = 0; j < num_ue; ++j) {
@@ -61,7 +62,7 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
     for (int i = 0; i < num_type2_slices_; ++i)
       ifs >> type2_weights_[i];
     for (int i = 0; i < num_type2_slices_; ++i) {
-      type2_exp_time_[i] = type2_weights_[i];
+      type2_rbs_offset_[i] = 0;
       int num_ue;
       ifs >> num_ue;
       for (int j = 0; j < num_ue; ++j) {
@@ -74,109 +75,32 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
     throw std::runtime_error("Fail to open configuration file");
   }
   ifs.close();
-
+  
   SetMacEntity (0);
   CreateFlowsToSchedule ();
 }
 
-DownlinkNVSScheduler::~DownlinkNVSScheduler()
+DownlinkSubOptScheduler::~DownlinkSubOptScheduler()
 {
   Destroy ();
 }
 
-void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
+void DownlinkSubOptScheduler::SelectFlowsToSchedule ()
 {
-  for (int i = 0; i < num_type1_slices_; ++i) {
-    std::cout << i << ": gbr: " << type1_bitrates_[i] << " average: " << type1_exp_bitrates_[i] << std::endl;
-  }
-  for(int i = 0; i < num_type2_slices_; ++i) {
-    std::cout << i << ": weight: " << type2_weights_[i] << " time: " << type2_exp_time_[i] << std::endl;
-  }
-  double max_score = 0;
-  // currently no type1 slice
-  /*
-  for (int i = 0; i < num_type1_slices_; ++i) {
-    if (type1_exp_bitrates_[i] == 0) {
-      slice_id = i;
-      is_type1 = true;
-      return;
-    }
-    else {
-      double score = (double)type1_bitrates_[i] / type1_exp_bitrates_[i];
-      if (score > max_score) {
-        max_score = score;
-        slice_id = i;
-        is_type1 = true;
-      }
-    }
-  }
-  */
-  RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
-  RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
-  std::vector<bool> slice_with_queue(num_type2_slices_, false);
-  for (auto it = bearers->begin(); it != bearers->end(); it++) {
-    RadioBearer *bearer = (*it);
-    int app_id = bearer->GetApplication()->GetApplicationID();
-    if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
-		{
-		  int dataToTransmit;
-		  if (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER) {
-			  dataToTransmit = 100000000;
-			}
-		  else {
-			  dataToTransmit = bearer->GetQueueSize ();
-			}
-      if (dataToTransmit > 0) {
-        slice_with_queue[type2_app_[app_id]] = true;
-      }
-    }
-  }
-  for (int i = 0; i < num_type2_slices_; ++i) {
-    if (! slice_with_queue[i]) continue;
-    if (type2_exp_time_[i] == 0) {
-      slice_id = i;
-      is_type1 = false;
-      break;
-    }
-    else {
-      double score = type2_weights_[i] / type2_exp_time_[i];
-      if (score > max_score) {
-        max_score = score;
-        slice_id = i;
-        is_type1 = false;
-      }
-    }
-  }
-  for (int i = 0; i < num_type2_slices_; ++i) {
-    if (! slice_with_queue[i]) continue;
-    type2_exp_time_[i] = (1-beta_) * type2_exp_time_[i];
-    if (i == slice_id) {
-      type2_exp_time_[i] += beta_ * 1;
-    }
-  }
-}
+#ifdef SCHEDULER_DEBUG
+	std::cout << "\t Select Flows to schedule" << std::endl;
+#endif
 
-void DownlinkNVSScheduler::SelectFlowsToSchedule ()
-{
   ClearFlowsToSchedule ();
 
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
-  // some logic to determine the slice to serve
-  int slice_serve = 0;
-  bool is_type1 = true;
-  SelectSliceToServe(slice_serve, is_type1);
-
+  //std::cerr << GetTimeStamp();
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
 	  //SELECT FLOWS TO SCHEDULE
 	  RadioBearer *bearer = (*it);
-    int app_id = bearer->GetApplication()->GetApplicationID();
-
-    if ( !(isType1(app_id) && is_type1 && type1_app_[app_id] == slice_serve)
-      && !(!isType1(app_id) && !is_type1 && type2_app_[app_id] == slice_serve) )
-      continue;
 
 	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
 		{
@@ -197,27 +121,27 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule ()
 		  std::vector<double> spectralEfficiency;
 		  std::vector<int> cqiFeedbacks = ueRecord->GetCQI ();
 		  int numberOfCqi = cqiFeedbacks.size ();
+      AMCModule *amc = GetMacEntity()->GetAmcModule();
 		  for (int i = 0; i < numberOfCqi; i++)
 			{
-			  double sEff = GetMacEntity ()->GetAmcModule ()->GetEfficiencyFromCQI (cqiFeedbacks.at (i));
-			  spectralEfficiency.push_back (sEff);
+        spectralEfficiency.push_back(amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
 			}
-
 		  //create flow to scheduler record
-		  InsertFlowToSchedule(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
+      if (dataToTransmit > 0)
+		    InsertFlowToSchedule(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
 		}
 	  else
 	    {}
 	}
+  //std::cerr << std::endl;
 }
 
 void
-DownlinkNVSScheduler::DoSchedule (void)
+DownlinkSubOptScheduler::DoSchedule (void)
 {
 #ifdef SCHEDULER_DEBUG
-	std::cout << "\nStart DL packet scheduler for node "
-			<< GetMacEntity ()->GetDevice ()->GetIDNetworkNode()
-      << " ts: " << GetTimeStamp() << std::endl;
+	std::cout << "Start DL packet scheduler for node "
+			<< GetMacEntity ()->GetDevice ()->GetIDNetworkNode()<< std::endl;
 #endif
 
   UpdateAverageTransmissionRate ();
@@ -234,16 +158,16 @@ DownlinkNVSScheduler::DoSchedule (void)
 }
 
 void
-DownlinkNVSScheduler::DoStopSchedule (void)
+DownlinkSubOptScheduler::DoStopSchedule (void)
 {
+#ifdef SCHEDULER_DEBUG
+  std::cout << "\t Creating Packet Burst" << std::endl;
+#endif
+
   PacketBurst* pb = new PacketBurst ();
 
   //Create Packet Burst
   FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
-  
-  bool is_type1 = true;
-  int slice_id = -1;
-  int aggregate_bits = 0;
 
   for (FlowsToSchedule::iterator it = flowsToSchedule->begin (); it != flowsToSchedule->end (); it++)
     {
@@ -251,22 +175,10 @@ DownlinkNVSScheduler::DoStopSchedule (void)
 
 	  int availableBytes = flow->GetAllocatedBits ()/8;
 
-    if (slice_id == -1) {
-      int app_id = flow->GetBearer()->GetApplication()->GetApplicationID();
-      if (isType1( app_id ) ){
-        slice_id = type1_app_[app_id];
-      }
-      else {
-        slice_id = type2_app_[app_id];
-        is_type1 = false;
-      }
-    }
-    aggregate_bits += flow->GetAllocatedBits();
-
 	  if (availableBytes > 0)
 	    {
+
 		  flow->GetBearer()->UpdateTransmittedBytes (min(availableBytes, flow->GetDataToTransmit()));
-      
       flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
 
 #ifdef SCHEDULER_DEBUG
@@ -275,8 +187,8 @@ DownlinkNVSScheduler::DoStopSchedule (void)
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
           << std::endl;
-	    std::cout << "\nTransmit packets for flow "
-	    		<< flow->GetBearer ()->GetApplication ()->GetApplicationID () << std::endl;
+	      std::cout << "\nTransmit packets for flow "
+	    		  << flow->GetBearer ()->GetApplication ()->GetApplicationID () << std::endl;
 #endif
 
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
@@ -287,40 +199,25 @@ DownlinkNVSScheduler::DoStopSchedule (void)
 // #endif
 
 	      if (pb2->GetNPackets () > 0)
-	      {
+	        {
 	    	  std::list<Packet*> packets = pb2->GetPackets ();
 	    	  std::list<Packet* >::iterator it;
 	    	  for (it = packets.begin (); it != packets.end (); it++)
-	    	  {
+	    	    {
 // #ifdef SCHEDULER_DEBUG
 // 	    		  std::cout << "\t\t  added packet of bytes " << (*it)->GetSize () << std::endl;
 // #endif
 	    		  Packet *p = (*it);
 	    		  pb->AddPacket (p->Copy ());
-	    	  }
-	      }
+	    	    }
+	        }
 	      delete pb2;
 	    }
 	  else
 	    {}
     }
-
-  // update exp weighted average allocated time
-  // for (int i = 0; i < num_type1_slices_; ++i) {
-  //    type1_exp_bitrates_[i] = (1-beta_) * type1_exp_bitrates_[i];
-  // }
-  // for (int i = 0; i < num_type2_slices_; ++i) {
-  //   type2_exp_time_[i] = (1-beta_) * type2_exp_time_[i];
-  // }
-  // if (is_type1) {
-  //   type1_exp_bitrates_[slice_id] += beta_ * aggregate_bits;
-  // }
-  // else {
-  //   type2_exp_time_[slice_id] += beta_ * 1;
-  // }
-
+    
   UpdateTimeStamp();
-
   //UpdateAverageTransmissionRate ();
 
   //SEND PACKET BURST
@@ -334,40 +231,146 @@ DownlinkNVSScheduler::DoStopSchedule (void)
 }
 
 void
-DownlinkNVSScheduler::RBsAllocation ()
+DownlinkSubOptScheduler::RBsAllocation ()
 {
 #ifdef SCHEDULER_DEBUG
-	std::cout << " ---- DownlinkNVSScheduler::RBsAllocation";
+	std::cout << " ---- DownlinkSubOptScheduler::RBsAllocation";
 #endif
-
   FlowsToSchedule* flows = GetFlowsToSchedule ();
   int nbOfRBs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
   int rbg_size = get_rbg_size(nbOfRBs);
   int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
 
-  // create a matrix of flow metrics
+  std::vector<double> sliceTargetRBs(num_type2_slices_);
+  std::cout << "\t slice quota:";
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    double quota = nbOfRBs * type2_weights_[i];
+    sliceTargetRBs[i] = quota + type2_rbs_offset_[i];
+    std::cout << "\t" << sliceTargetRBs[i];
+  }
+  std::cout << std::endl;
+
+  // create a matrix of flow metrics (RBG, flow index)
   double metrics[nbOfGroups][flows->size ()];
+  // create a matrix of slices information
+  int sliceFlow[nbOfGroups][num_type2_slices_];
+  double sliceMaxMetric[nbOfGroups][num_type2_slices_];
+  double sliceCQI[nbOfGroups][num_type2_slices_];
+  // initialize
+  for (int i = 0; i < nbOfGroups; ++i) {
+    for (int j = 0; j < num_type2_slices_; ++j) {
+      sliceFlow[i][j] = sliceMaxMetric[i][j] = sliceCQI[i][j] = -1;
+    }
+  }
+
+  int rbgToSlice[nbOfGroups];
+  std::vector<int> sliceRBs(num_type2_slices_, 0);
+
   for (int i = 0; i < nbOfGroups; i++) {
 	  for (int j = 0; j < flows->size (); j++) {
+      int app_id = flows->at(j)->GetBearer()->GetApplication()->GetApplicationID();
+      int slice_id = type2_app_[app_id];
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
-        i,
-        flows->at (j)->GetAllEfficiency());
+        i, flows->at(j)->GetAllEfficiency());
+      if (metrics[i][j] > sliceMaxMetric[i][slice_id]) {
+        sliceMaxMetric[i][slice_id] = metrics[i][j];
+        sliceFlow[i][slice_id] = j;
+        sliceCQI[i][slice_id] = flows->at(j)->GetSpectralEfficiency().at(i * rbg_size);
+      }
 	  }
+    
+  }
+  for (int i = 0; i < nbOfGroups; ++i) {
+    double maxCQI = 0;
+    for (int j = 0; j < num_type2_slices_; ++j) {
+      //fprintf(stderr, "rb: %d slice: %d cqi: %.3f\n", i, j, sliceCQI[i][j]);
+      if (sliceCQI[i][j] > maxCQI) {
+        rbgToSlice[i] = j;
+        maxCQI = sliceCQI[i][j];
+      }
+    }
+    sliceRBs[rbgToSlice[i]] += rbg_size;
   }
 
+  // the reallocation procedure
+  // fprintf(stderr, "reallocation begin\n");
+  std::unordered_map<int, double> slice_more;
+  std::unordered_map<int, double> slice_fewer;
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    if (sliceRBs[i] >= sliceTargetRBs[i] + rbg_size) {
+      slice_more[i] = sliceRBs[i] - (sliceTargetRBs[i] > 0 ? sliceTargetRBs[i] : 0);
+    }
+    else if (sliceRBs[i] <= sliceTargetRBs[i] - rbg_size) {
+      slice_fewer[i] = sliceTargetRBs[i] - sliceRBs[i];
+    }
+  }
+  while (slice_more.size() > 0 && slice_fewer.size() > 0) {
+    std::cout << "more: ";
+    for (auto it = slice_more.begin(); it != slice_more.end(); ++it) {
+        std::cout << it->first << ", ";
+    }
+    std::cout << std::endl;
+    for (auto it = slice_fewer.begin(); it != slice_fewer.end(); ++it) {
+        std::cout << it->first << ", ";
+    }
+    std::cout << std::endl;
+    double min_tbs_reduce = 100;
+    int rb_id, from_slice = -1, to_slice;
+    for (int i = 0; i < nbOfGroups; ++i) {
+      if ( slice_more.find(rbgToSlice[i]) != slice_more.end() ) {
+        for (auto it = slice_fewer.begin(); it != slice_fewer.end(); ++it) {
+          if (sliceCQI[i][rbgToSlice[i]] < sliceCQI[i][it->first]) {
+            char error_log[200];
+            sprintf(error_log, "rb: %d optimal_s: %d %.3f abnormal_s: %d %.3f",
+                i, rbgToSlice[i], it->first, 
+                sliceCQI[i][rbgToSlice[i]], sliceCQI[i][it->first]);
+            throw std::runtime_error(std::string(error_log));
+          } 
+          if (sliceCQI[i][rbgToSlice[i]] - sliceCQI[i][it->first] < min_tbs_reduce) {
+            min_tbs_reduce = sliceCQI[i][rbgToSlice[i]] - sliceCQI[i][it->first];
+            rb_id = i;
+            from_slice = rbgToSlice[i];
+            to_slice = it->first;
+          }
+        }
+      }
+    }
+    if (from_slice == -1)
+      break;
+    sliceRBs[from_slice] -= rbg_size;
+    sliceRBs[to_slice] += rbg_size;
+    rbgToSlice[rb_id] = to_slice;
+    slice_more.at(from_slice) -= rbg_size;
+    slice_fewer.at(to_slice) -= rbg_size;
+    std::cout << "reallocate: " 
+        << from_slice << " -> " << to_slice << " "
+        << sliceRBs[from_slice] << " & " << sliceRBs[to_slice] << " "
+        << slice_more[from_slice] << " & " << slice_fewer[to_slice] << " "
+        << "rbg_size: " << rbg_size
+        << std::endl;
+    if (slice_more.at(from_slice) <= 0 || sliceRBs[from_slice] <= 0) {
+      slice_more.erase(from_slice);
+    }
+    if (slice_fewer.at(to_slice) <= 0) {
+      slice_fewer.erase(to_slice);
+    }
+  }
+  
+
 #ifdef SCHEDULER_DEBUG
+  //std::cout << ", available RBGs " << nbOfGroups << ", flows " << flows->size () << std::endl;
   for (int ii = 0; ii < flows->size (); ii++)
     {
 	  std::cout << "\t metrics for flow "
 			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
 	  for (int jj = 0; jj < nbOfGroups; jj++)
-	  {
-      fprintf(stdout, " (%d, %.3f, %d)",
-          jj, metrics[jj][ii], 
-          flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size));
-	  }
+	    {
+        fprintf(stdout, " (%d, %.3f, %d)",
+            jj, metrics[jj][ii], 
+            flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size));
+	    }
 	  std::cout << std::endl;
     }
 #endif
@@ -382,30 +385,18 @@ DownlinkNVSScheduler::RBsAllocation ()
   //RBs allocation
   for (int s = 0; s < nbOfGroups; s++)
     {
-      if (l_iScheduledFlows == flows->size ())
-          break;
-
-      double targetMetric = std::numeric_limits<double>::min();
-      bool SubbandAllocated = false;
+      bool SubbandAllocated = true;
       FlowToSchedule* scheduledFlow;
-      int l_iScheduledFlowIndex = 0;
-
-      for (int k = 0; k < flows->size (); k++)
-        {
-          if (metrics[s][k] > targetMetric && !l_bFlowScheduled[k])
-            {
-              targetMetric = metrics[s][k];
-              SubbandAllocated = true;
-              scheduledFlow = flows->at (k);
-              l_iScheduledFlowIndex = k;
-            }
-        }
+      int sliceServe = rbgToSlice[s];
+      int l_iScheduledFlowIndex = sliceFlow[s][sliceServe];
+      scheduledFlow = flows->at(l_iScheduledFlowIndex);
 
       if (SubbandAllocated)
         {
           // allocate the sth rbg
           int l = s*rbg_size, r = (s+1)*rbg_size;
           if (r > nbOfRBs) r = nbOfRBs;
+
           for (int i = l; i < r; ++i) {
             scheduledFlow->GetListOfAllocatedRBs()->push_back(i);
             double sinr = amc->GetSinrFromCQI(scheduledFlow->GetCqiFeedbacks().at(i));
@@ -414,17 +405,19 @@ DownlinkNVSScheduler::RBsAllocation ()
 
           double effectiveSinr = GetEesmEffectiveSinr (l_bFlowScheduledSINR[l_iScheduledFlowIndex]);
           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
-          //assert(scheduledFlow->m_bearer->GetApplication()->GetApplicationID() == l_iScheduledFlowIndex);
           int alloc_num = scheduledFlow->GetListOfAllocatedRBs()->size();
           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, alloc_num);
-          if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8 )
+          if (transportBlockSize >= scheduledFlow->GetDataToTransmit() * 8)
           {
-              //std::cout << "flow index: " << l_iScheduledFlowIndex << " alloc_rbs:" << alloc_num << std::endl;
               l_bFlowScheduled[l_iScheduledFlowIndex] = true;
               l_iScheduledFlows++;
           }
         }
     }
+
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    type2_rbs_offset_[i] = sliceTargetRBs[i] - sliceRBs[i];
+  }
 
   delete [] l_bFlowScheduled;
   delete [] l_bFlowScheduledSINR;
@@ -436,7 +429,7 @@ DownlinkNVSScheduler::RBsAllocation ()
     {
       FlowToSchedule *flow = (*it);
 
-	  std::cout << "Flow: " << flow->GetBearer()->GetApplication()->GetApplicationID();
+	  std::cout << "Flow(" << flow->GetBearer()->GetApplication()->GetApplicationID() << ")";
 	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
       int rbid = flow->GetListOfAllocatedRBs()->at(rb);
       if (rbid % rbg_size == 0)
@@ -461,7 +454,6 @@ DownlinkNVSScheduler::RBsAllocation ()
           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
 
           //define the amount of bytes to transmit
-          //int transportBlockSize = amc->GetTBSizeFromMCS (mcs);
           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
           flow->UpdateAllocatedBits (transportBlockSize);
 
@@ -485,7 +477,6 @@ DownlinkNVSScheduler::RBsAllocation ()
 									  mcs);
 		    }
 	    }
-
     }
 
   if (pdcchMsg->GetMessage()->size () > 0)
@@ -496,7 +487,7 @@ DownlinkNVSScheduler::RBsAllocation ()
 }
 
 double
-DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
+DownlinkSubOptScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
 {
   double metric = 0;
   switch (intra_sched_) {
@@ -516,7 +507,7 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectr
 }
 
 void
-DownlinkNVSScheduler::UpdateAverageTransmissionRate (void)
+DownlinkSubOptScheduler::UpdateAverageTransmissionRate (void)
 {
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
