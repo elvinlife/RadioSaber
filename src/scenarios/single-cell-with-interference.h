@@ -130,8 +130,12 @@ static void SingleCellWithInterference (int nbCells, double radius,
 		std::cout << "Scheduler Oracle " << std::endl;
 		break;
 		case 10:
-		downlink_scheduler_type = ENodeB::DLScheduler_TRANS;
+		downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
 		std::cout << "Scheduler Transport " << std::endl;
+		break;
+		case 11:
+		downlink_scheduler_type = ENodeB::DLScheduler_VOGEL;
+		std::cout << "Scheduler VOGEL Approximate";
 		break;
 	
 	  default:

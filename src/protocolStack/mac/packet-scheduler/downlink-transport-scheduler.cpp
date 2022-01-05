@@ -45,7 +45,7 @@ using std::vector;
 using coord_t = std::pair<int, int>;
 using coord_cqi_t = std::pair<coord_t, int>;
 
-DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname)
+DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname, int algo)
 {
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
@@ -79,7 +79,7 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname)
     throw std::runtime_error("Fail to open configuration file");
   }
   ifs.close();
-  
+  inter_sched_ = algo;
   SetMacEntity (0);
   CreateFlowsToSchedule ();
 }
@@ -351,7 +351,10 @@ DownlinkTransportScheduler::RBsAllocation ()
     std::cout << "\t" << slice_target_rbs[i];
   }
   std::cout << std::endl;
-  slice_quota_rbgs[rand() % num_type2_slices_] += extra_rbgs;
+  while (extra_rbgs > 0) {
+    slice_quota_rbgs[rand() % num_type2_slices_] += 1;
+    extra_rbgs -= 1;
+  }
 
   // create a matrix of flow metrics (RBG, flow index)
   double metrics[nb_rbgs][flows->size ()];
@@ -405,7 +408,14 @@ DownlinkTransportScheduler::RBsAllocation ()
     }
   }
 
-  vector<int> rbg_to_slice = MaximizeCell(flow_cqi, slice_quota_rbgs, nb_rbgs, num_type2_slices_);
+  vector<int> rbg_to_slice;
+  if (inter_sched_ == 1) {
+    rbg_to_slice = VogelApproximate(flow_cqi, slice_quota_rbgs, nb_rbgs, num_type2_slices_);
+  }
+  else {
+    rbg_to_slice = MaximizeCell(flow_cqi, slice_quota_rbgs, nb_rbgs, num_type2_slices_);
+  }
+
   for (int i = 0; i < rbg_to_slice.size(); ++i) {
     int fid = flow_id[i][rbg_to_slice[i]];
     int sid = type2_app_[flows->at(fid)->GetBearer()->GetApplication()->GetApplicationID()];

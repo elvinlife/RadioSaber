@@ -79,7 +79,8 @@ public:
 		DLScheduler_NVS,
 		DLScheduler_GREEDY,
 		DLScheduler_SUBOPT,
-		DLScheduler_TRANS
+		DLScheduler_MAXCELL,
+		DLScheduler_VOGEL
 	  };
 	enum ULSchedulerType
 	  {

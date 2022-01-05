@@ -360,19 +360,18 @@ DownlinkSubOptScheduler::RBsAllocation ()
   
 
 #ifdef SCHEDULER_DEBUG
-  //std::cout << ", available RBGs " << nbOfGroups << ", flows " << flows->size () << std::endl;
-  for (int ii = 0; ii < flows->size (); ii++)
-    {
-	  std::cout << "\t metrics for flow "
-			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
-	  for (int jj = 0; jj < nbOfGroups; jj++)
-	    {
-        fprintf(stdout, " (%d, %.3f, %d)",
-            jj, metrics[jj][ii], 
-            flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size));
-	    }
-	  std::cout << std::endl;
-    }
+  // for (int ii = 0; ii < flows->size (); ii++)
+  //   {
+	//   std::cout << "\t metrics for flow "
+	// 		  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
+	//   for (int jj = 0; jj < nbOfGroups; jj++)
+	//     {
+  //       fprintf(stdout, " (%d, %.3f, %d)",
+  //           jj, metrics[jj][ii], 
+  //           flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size));
+	//     }
+	//   std::cout << std::endl;
+  //   }
 #endif
 
   AMCModule *amc = GetMacEntity ()->GetAmcModule ();

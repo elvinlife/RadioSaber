@@ -40,12 +40,11 @@ private:
 
 	const double beta_			= 0.1;
 	
-	Scheduler intra_sched_ = PF;
-	
-
+	Scheduler	intra_sched_ = PF;
+	int			inter_sched_ = 0;
 
 public:
-	DownlinkTransportScheduler(std::string config_fname);
+	DownlinkTransportScheduler(std::string config_fname, int algo);
 	virtual ~DownlinkTransportScheduler();
 
 	void SelectFlowsToSchedule ();

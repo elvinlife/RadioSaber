@@ -362,8 +362,14 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
         mac->SetDownlinkPacketScheduler( scheduler );
       break;
 
-      case ENodeB::DLScheduler_TRANS:
-        scheduler = new DownlinkTransportScheduler(config_fname);
+      case ENodeB::DLScheduler_MAXCELL:
+        scheduler = new DownlinkTransportScheduler(config_fname, 0);
+        scheduler->SetMacEntity( mac );
+        mac->SetDownlinkPacketScheduler( scheduler );
+      break;
+
+      case ENodeB::DLScheduler_VOGEL:
+        scheduler = new DownlinkTransportScheduler(config_fname, 1);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
       break;
