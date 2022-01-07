@@ -174,23 +174,19 @@ DownlinkGreedyScheduler::DoStopSchedule (void)
 	  int availableBytes = flow->GetAllocatedBits ()/8;
 
 	  if (availableBytes > 0)
-	    {
+	  {
 
 		  flow->GetBearer()->UpdateTransmittedBytes (min(availableBytes, flow->GetDataToTransmit()));
       flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
 
-#ifdef SCHEDULER_DEBUG
       std::cerr << GetTimeStamp()
           << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
           << std::endl;
-	      std::cout << "\nTransmit packets for flow "
-	    		  << flow->GetBearer ()->GetApplication ()->GetApplicationID () << std::endl;
-#endif
 
-	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
-	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
+	    RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
+	    PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
 
 // #ifdef SCHEDULER_DEBUG
 // 	      std::cout << "\t\t  nb of packets: " << pb2->GetNPackets () << std::endl;
@@ -210,7 +206,7 @@ DownlinkGreedyScheduler::DoStopSchedule (void)
 	    	    }
 	        }
 	      delete pb2;
-	    }
+	  }
 	  else
 	    {}
     }
