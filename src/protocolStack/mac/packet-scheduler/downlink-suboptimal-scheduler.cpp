@@ -181,15 +181,11 @@ DownlinkSubOptScheduler::DoStopSchedule (void)
 		  flow->GetBearer()->UpdateTransmittedBytes (min(availableBytes, flow->GetDataToTransmit()));
       flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
 
-#ifdef SCHEDULER_DEBUG
       std::cerr << GetTimeStamp()
           << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
           << std::endl;
-	      std::cout << "\nTransmit packets for flow "
-	    		  << flow->GetBearer ()->GetApplication ()->GetApplicationID () << std::endl;
-#endif
 
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
 	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);

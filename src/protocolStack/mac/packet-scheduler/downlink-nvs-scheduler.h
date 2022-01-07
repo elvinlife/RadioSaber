@@ -49,7 +49,7 @@ public:
 	virtual ~DownlinkNVSScheduler();
 
 	void SelectSliceToServe(int&, bool&);
-	void SelectFlowsToSchedule ();
+	void SelectFlowsToSchedule (int );
 
 	virtual void DoSchedule (void);
 	virtual void DoStopSchedule (void);
@@ -59,7 +59,7 @@ public:
 		RadioBearer *bearer, double spectralEfficiency,
 		int subChannel, double wideBandEfficiency);
 
-	void UpdateAverageTransmissionRate (void);
+	void UpdateAverageTransmissionRate (int);
 
 	bool isType1(int app_id) {
 		return app_id < num_type1_apps_;

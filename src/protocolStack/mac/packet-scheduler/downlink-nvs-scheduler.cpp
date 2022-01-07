@@ -86,13 +86,10 @@ DownlinkNVSScheduler::~DownlinkNVSScheduler()
 
 void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
 {
-  for (int i = 0; i < num_type1_slices_; ++i) {
-    std::cout << i << ": gbr: " << type1_bitrates_[i] << " average: " << type1_exp_bitrates_[i] << std::endl;
-  }
-  for(int i = 0; i < num_type2_slices_; ++i) {
-    std::cout << i << ": weight: " << type2_weights_[i] << " time: " << type2_exp_time_[i] << std::endl;
-  }
   double max_score = 0;
+  // for (int i = 0; i < num_type1_slices_; ++i) {
+  //   std::cout << i << ": gbr: " << type1_bitrates_[i] << " average: " << type1_exp_bitrates_[i] << std::endl;
+  // }
   // currently no type1 slice
   /*
   for (int i = 0; i < num_type1_slices_; ++i) {
@@ -111,6 +108,13 @@ void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
     }
   }
   */
+
+#ifdef SCHEDULER_DEBUG
+  for(int i = 0; i < num_type2_slices_; ++i) {
+    std::cout << i << ": weight: " << type2_weights_[i] << " time: " << type2_exp_time_[i] << std::endl;
+  }
+#endif
+
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
   std::vector<bool> slice_with_queue(num_type2_slices_, false);
@@ -156,17 +160,12 @@ void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
   }
 }
 
-void DownlinkNVSScheduler::SelectFlowsToSchedule ()
+void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
 {
   ClearFlowsToSchedule ();
 
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
-
-  // some logic to determine the slice to serve
-  int slice_serve = 0;
-  bool is_type1 = true;
-  SelectSliceToServe(slice_serve, is_type1);
 
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
@@ -174,8 +173,10 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule ()
 	  RadioBearer *bearer = (*it);
     int app_id = bearer->GetApplication()->GetApplicationID();
 
-    if ( !(isType1(app_id) && is_type1 && type1_app_[app_id] == slice_serve)
-      && !(!isType1(app_id) && !is_type1 && type2_app_[app_id] == slice_serve) )
+    // if ( !(isType1(app_id) && is_type1 && type1_app_[app_id] == slice_serve)
+    //   && !(!isType1(app_id) && !is_type1 && type2_app_[app_id] == slice_serve) )
+    //   continue;
+    if (type2_app_[app_id] != slice_serve)
       continue;
 
 	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
@@ -220,8 +221,12 @@ DownlinkNVSScheduler::DoSchedule (void)
       << " ts: " << GetTimeStamp() << std::endl;
 #endif
 
-  UpdateAverageTransmissionRate ();
-  SelectFlowsToSchedule ();
+  // some logic to determine the slice to serve
+  int slice_serve = 0;
+  bool is_type1 = true;
+  SelectSliceToServe(slice_serve, is_type1);
+  UpdateAverageTransmissionRate (slice_serve);
+  SelectFlowsToSchedule (slice_serve);
 
   if (GetFlowsToSchedule ()->size() == 0)
 	{}
@@ -269,15 +274,11 @@ DownlinkNVSScheduler::DoStopSchedule (void)
       
       flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
 
-#ifdef SCHEDULER_DEBUG
       std::cerr << GetTimeStamp()
           << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
           << std::endl;
-	    std::cout << "\nTransmit packets for flow "
-	    		<< flow->GetBearer ()->GetApplication ()->GetApplicationID () << std::endl;
-#endif
 
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
 	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
@@ -305,19 +306,6 @@ DownlinkNVSScheduler::DoStopSchedule (void)
 	    {}
     }
 
-  // update exp weighted average allocated time
-  // for (int i = 0; i < num_type1_slices_; ++i) {
-  //    type1_exp_bitrates_[i] = (1-beta_) * type1_exp_bitrates_[i];
-  // }
-  // for (int i = 0; i < num_type2_slices_; ++i) {
-  //   type2_exp_time_[i] = (1-beta_) * type2_exp_time_[i];
-  // }
-  // if (is_type1) {
-  //   type1_exp_bitrates_[slice_id] += beta_ * aggregate_bits;
-  // }
-  // else {
-  //   type2_exp_time_[slice_id] += beta_ * 1;
-  // }
 
   UpdateTimeStamp();
 
@@ -436,13 +424,15 @@ DownlinkNVSScheduler::RBsAllocation ()
     {
       FlowToSchedule *flow = (*it);
 
-	  std::cout << "Flow: " << flow->GetBearer()->GetApplication()->GetApplicationID();
-	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
-      int rbid = flow->GetListOfAllocatedRBs()->at(rb);
-      if (rbid % rbg_size == 0)
-        std::cout << " " << rbid / rbg_size;
-	  }
-	  std::cout << std::endl;
+#ifdef SCHEDULER_DEBUG
+	    std::cout << "Flow: " << flow->GetBearer()->GetApplication()->GetApplicationID();
+	    for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
+        int rbid = flow->GetListOfAllocatedRBs()->at(rb);
+        if (rbid % rbg_size == 0)
+          std::cout << " " << rbid / rbg_size;
+	    }
+	    std::cout << std::endl;
+#endif
 
       if (flow->GetListOfAllocatedRBs ()->size () > 0)
         {
@@ -516,14 +506,17 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectr
 }
 
 void
-DownlinkNVSScheduler::UpdateAverageTransmissionRate (void)
+DownlinkNVSScheduler::UpdateAverageTransmissionRate (int slice_serve)
 {
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
     {
-      RadioBearer *bearer = (*it);
+	    RadioBearer *bearer = (*it);
+      int app_id = bearer->GetApplication()->GetApplicationID();
+      if (type2_app_[app_id] != slice_serve)
+        continue;
       bearer->UpdateAverageTransmissionRate ();
     }
 }
