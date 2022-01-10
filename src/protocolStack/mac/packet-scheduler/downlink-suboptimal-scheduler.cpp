@@ -185,6 +185,7 @@ DownlinkSubOptScheduler::DoStopSchedule (void)
           << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
+          << " hol_delay: " << flow->GetBearer()->GetHeadOfLinePacketDelay()
           << std::endl;
 
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
@@ -495,6 +496,14 @@ DownlinkSubOptScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spe
     case TTA:
       metric = spectralEfficiency / wbEff;
       break;
+    case MLWDF:
+    {
+      double a = -log10 (0.05) / 1;
+      double HOL = bearer->GetHeadOfLinePacketDelay ();
+      metric = (a * HOL) * ((spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate ());
+      break;
+    }
+
     default:
       metric = spectralEfficiency;
   }

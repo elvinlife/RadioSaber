@@ -278,6 +278,7 @@ DownlinkNVSScheduler::DoStopSchedule (void)
           << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
+          << " hol_delay: " << flow->GetBearer()->GetHeadOfLinePacketDelay()
           << std::endl;
 
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
@@ -475,7 +476,6 @@ DownlinkNVSScheduler::RBsAllocation ()
 									  mcs);
 		    }
 	    }
-
     }
 
   if (pdcchMsg->GetMessage()->size () > 0)
@@ -499,6 +499,14 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectr
     case TTA:
       metric = spectralEfficiency / wbEff;
       break;
+    case MLWDF:
+    {
+      double a = -log10 (0.05) / 1;
+      double HOL = bearer->GetHeadOfLinePacketDelay ();
+      metric = (a * HOL) * ((spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate ());
+      break;
+    }
+
     default:
       metric = spectralEfficiency;
   }
@@ -514,9 +522,9 @@ DownlinkNVSScheduler::UpdateAverageTransmissionRate (int slice_serve)
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
     {
 	    RadioBearer *bearer = (*it);
-      int app_id = bearer->GetApplication()->GetApplicationID();
-      if (type2_app_[app_id] != slice_serve)
-        continue;
+      //int app_id = bearer->GetApplication()->GetApplicationID();
+      // if (type2_app_[app_id] != slice_serve)
+      //   continue;
       bearer->UpdateAverageTransmissionRate ();
     }
 }

@@ -54,7 +54,7 @@ GetEesmEffectiveSinr (std::vector <double> &sinr)
 {
   double eff_sinr;
   double sum_I_sinr = 0;
-  double beta = 6;
+  double beta = 1;
   std::vector<double>::iterator it;
   for (it = sinr.begin (); it != sinr.end (); it++)
   {

@@ -138,12 +138,12 @@ RadioBearer::UpdateAverageTransmissionRate ()
     {
 	  m_averageTransmissionRate = 1;
     }
-
+  
 /*
 #ifdef SCHEDULER_DEBUG
   std::cout << "UPDATE AVG RATE, bearer " << GetApplication ()->GetApplicationID () <<
 		  "\n\t tx byte " << GetTransmittedBytes () <<
-		  "\n\t interval " << Simulator::Init()->Now() - GetLastUpdate() <<
+	 	  "\n\t ts: " << Simulator::Init()->Now() <<
 		  "\n\t old rate " << m_averageTransmissionRate <<
           "\n\t new rate " << rate <<
 		  "\n\t new estimated rate " << m_averageTransmissionRate << std::endl;
@@ -273,6 +273,8 @@ RadioBearer::GetHeadOfLinePacketDelay (void)
 {
   double HOL = 0.;
   double now = Simulator::Init()->Now();
+  if (GetMacQueue()->GetQueueSize() == 0)
+    return HOL;
   if (GetRlcEntity ()->GetRlcModel () == RlcEntity::AM_RLC_MODE)
     {
 	  AmRlcEntity* amRlc = (AmRlcEntity*) GetRlcEntity ();

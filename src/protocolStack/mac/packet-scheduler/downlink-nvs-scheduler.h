@@ -25,7 +25,7 @@
 #include "packet-scheduler.h"
 
 class DownlinkNVSScheduler: public PacketScheduler {
-	enum Scheduler {MT, PF, TTA};
+	enum Scheduler {MT, PF, TTA, MLWDF};
 private:
 	int		type1_app_[MAX_APPS];
 	int		type2_app_[MAX_APPS];
@@ -40,7 +40,7 @@ private:
 
 	const double beta_			= 0.1;
 
-	Scheduler intra_sched_ = PF;
+	Scheduler intra_sched_ = MLWDF;
 
 
 
