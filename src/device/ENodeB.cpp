@@ -351,25 +351,27 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
       break;
 
       case ENodeB::DLScheduler_GREEDY:
-        scheduler = new DownlinkGreedyScheduler(config_fname);
+        //scheduler = new DownlinkGreedyScheduler(config_fname);
+        scheduler = new DownlinkTransportScheduler(config_fname, 0);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
       break;
       
       case ENodeB::DLScheduler_SUBOPT:
-        scheduler = new DownlinkSubOptScheduler(config_fname);
+        //scheduler = new DownlinkSubOptScheduler(config_fname);
+        scheduler = new DownlinkTransportScheduler(config_fname, 1);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
       break;
 
       case ENodeB::DLScheduler_MAXCELL:
-        scheduler = new DownlinkTransportScheduler(config_fname, 0);
+        scheduler = new DownlinkTransportScheduler(config_fname, 2);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
       break;
 
       case ENodeB::DLScheduler_VOGEL:
-        scheduler = new DownlinkTransportScheduler(config_fname, 1);
+        scheduler = new DownlinkTransportScheduler(config_fname, 3);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
       break;

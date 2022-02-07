@@ -320,7 +320,7 @@ DownlinkSubOptScheduler::RBsAllocation ()
         for (auto it = slice_fewer.begin(); it != slice_fewer.end(); ++it) {
           if (sliceCQI[i][rbgToSlice[i]] < sliceCQI[i][it->first]) {
             char error_log[200];
-            sprintf(error_log, "rb: %d optimal_s: %d %.3f abnormal_s: %d %.3f",
+            sprintf(error_log, "rb: %d optimal_s: %d %d abnormal_s: %.3f %.3f",
                 i, rbgToSlice[i], it->first, 
                 sliceCQI[i][rbgToSlice[i]], sliceCQI[i][it->first]);
             throw std::runtime_error(std::string(error_log));

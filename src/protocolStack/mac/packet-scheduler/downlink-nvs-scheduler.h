@@ -40,7 +40,7 @@ private:
 
 	const double beta_			= 0.1;
 
-	Scheduler intra_sched_ = MLWDF;
+	Scheduler intra_sched_ = PF;
 
 
 

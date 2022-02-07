@@ -40,6 +40,8 @@
 #include <fstream>
 #include <cassert>
 #include <algorithm>
+#include <unordered_map>
+#include <limits>
 using std::vector;
 
 using coord_t = std::pair<int, int>;
@@ -248,6 +250,88 @@ static vector<int> GreedyByRow(double** flow_spectraleff, vector<int>& slice_quo
     rbg_to_slice[i] = assigned_slice;
     slice_rbgs[assigned_slice] += 1;
   }
+  double sum_bits = 0;
+  for (int i = 0; i < nb_rbgs; ++i) {
+    sum_bits += flow_spectraleff[i][rbg_to_slice[i]];
+  }
+  fprintf(stderr, "all_bytes: %.0f\n", sum_bits * 180 / 8 * 4); // 4 for rbg_size
+  return rbg_to_slice;
+}
+
+static vector<int> SubOpt(double** flow_spectraleff, vector<int>& slice_quota_rbgs, int nb_rbgs, int nb_slices)
+{
+  vector<int> slice_rbgs(nb_slices, 0);
+  vector<int> rbg_to_slice(nb_rbgs, -1);
+  // set negative to 0 first
+  for (int i = 0; i < slice_quota_rbgs.size(); ++i) {
+    if (slice_quota_rbgs[i] < 0)
+      slice_quota_rbgs[i] = 0;
+  }
+  for (int i = 0; i < nb_rbgs; ++i) {
+    double max_eff = -1;
+    int assigned_slice = -1;
+    for (int j = 0; j < nb_slices; ++j) {
+      if (flow_spectraleff[i][j] > max_eff) {
+        max_eff = flow_spectraleff[i][j];
+        assigned_slice = j;
+      }
+    }
+    assert(assigned_slice != -1);
+    rbg_to_slice[i] = assigned_slice;
+    slice_rbgs[assigned_slice] += 1;
+  }
+  // do the reallocation
+  unordered_map<int, int> slice_more;
+  unordered_map<int, int> slice_fewer;
+  for(int i = 0; i < nb_slices; ++i) {
+    if (slice_rbgs[i] > slice_quota_rbgs[i]) {
+      slice_more[i] = slice_rbgs[i] - slice_quota_rbgs[i];
+    }
+    else if (slice_rbgs[i] < slice_quota_rbgs[i]) {
+      slice_fewer[i] = slice_quota_rbgs[i] - slice_rbgs[i];
+    }
+  }
+  while (slice_more.size() > 0 && slice_fewer.size() > 0) {
+    // one reallocation
+    //std::cout << slice_more.size() << "*" << slice_fewer.size() << std::endl;
+    int from_slice = -1, to_slice, rbg_id;
+    double min_tbs_reduce = std::numeric_limits<double>::max();
+    for (int i = 0; i < nb_rbgs; ++i) {
+      if ( slice_more.find(rbg_to_slice[i]) != slice_more.end() ) {
+        for (auto it = slice_fewer.begin(); it != slice_fewer.end(); ++it) {
+          assert(flow_spectraleff[i][rbg_to_slice[i]] >= flow_spectraleff[i][it->first]);
+          if (flow_spectraleff[i][rbg_to_slice[i]] - flow_spectraleff[i][it->first] < min_tbs_reduce) {
+            min_tbs_reduce = flow_spectraleff[i][rbg_to_slice[i]] - flow_spectraleff[i][it->first];
+            from_slice = rbg_to_slice[i];
+            to_slice = it->first;
+            rbg_id = i;
+          }
+        }
+      }
+    }
+    assert(from_slice != -1);
+    slice_rbgs[from_slice] -= 1;
+    slice_rbgs[to_slice] += 1;
+    rbg_to_slice[rbg_id] = to_slice;
+    slice_more.at(from_slice) -= 1;
+    slice_fewer.at(to_slice) -= 1;
+        // std::cout << "reallocate: " 
+        // << from_slice << " -> " << to_slice << " "
+        // << slice_rbgs[from_slice] << " & " << slice_rbgs[to_slice] << " "
+        // << slice_more[from_slice] << " & " << slice_fewer[to_slice] << " "
+        // << std::endl;
+    if (slice_more.at(from_slice) <= 0 || slice_rbgs[from_slice] <= 0) {
+      slice_more.erase(from_slice);
+    }
+    if (slice_fewer.at(to_slice) <= 0) {
+      slice_fewer.erase(to_slice);
+    }
+  }
+  double sum_bits = 0;
+  for (int i = 0; i < nb_rbgs; ++i) {
+    sum_bits += flow_spectraleff[i][rbg_to_slice[i]];
+  }
+  fprintf(stderr, "all_bytes: %.0f\n", sum_bits * 180 / 8 * 4); // 4 for rbg_size
   return rbg_to_slice;
 }
 
@@ -464,6 +548,9 @@ DownlinkTransportScheduler::RBsAllocation ()
     rbg_to_slice = GreedyByRow(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_type2_slices_);
   }
   else if (inter_sched_ == 1) {
+    rbg_to_slice = SubOpt(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_type2_slices_);
+  }
+  else if (inter_sched_ == 2) {
     rbg_to_slice = MaximizeCell(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_type2_slices_);
   }
   else {
@@ -498,8 +585,8 @@ DownlinkTransportScheduler::RBsAllocation ()
   for (FlowsToSchedule::iterator it = flows->begin (); it != flows->end (); it++)
   {
     FlowToSchedule *flow = (*it);
-    if (flow->GetListOfAllocatedRBs()->size() <= 0)
-      continue;
+    //if (flow->GetListOfAllocatedRBs()->size() <= 0)
+    //  continue;
 	  std::cout << "Flow(" << flow->GetBearer()->GetApplication()->GetApplicationID() << ")";
 	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
       int rbid = flow->GetListOfAllocatedRBs()->at(rb);

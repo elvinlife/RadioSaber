@@ -39,6 +39,8 @@
 #include <limits>
 #include <fstream>
 
+#define SCHEDULER_DEBUG 1
+
 DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
 {
   std::ifstream ifs(config_fname, std::ifstream::in);
@@ -144,7 +146,7 @@ void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
     }
     else {
       double score = type2_weights_[i] / type2_exp_time_[i];
-      if (score > max_score) {
+      if (score >= max_score) {
         max_score = score;
         slice_id = i;
         is_type1 = false;
@@ -374,7 +376,7 @@ DownlinkNVSScheduler::RBsAllocation ()
       if (l_iScheduledFlows == flows->size ())
           break;
 
-      double targetMetric = std::numeric_limits<double>::min();
+      double targetMetric = std::numeric_limits<double>::lowest();
       bool SubbandAllocated = false;
       FlowToSchedule* scheduledFlow;
       int l_iScheduledFlowIndex = 0;
@@ -522,9 +524,6 @@ DownlinkNVSScheduler::UpdateAverageTransmissionRate (int slice_serve)
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
     {
 	    RadioBearer *bearer = (*it);
-      //int app_id = bearer->GetApplication()->GetApplicationID();
-      // if (type2_app_[app_id] != slice_serve)
-      //   continue;
       bearer->UpdateAverageTransmissionRate ();
     }
 }

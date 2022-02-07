@@ -55,9 +55,10 @@ DL_PF_PacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spec
    * metric = spectralEfficiency / averageRate
    */
 
-  double metric = (spectralEfficiency * 180000.)
-					  /
-					  bearer->GetAverageTransmissionRate();
+   double metric = (spectralEfficiency * 180000.)
+	 				  /
+	 				  bearer->GetAverageTransmissionRate();
+  //double metric = spectralEfficiency;
 
   return metric;
 }

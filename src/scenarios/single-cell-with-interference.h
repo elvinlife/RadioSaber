@@ -94,53 +94,53 @@ static void SingleCellWithInterference (int nbCells, double radius,
   switch (sched_type)
 	{
 	  case 1:
-		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
-		std::cout << "Scheduler PF "<< std::endl;
-		break;
+		  downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
+		  std::cout << "Scheduler PF "<< std::endl;
+		  break;
 	  case 2:
-		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_MLWDF;
-		std::cout << "Scheduler MLWDF "<< std::endl;
-		break;
+		  downlink_scheduler_type = ENodeB::DLScheduler_TYPE_MLWDF;
+		  std::cout << "Scheduler MLWDF "<< std::endl;
+		  break;
 	  case 3:
-		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_EXP;
-		std::cout << "Scheduler EXP "<< std::endl;
-		break;
+		  downlink_scheduler_type = ENodeB::DLScheduler_TYPE_EXP;
+		  std::cout << "Scheduler EXP "<< std::endl;
+		  break;
 	  case 4:
-		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_FLS;
-		std::cout << "Scheduler FLS "<< std::endl;
-		break;
-    	case 5:
+		  downlink_scheduler_type = ENodeB::DLScheduler_TYPE_FLS;
+		  std::cout << "Scheduler FLS "<< std::endl;
+		  break;
+    case 5:
   		downlink_scheduler_type = ENodeB::DLScheduler_EXP_RULE;
   		std::cout << "Scheduler EXP_RULE "<< std::endl;
 	  	break;
-    	case 6:
+    case 6:
   		downlink_scheduler_type = ENodeB::DLScheduler_LOG_RULE;
   		std::cout << "Scheduler LOG RULE "<< std::endl;
 	  	break;
-    	case 7:
+    case 7:
    		downlink_scheduler_type = ENodeB::DLScheduler_NVS;
     	std::cout << "Scheduler NVS " << std::endl;
-		break;
+		  break;
 		case 8:
-		downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
-		std::cout << "Scheduler Greedy " << std::endl;
-		break;
+		  downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
+		  std::cout << "Scheduler Greedy " << std::endl;
+		  break;
 		case 9:
-		downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
-		std::cout << "Scheduler Oracle " << std::endl;
-		break;
+		  downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
+		  std::cout << "Scheduler Oracle " << std::endl;
+		  break;
 		case 10:
-		downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
-		std::cout << "Scheduler Transport " << std::endl;
-		break;
+		  downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
+		  std::cout << "Scheduler Transport " << std::endl;
+		  break;
 		case 11:
-		downlink_scheduler_type = ENodeB::DLScheduler_VOGEL;
-		std::cout << "Scheduler VOGEL Approximate";
-		break;
-	
+		  downlink_scheduler_type = ENodeB::DLScheduler_VOGEL;
+		  std::cout << "Scheduler VOGEL Approximate";
+		  break;
 	  default:
-		downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
-		break;
+    	string error_log = "Undefined Scheduler: " + std::to_string(sched_type);
+      throw std::runtime_error(error_log);
+      break;
 	}
 
   // SET FRAME STRUCTURE

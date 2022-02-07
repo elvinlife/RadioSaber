@@ -56,10 +56,22 @@ using std::pair;
 
 UserEquipment* genNewUE(int idUE, double radius, int speed, Cell* cell, ENodeB* enb, NetworkManager* nm)
 {
-  double posX = (double)rand()/RAND_MAX;
-  posX = 0.95 * (((2*radius*1000)*posX) - (radius*1000));
-  double posY = (double)rand()/RAND_MAX;
-  posY = 0.95 * (((2*radius*1000)*posY) - (radius*1000));
+  // double posX = (double)rand()/RAND_MAX;
+  // posX = 0.95 * (((2*radius*1000)*posX) - (radius*1000));
+  // double posY = (double)rand()/RAND_MAX;
+  // posY = 0.95 * (((2*radius*1000)*posY) - (radius*1000));
+
+  /*
+  Configure the initial positions of ues to make bandwdith not the bottleneck
+  for real-time flows;
+  Have tested it with 100 128kbps flows;
+  */
+
+	double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 200;
+	double posY = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 200;
+	posX = rand() % 2 == 0 ? posX : -posX;
+	posY = rand() % 2 == 0 ? posY : -posY;
+
   double speedDirection = GetRandomVariable (360.) * ((2.*3.14)/360.);
 
   UserEquipment* ue = new UserEquipment (
@@ -163,12 +175,15 @@ static void SingleCellCustomize (int nbCells, double radius,
       std::cout << "Scheduler NVS " << std::endl;
       break;
     case 8:
-      downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
-      std::cout << "Scheduler Oracle " << std::endl;
+      downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
+      std::cout << "Scheduler Greedy " << std::endl;
       break;
-
+    case 9:
+      downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
+      std::cout << "Scheduler SubOptimal" << std::endl;
     default:
-      downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
+      string error_log = "Undefined Scheduler: " + std::to_string(sched_type);
+      throw std::runtime_error(error_log);
       break;
   }
 

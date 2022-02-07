@@ -32,7 +32,7 @@ static std::string path ("/home/alvin/Research/lte-sim-dev/");
 
 
 /* tracing */
-static bool _APP_TRACING_ = true;
+static bool _APP_TRACING_ = false;
 static bool _RLC_TRACING_ = false;
 static bool _MAC_TRACING_ = false;
 static bool _PHY_TRACING_ = false;
@@ -59,7 +59,7 @@ static bool _channel_AWGN_ = false;
 //#define APPLICATION_DEBUG
 //#define BEARER_DEBUG
 //#define RLC_DEBUG
-#define MAC_QUEUE_DEBUG
+//#define MAC_QUEUE_DEBUG
 //#define FLOW_MANAGER_DEBUG
 //#define FRAME_MANAGER_DEBUG
 //#define ENODEB_DEBUG
@@ -78,7 +78,7 @@ static bool _channel_AWGN_ = false;
 //#define TEST_PROPAGATION_LOSS_MODEL
 //#define INTERFERENCE_DEBUG
 //#define TEST_CQI_FEEDBACKS
-#define SCHEDULER_DEBUG
+//#define SCHEDULER_DEBUG
 //#define AMC_MAPPING
 //#define PLOT_USER_POSITION
 //#define TEST_UL_SINR

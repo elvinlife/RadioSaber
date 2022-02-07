@@ -42,3 +42,4 @@ TOOLS/make_sum
 *.log
 *.error
 *.png
+*.backup

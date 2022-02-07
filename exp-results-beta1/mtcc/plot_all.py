@@ -1,4 +1,4 @@
-TIMES=3
+TIMES=1
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import numpy as np
@@ -54,8 +54,8 @@ def get_throughput(dname, ues):
         cumu_bytes['nvs'].append(b/ratio)
         b, _ = get_onetrace( dname + "/greedy_pf" + str(i) + ".log", ues)
         cumu_bytes['greedy'].append(b/ratio)
-        b, _ = get_onetrace( dname + "/subopt_pf" + str(i) + ".log", ues)
-        cumu_bytes['subopt'].append(b/ratio)
+        #b, _ = get_onetrace( dname + "/subopt_pf" + str(i) + ".log", ues)
+        #cumu_bytes['subopt'].append(b/ratio)
         #b, _ = get_onetrace( dname + "/maxcell_pf" + str(i) + ".log", ues)
         #cumu_bytes['maxcell'].append(b/ratio)
         #b, _ = get_onetrace( dname + "/vogel_pf" + str(i) + ".log", ues)
@@ -135,9 +135,10 @@ def plot_bar_ratio():
 #    fig.savefig("fix10slices.png")
 
 def plot_bar_throughput():
-    dnames = ['4ues', '10ues', '20ues', '40ues']
-    x_array = np.arange(4)
-    ue_array = [4, 10, 20, 40]
+    dnames = ['10slices', '25slices', '50slices']
+    x_array = np.arange(3)
+    all_ue = 100
+    slice_array = [10, 25, 50]
     y1_array = []
     y2_array = []
     y3_array = []
@@ -145,29 +146,29 @@ def plot_bar_throughput():
     yerr2_array = []
     yerr3_array = []
     for i in range(len(dnames)):
-        cumu_bytes = get_throughput( dnames[i], ue_array[i]*10 )
+        cumu_bytes = get_throughput( dnames[i], all_ue)
         y1_array.append( np.mean( cumu_bytes['nvs'] ) )
         yerr1_array.append( np.std( cumu_bytes['nvs'] ) )
         y2_array.append( np.mean( cumu_bytes['greedy'] ) )
         yerr2_array.append( np.std( cumu_bytes['greedy'] ) )
-        y3_array.append( np.mean( cumu_bytes['subopt'] ) )
-        yerr3_array.append( np.std( cumu_bytes['subopt'] ) )
+        #y3_array.append( np.mean( cumu_bytes['subopt'] ) )
+        #yerr3_array.append( np.std( cumu_bytes['subopt'] ) )
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.bar( x_array - 0.3, y1_array, color="cornflowerblue", width=0.3, label="NVS")
     ax.bar( x_array, y2_array, color="orange", width=0.3, label="Greedy")
-    ax.bar( x_array + 0.3, y3_array, color="green", width=0.3, label="Subopt")
+    #ax.bar( x_array + 0.3, y3_array, color="green", width=0.3, label="Subopt")
     ax.errorbar(x_array - 0.3, y1_array, yerr1_array, fmt=".", elinewidth=0.3, capsize=10)
     ax.errorbar(x_array, y2_array, yerr2_array, fmt=".", elinewidth=0.3, capsize=10)
-    ax.errorbar(x_array + 0.3, y3_array, yerr3_array, fmt=".", elinewidth=0.3, capsize=10)
+    #ax.errorbar(x_array + 0.3, y3_array, yerr3_array, fmt=".", elinewidth=0.3, capsize=10)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.set_ylim( bottom = 1 )
-    ax.set_xlabel("# of ues", fontsize=14)
+    ax.set_xlabel("# of slices", fontsize=14)
     ax.set_ylabel("Throughput(Mbps)", fontsize=14)
     ax.tick_params(axis="both", labelsize=12)
     ax.set_xticks( x_array )
-    ax.set_xticklabels( ue_array )
+    ax.set_xticklabels( slice_array )
     ax.legend(loc="lower left")
-    fig.savefig("fix10slices.png")
+    fig.savefig("mtcc.png")
 
 plot_bar_throughput()
