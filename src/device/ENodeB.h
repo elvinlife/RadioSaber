@@ -79,6 +79,7 @@ public:
 		DLScheduler_NVS,
 		DLScheduler_GREEDY,
 		DLScheduler_SUBOPT,
+		DLScheduler_UpperBound,
 		DLScheduler_MAXCELL,
 		DLScheduler_VOGEL
 	  };

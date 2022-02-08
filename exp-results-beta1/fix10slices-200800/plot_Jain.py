@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 TIMES=3
 import matplotlib.pyplot as plt
 from collections import defaultdict
@@ -5,7 +6,7 @@ import numpy as np
 
 # ues_per_slice = 4
 slice_number = 10
-INTRA = "mt"
+INTRA = "pf"
 
 def get_JIndex_array(fname, n_users):
     begin_ts = 9000
@@ -110,7 +111,7 @@ def get_inter_JainsIndex(dname, ues):
         b_suboptimal_J_index = get_inter_JIndex(dname + "/subopt_" + INTRA + str(i) + ".log", ues)
         subopt_index+=b_suboptimal_J_index
 
-        b_single_J_index = get_inter_JIndex(dname + "/single_" + INTRA + str(i) + ".log", ues)
+        b_single_J_index = get_inter_JIndex(dname + "/upperbound_" + INTRA + str(i) + ".log", ues)
         single_index+=b_single_J_index
 
     nvs_index/=TIMES
@@ -189,7 +190,7 @@ def plot_inter_JainIndex():
     ax.plot(x_array, y_array_nvs, "b-", label = "NVS")
     ax.plot(x_array, y_array_greedy, "r-.", label = "Greedy")
     ax.plot(x_array, y_array_subopt, "y--", label = "Subopt")
-    ax.plot(x_array, y_array_single, "g-o", label="Single")
+    ax.plot(x_array, y_array_single, "g-o", label="UpperBound")
     ax.set_ylim( [0.0, 1.1] )
     ax.legend()
 

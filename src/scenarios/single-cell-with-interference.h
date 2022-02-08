@@ -129,14 +129,18 @@ static void SingleCellWithInterference (int nbCells, double radius,
 		  downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
 		  std::cout << "Scheduler Oracle " << std::endl;
 		  break;
-		case 10:
-		  downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
-		  std::cout << "Scheduler Transport " << std::endl;
-		  break;
-		case 11:
-		  downlink_scheduler_type = ENodeB::DLScheduler_VOGEL;
-		  std::cout << "Scheduler VOGEL Approximate";
-		  break;
+    case 10:
+      downlink_scheduler_type = ENodeB::DLScheduler_UpperBound;
+      std::cout << "Scheduler UpperBound " << std::endl;
+      break;
+		// case 10:
+		//   downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
+		//   std::cout << "Scheduler Transport " << std::endl;
+		//   break;
+		// case 11:
+		//   downlink_scheduler_type = ENodeB::DLScheduler_VOGEL;
+		//   std::cout << "Scheduler VOGEL Approximate";
+		//   break;
 	  default:
     	string error_log = "Undefined Scheduler: " + std::to_string(sched_type);
       throw std::runtime_error(error_log);

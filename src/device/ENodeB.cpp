@@ -309,10 +309,10 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
   switch (type)
     {
       case ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR:
-    	scheduler = new  DL_PF_PacketScheduler ();
-    	scheduler->SetMacEntity (mac);
-    	mac->SetDownlinkPacketScheduler (scheduler);
-	    break;
+    	  scheduler = new  DL_PF_PacketScheduler ();
+    	  scheduler->SetMacEntity (mac);
+    	  mac->SetDownlinkPacketScheduler (scheduler);
+	      break;
 
       case ENodeB::DLScheduler_TYPE_FLS:
       	scheduler = new  DL_FLS_PacketScheduler ();
@@ -324,57 +324,63 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
       	scheduler = new  DL_EXP_PacketScheduler ();
       	scheduler->SetMacEntity (mac);
       	mac->SetDownlinkPacketScheduler (scheduler);
-		  break;
+		    break;
 
       case ENodeB::DLScheduler_TYPE_MLWDF:
       	scheduler = new  DL_MLWDF_PacketScheduler ();
       	scheduler->SetMacEntity (mac);
       	mac->SetDownlinkPacketScheduler (scheduler);
-		  break;
+		    break;
 
       case ENodeB::DLScheduler_EXP_RULE:
       	scheduler = new  ExpRuleDownlinkPacketScheduler ();
       	scheduler->SetMacEntity (mac);
       	mac->SetDownlinkPacketScheduler (scheduler);
-		  break;
+		    break;
 
       case ENodeB::DLScheduler_LOG_RULE:
       	scheduler = new  LogRuleDownlinkPacketScheduler ();
       	scheduler->SetMacEntity (mac);
       	mac->SetDownlinkPacketScheduler (scheduler);
-		  break;
+		    break;
 
       case ENodeB::DLScheduler_NVS:
         scheduler = new DownlinkNVSScheduler(config_fname);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
-      break;
+        break;
 
       case ENodeB::DLScheduler_GREEDY:
         //scheduler = new DownlinkGreedyScheduler(config_fname);
         scheduler = new DownlinkTransportScheduler(config_fname, 0);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
-      break;
+        break;
       
       case ENodeB::DLScheduler_SUBOPT:
         //scheduler = new DownlinkSubOptScheduler(config_fname);
         scheduler = new DownlinkTransportScheduler(config_fname, 1);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
-      break;
+        break;
+
+      case ENodeB::DLScheduler_UpperBound:
+        scheduler = new DownlinkTransportScheduler(config_fname, 4);
+        scheduler->SetMacEntity( mac );
+        mac->SetDownlinkPacketScheduler( scheduler );
+        break;
 
       case ENodeB::DLScheduler_MAXCELL:
         scheduler = new DownlinkTransportScheduler(config_fname, 2);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
-      break;
+        break;
 
       case ENodeB::DLScheduler_VOGEL:
         scheduler = new DownlinkTransportScheduler(config_fname, 3);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
-      break;
+        break;
 
 	  default:
 	    std::cout << "ERROR: invalid scheduler type" << std::endl;

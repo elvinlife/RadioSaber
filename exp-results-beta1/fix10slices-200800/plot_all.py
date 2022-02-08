@@ -1,7 +1,10 @@
-TIMES=2
+#!/usr/bin/python3
+TIMES=3
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import numpy as np
+
+INTRA = "mt"
 
 def get_onetrace(fname, n_users):
     begin_ts = 9000
@@ -26,13 +29,13 @@ def get_ratio(dname, ues):
     cumu_bytes = defaultdict(list)
     cumu_rbs = defaultdict(list)
     for i in range(TIMES):
-        b, r = get_onetrace( dname + "/nvs_mt" + str(i) + ".log", ues)
+        b, r = get_onetrace( dname + "/nvs_pf" + str(i) + ".log", ues)
         cumu_bytes['nvs'].append(b)
         cumu_rbs['nvs'].append(r)
-        b, r = get_onetrace( dname + "/greedy_mt" + str(i) + ".log", ues)
+        b, r = get_onetrace( dname + "/greedy_pf" + str(i) + ".log", ues)
         cumu_bytes['greedy'].append(b)
         cumu_rbs['greedy'].append(r)
-        b, r = get_onetrace( dname + "/maxcell_mt" + str(i) + ".log", ues)
+        b, r = get_onetrace( dname + "/maxcell_pf" + str(i) + ".log", ues)
         cumu_bytes['maxcell'].append(b)
         cumu_rbs['maxcell'].append(r)
         if abs(cumu_rbs['nvs'][-1] - cumu_rbs['maxcell'][-1]) > 1:
@@ -50,18 +53,14 @@ def get_throughput(dname, ues):
     ratio = 12* 1000 / 8
     cumu_bytes = defaultdict(list)
     for i in range(TIMES):
-        b, _ = get_onetrace( dname + "/nvs_mt" + str(i) + ".log", ues)
+        b, _ = get_onetrace( dname + "/nvs_" + INTRA + str(i) + ".log", ues)
         cumu_bytes['nvs'].append(b/ratio)
-        b, _ = get_onetrace( dname + "/greedy_mt" + str(i) + ".log", ues)
+        b, _ = get_onetrace( dname + "/greedy_" + INTRA + str(i) + ".log", ues)
         cumu_bytes['greedy'].append(b/ratio)
-        b, _ = get_onetrace( dname + "/subopt_mt" + str(i) + ".log", ues)
+        b, _ = get_onetrace( dname + "/subopt_" + INTRA + str(i) + ".log", ues)
         cumu_bytes['subopt'].append(b/ratio)
-        b, _ = get_onetrace( dname + "/single_mt" + str(i) + ".log", ues)
+        b, _ = get_onetrace( dname + "/upperbound_" + INTRA + str(i) + ".log", ues)
         cumu_bytes['single'].append(b/ratio)
-        #b, _ = get_onetrace( dname + "/maxcell_mt" + str(i) + ".log", ues)
-        #cumu_bytes['maxcell'].append(b/ratio)
-        #b, _ = get_onetrace( dname + "/vogel_mt" + str(i) + ".log", ues)
-        #cumu_bytes['vogel'].append(b/ratio)
     return cumu_bytes
 
 def plot_bar_ratio():
@@ -162,7 +161,7 @@ def plot_bar_throughput():
     ax.bar( x_array - 0.6, y1_array, color="cornflowerblue", width=0.4, label="NVS")
     ax.bar( x_array - 0.2, y2_array, color="orange", width=0.4, label="Greedy")
     ax.bar( x_array + 0.2, y3_array, color="green", width=0.4, label="Subopt")
-    ax.bar( x_array + 0.6, y4_array, color="blue", width=0.4, label="Single")
+    ax.bar( x_array + 0.6, y4_array, color="blue", width=0.4, label="UpperBound")
     ax.errorbar(x_array - 0.6, y1_array, yerr1_array, fmt=".", elinewidth=0.3, capsize=10)
     ax.errorbar(x_array - 0.2, y2_array, yerr2_array, fmt=".", elinewidth=0.3, capsize=10)
     ax.errorbar(x_array + 0.2, y3_array, yerr3_array, fmt=".", elinewidth=0.3, capsize=10)
@@ -177,6 +176,6 @@ def plot_bar_throughput():
     ax.set_xticks( x_array )
     ax.set_xticklabels( ue_array )
     ax.legend(loc="lower left")
-    fig.savefig("mt.png")
+    fig.savefig(INTRA + ".png")
 
 plot_bar_throughput()
