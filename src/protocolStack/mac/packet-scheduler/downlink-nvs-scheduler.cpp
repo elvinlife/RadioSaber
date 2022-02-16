@@ -38,6 +38,7 @@
 #include <cstdio>
 #include <limits>
 #include <fstream>
+#include <cassert>
 
 #define SCHEDULER_DEBUG 1
 
@@ -332,13 +333,16 @@ DownlinkNVSScheduler::RBsAllocation ()
 #endif
 
   FlowsToSchedule* flows = GetFlowsToSchedule ();
-  int nbOfRBs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
-  int rbg_size = get_rbg_size(nbOfRBs);
-  int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
+  int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int rbg_size = get_rbg_size(nb_rbs);
+  // currently nb_rbgs should be divisible
+  nb_rbs = nb_rbs - (nb_rbs % rbg_size);
+ 
+  int nb_rbgs = (nb_rbs + rbg_size - 1) / rbg_size;
 
   // create a matrix of flow metrics
-  double metrics[nbOfGroups][flows->size ()];
-  for (int i = 0; i < nbOfGroups; i++) {
+  double metrics[nb_rbgs][flows->size ()];
+  for (int i = 0; i < nb_rbgs; i++) {
 	  for (int j = 0; j < flows->size (); j++) {
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
@@ -353,7 +357,7 @@ DownlinkNVSScheduler::RBsAllocation ()
     {
 	  std::cout << "\t metrics for flow "
 			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
-	  for (int jj = 0; jj < nbOfGroups; jj++)
+	  for (int jj = 0; jj < nb_rbgs; jj++)
 	  {
       fprintf(stdout, " (%d, %.3f, %d)",
           jj, metrics[jj][ii], 
@@ -371,7 +375,7 @@ DownlinkNVSScheduler::RBsAllocation ()
       l_bFlowScheduled[k] = false;
 
   //RBs allocation
-  for (int s = 0; s < nbOfGroups; s++)
+  for (int s = 0; s < nb_rbgs; s++)
     {
       if (l_iScheduledFlows == flows->size ())
           break;
@@ -396,7 +400,7 @@ DownlinkNVSScheduler::RBsAllocation ()
         {
           // allocate the sth rbg
           int l = s*rbg_size, r = (s+1)*rbg_size;
-          if (r > nbOfRBs) r = nbOfRBs;
+          if (r > nb_rbs) r = nb_rbs;
           for (int i = l; i < r; ++i) {
             scheduledFlow->GetListOfAllocatedRBs()->push_back(i);
             double sinr = amc->GetSinrFromCQI(scheduledFlow->GetCqiFeedbacks().at(i));

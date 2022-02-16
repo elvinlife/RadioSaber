@@ -94,6 +94,9 @@ get_subband_size(int nof_prb)
   else if (nof_prb <= 110) {
     return 8;
   }
+  // 5G 100MHz
+  // If a RB is 400khz, there're 250 PRB. Thus, the subband size is 16 PRB(32 200khz PRB)
+  // If a RB is 800khz, there're 125 PRB. Thus, the subband size is 8 PRB(32 200khz PRB)
   else if (nof_prb <= 500) {
     return 32;
   }
@@ -113,6 +116,8 @@ get_rbg_size(int nof_prb)
     return 3;
   else if (nof_prb <= 110)
     return 4;
+  // According to 3GPP TS 38.214, the RBG size can be 2 or 4 or wideband(which means cannot allocate non-contiguous RBs)
+  // https://www.etsi.org/deliver/etsi_ts/136200_136299/136213/15.10.00_60/ts_136213v151000p.pdf
   else if (nof_prb <= 500)
     return 8;
   else {

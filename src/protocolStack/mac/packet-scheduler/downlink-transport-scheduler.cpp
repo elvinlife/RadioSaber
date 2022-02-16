@@ -236,6 +236,7 @@ DownlinkTransportScheduler::DoStopSchedule (void)
 
 static unordered_map<int, vector<int>> UpperBound(double** flow_spectraleff, vector<int>& slice_quota_rbgs, int nb_rbgs, int nb_slices)
 {
+  double sum_bits = 0;
   unordered_map<int, vector<int>> slice_rbgs;
   for (int j = 0; j < nb_slices; ++j) {
     if (slice_quota_rbgs[j] <= 0)
@@ -251,8 +252,10 @@ static unordered_map<int, vector<int>> UpperBound(double** flow_spectraleff, vec
       );
     for (int k = 0; k < slice_quota_rbgs[j]; ++k) {
       slice_rbgs[j].push_back(sorted_cqi[k].first);
+      sum_bits += sorted_cqi[k].second;
     }
   }
+  fprintf(stderr, "all_bytes: %.0f\n", sum_bits * 180 / 8 * 4); // 4 for rbg_size
   return slice_rbgs;
 }
 
@@ -460,15 +463,15 @@ DownlinkTransportScheduler::RBsAllocation ()
   FlowsToSchedule* flows = GetFlowsToSchedule ();
   int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
   int rbg_size = get_rbg_size(nb_rbs);
-  // we only evaluate 20Mhz with 100rbs here
-  assert(rbg_size == 4 && nb_rbs == 100);
-
+  // currently nb_rbgs should be divisible
+  nb_rbs = nb_rbs - (nb_rbs % rbg_size);
+  assert(nb_rbs % rbg_size == 0);
 
   // find out slices without data/flows at all, and assign correct rb target
   // we can estimate the required rbs for every slice as the future work (to guide the reallocation)
   std::vector<bool> slice_with_data(num_type2_slices_, false);
-  std::vector<double> slice_target_rbs(num_type2_slices_, 0);
-  double extra_rbs = nb_rbs;
+  std::vector<int> slice_target_rbs(num_type2_slices_, 0);
+  int extra_rbs = nb_rbs;
   for (int k = 0; k < flows->size(); k++)
   {
     int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
@@ -476,19 +479,18 @@ DownlinkTransportScheduler::RBsAllocation ()
     if (slice_with_data[slice_id])
       continue;
     slice_with_data[slice_id] = true;
-    slice_target_rbs[slice_id] = nb_rbs * type2_weights_[slice_id] + type2_rbs_offset_[slice_id];
+    slice_target_rbs[slice_id] = (int)(nb_rbs * type2_weights_[slice_id] + type2_rbs_offset_[slice_id]);
     extra_rbs -= slice_target_rbs[slice_id];
   }
+  
+  int rand_begin_idx = rand() % num_type2_slices_;
   while (extra_rbs > 0) {
-    int rand_id = rand() % num_type2_slices_;
-    if (slice_with_data[rand_id]) {
-      double alloc = extra_rbs > rbg_size ? rbg_size : extra_rbs;
-      slice_target_rbs[rand_id] += alloc;
-      extra_rbs -= alloc;
-    }
+    slice_target_rbs[rand_begin_idx % num_type2_slices_] += 1;
+    extra_rbs -= 1;
+    rand_begin_idx += 1;
   }
 
-  int nb_rbgs = (nb_rbs + rbg_size - 1) / rbg_size;
+  int nb_rbgs = nb_rbs / rbg_size;
   // calculate the rbg quota for slices
   std::vector<int> slice_quota_rbgs(num_type2_slices_, 0);
   std::vector<int> slice_final_rbgs(num_type2_slices_, 0);
@@ -499,12 +501,16 @@ DownlinkTransportScheduler::RBsAllocation ()
   }
   std::cout << std::endl;
   while (extra_rbgs > 0) {
-    int rand_id = rand() % num_type2_slices_;
-    if (slice_with_data[rand_id]) {
-      slice_quota_rbgs[rand_id] += 1;
-      extra_rbgs -= 1;
-    }
+    slice_quota_rbgs[extra_rbgs % num_type2_slices_] += 1;
+    extra_rbgs -= 1;
   }
+  // while (extra_rbgs > 0) {
+  //   int rand_id = rand() % num_type2_slices_;
+  //   if (slice_with_data[rand_id]) {
+  //     slice_quota_rbgs[rand_id] += 1;
+  //     extra_rbgs -= 1;
+  //   }
+  // }
   std::cout << "slice target RBs:";
   for (int i = 0; i < num_type2_slices_; ++i) {
     std::cout << "(" << i << ", " << slice_target_rbs[i] << ", " << slice_quota_rbgs[i] << ") ";
