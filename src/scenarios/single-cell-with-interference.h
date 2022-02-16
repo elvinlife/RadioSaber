@@ -42,6 +42,7 @@
 #include "../phy/wideband-cqi-eesm-error-model.h"
 #include "../phy/simple-error-model.h"
 #include "../channel/propagation-model/macrocell-urban-area-channel-realization.h"
+#include "../channel/propagation-model/macrocell-rural-area-channel-realization.h"
 #include "../load-parameters.h"
 #include <queue>
 #include <fstream>
@@ -341,9 +342,14 @@ static void SingleCellWithInterference (int nbCells, double radius,
 	  eNBs->at (0)->RegisterUserEquipment (ue);
 
 	  // define the channel realization
-	  MacroCellUrbanAreaChannelRealization* c_dl = new MacroCellUrbanAreaChannelRealization (eNBs->at (0), ue);
+	  // MacroCellUrbanAreaChannelRealization* c_dl = new MacroCellUrbanAreaChannelRealization (eNBs->at (0), ue);
+	  // eNBs->at (0)->GetPhy ()->GetDlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_dl);
+	  // MacroCellUrbanAreaChannelRealization* c_ul = new MacroCellUrbanAreaChannelRealization (ue, eNBs->at (0));
+	  // eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
+    
+    MacroCellRuralAreaChannelRealization* c_dl = new MacroCellRuralAreaChannelRealization (eNBs->at (0), ue);
 	  eNBs->at (0)->GetPhy ()->GetDlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_dl);
-	  MacroCellUrbanAreaChannelRealization* c_ul = new MacroCellUrbanAreaChannelRealization (ue, eNBs->at (0));
+	  MacroCellRuralAreaChannelRealization* c_ul = new MacroCellRuralAreaChannelRealization (ue, eNBs->at (0));
 	  eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
 
 

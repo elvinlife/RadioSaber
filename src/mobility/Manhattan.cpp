@@ -75,15 +75,15 @@ Manhattan::UpdatePosition (double timestamp)
 
 #ifdef MOBILITY_DEBUG
 	cout << "MOBILITY_DEBUG: User ID: " << GetNodeID ()
-	    << "\n\t Cell ID " <<
+	    << "\t Cell ID " <<
 					NetworkManager::Init()->GetCellIDFromPosition (GetAbsolutePosition()->GetCoordinateX(),
 																   GetAbsolutePosition()->GetCoordinateY())
 		<< "\n\t Initial Position (X): " << GetAbsolutePosition()->GetCoordinateX()
-		<< "\n\t Initial Position (Y): " << GetAbsolutePosition()->GetCoordinateY()
+		<< "\t Initial Position (Y): " << GetAbsolutePosition()->GetCoordinateY()
 		<< "\n\t Speed: " << GetSpeed()
-		<< "\n\t Speed Direction: " << GetSpeedDirection()
+		<< "\t Speed Direction: " << GetSpeedDirection()
 		<< "\n\t Time Last Update: " << GetPositionLastUpdate()
-		<< "\n\t Time Interval: " << timeInterval
+		<< "\t Time Interval: " << timeInterval
 		<< endl;
 #endif
 #ifdef MOBILITY_DEBUG_TAB
@@ -175,7 +175,7 @@ Manhattan::UpdatePosition (double timestamp)
 		  (rounded_x==0 && old_x<rounded_x && rounded_x<=new_x) || (rounded_x==0 && old_x>rounded_x && rounded_x>=new_x) ||
 		  (rounded_y==0 && old_y<rounded_y && rounded_y<=new_y) || (rounded_y==0 && old_y>rounded_y && rounded_y>=new_y) )
   {
-	  srand ( time(NULL) );
+	  //srand ( time(NULL) );
 	  double prob_turn = (rand()%100)*0.01;
 	  if(prob_turn<=0.25) {
 		  speedDirection = GetSpeedDirection() + 1.57; //turn left;
