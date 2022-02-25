@@ -84,15 +84,27 @@ FullbandCqiManager::CreateCqiFeedbacks (std::vector<double> sinr)
 
   AMCModule *amc = GetDevice ()->GetProtocolStack ()->GetMacEntity ()->GetAmcModule ();
 
-  //std::cout << "\t sinr: ";
-  //for (int i = 0; i < sinr.size (); i++)
-  //  {
-  //    std::cout << sinr.at (i) << " ";
-  //  }
-  //std::cout << std::endl;
+  // std::cerr << "rb sinr: ";
+  // for (int i = 0; i < sinr.size (); i++) {
+  //    std::cerr << sinr.at (i) << " ";
+  // }
+  // std::cerr << std::endl;
 
   sinr = GenSubbandSINR(sinr);
+  
+  // std::cerr << "rb(subband) sinr: ";
+  // for (int i = 0; i < sinr.size (); i++) {
+  //    std::cerr << sinr.at (i) << " ";
+  // }
+  // std::cerr << std::endl;
+
   std::vector<int> cqi = amc->CreateCqiFeedbacks (sinr);
+
+  // std::cerr << "rb cqi: ";
+  // for (int i = 0; i < cqi.size(); i++) {
+  //   std::cerr << cqi.at(i) << " ";
+  // }
+  // std:cerr << std::endl;
 
   CqiIdealControlMessage *msg = new CqiIdealControlMessage ();
   msg->SetSourceDevice (thisNode);

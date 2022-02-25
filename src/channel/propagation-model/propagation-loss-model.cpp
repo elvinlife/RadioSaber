@@ -110,29 +110,20 @@ PropagationLossModel::AddLossModel (NetworkNode* src,
 #ifdef TEST_PROPAGATION_LOSS_MODEL
   std::cout << "tx sub channels " << rxSignalValues.size () << " loss sub channels " << loss.size () << std::endl;
 #endif
-  // std::cout << "tx sub channels " << rxSignalValues.size () << " loss sub channels " << loss.size () << std::endl;
-  // std::cout << "channel: " << typeid(*c).name();
+  // std::cerr << "tx sub channels " << rxSignalValues.size () << " loss sub channels " << loss.size () << std::endl;
+  // std::cerr << "channel: " << typeid(*c).name();
   // for (int i = 0; i < rxSignalValues.size(); ++i) {
-  //   std::cout << "(" << rxSignalValues[i] << ", " << loss[i] << ")\t";
+  //   std::cerr << "(" << rxSignalValues[i] << ", " << loss[i] << ")\t";
   // }
-  // std::cout << std::endl;
+  // std::cerr << std::endl;
 
   int nbOfSubChannels = rxSignalValues.size ();
 
   for (int i = 0; i < nbOfSubChannels; i++)
-    {
+  {
 	  double rxPower = rxSignalValues.at (i) + loss.at (i); // add propagation loss
-
-// #ifdef TEST_PROPAGATION_LOSS_MODEL
-//       std::cout << "\t\t sub channel = " << i
-// 		  << " rxSignalValues = " << rxSignalValues.at (i)
-//           << " loss = " << loss.at (i)
-//           << " rxPower = " << rxPower
-// 		  << std::endl;
-// #endif
-
 	  rxSignalValues.at (i) = rxPower; // in W/Hz
-    }
+  }
 
   rxSignal->SetValues (rxSignalValues);
 

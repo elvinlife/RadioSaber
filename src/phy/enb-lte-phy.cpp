@@ -78,12 +78,14 @@ EnbLtePhy::DoSetBandwidthManager (void)
 
   double powerTx = pow (10., (GetTxPower () - 30) / 10); // in natural unit
 
-  double txPower = 10 * log10 (powerTx / channels.size ()); //in dB
+  //double txPower = 10 * log10 (powerTx / channels.size ()); //in dB
+  double txPower = 10 * log10 (powerTx / 500); //in dB
 
   for (it = channels.begin (); it != channels.end (); it++ )
-    {
+  {
       values.push_back(txPower);
-    }
+  }
+  std::cerr << "powerTX: " << powerTx << " txPower: " << txPower << " channelSize: " << channels.size() <<  std::endl;
 
   txSignal->SetValues (values);
   //txSignal->SetBandwidthManager (s->Copy());

@@ -52,7 +52,6 @@
 #include <vector>
 #include <utility>
 using std::pair;
-//#define SLICE_CLUSTER 1
 
 static void SingleCellWithInterference (int nbCells, double radius,
                                         int nbUE,
@@ -253,72 +252,24 @@ static void SingleCellWithInterference (int nbCells, double radius,
   //Create UEs
   int idUE = nbCells;
 
-  #ifdef SLICE_CLUSTER
-	int num_slices = 0, ue_id = 0;
-	std::vector<int> appid_to_slice;
-	std::vector<double> slice_xpos;
-	std::vector<double> slice_ypos;
-	double temp;
-	std::ifstream ifs(config_fname);
-	if (!ifs.is_open()) {
-		throw std::runtime_error("Defined SLICE_CLUSTER without offering config_file");
-	}
-	if (ifs.is_open()) {
-    	ifs >> num_slices;
-    	for (int i = 0; i < num_slices; ++i) {
-			ifs >> temp;
-	  		double posX = (double)rand()/RAND_MAX;
-			double posY = (double)rand()/RAND_MAX;
-			int range = 300;
-	  		//posX = 0.95 * (((2*radius*1000) * posX) - (radius*1000));
-	  		//posY = 0.95 * (((2*radius*1000) * posY) - (radius*1000));
-			posX = 0.95 * ((2 * range * radius * posX) - (radius * range) + range * i);
-			posY = 0.95 * ((2 * range * radius * posY) - (radius * range) + range * i);
-			slice_xpos.push_back(posX);
-			slice_ypos.push_back(posY);
-		}
-		for (int i = 0; i < num_slices; ++i) {
-			int ue_num = 0;
-			ifs >> ue_num;
-			for (int j = 0; j < ue_num; ++j) {
-				appid_to_slice.push_back(i);
-			}
-		}
-  }
-  ifs.close();
-  #endif
-
   for (int i = 0; i < nbUE; i++)
 	{
-		#ifdef SLICE_CLUSTER
-		int slice_id = appid_to_slice[i];
-		//double posX = slice_xpos[slice_id] + (double)rand() / RAND_MAX * radius * 20;
-		//double posY = slice_ypos[slice_id] + (double)rand() / RAND_MAX * radius * 20;
-		double posX = slice_xpos[slice_id];
-		double posY = slice_ypos[slice_id];
 
-		#else
-		// double posX = (double)rand()/RAND_MAX;
-	  	// posX = 0.95 * (((2*radius*1000)*posX) - (radius*1000));
-	  	// double posY = (double)rand()/RAND_MAX;
-	  	// posY = 0.95 * (((2*radius*1000)*posY) - (radius*1000));
 		double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.6 + 200;
 		double posY = (double)rand() / RAND_MAX * radius * 1000 * 0.6 + 200;
 		posX = rand() % 2 == 0 ? posX : -posX;
 		posY = rand() % 2 == 0 ? posY : -posY;
-		#endif
-	  //ue's random position
-	  
+
 
 	  double speedDirection = GetRandomVariable (360.) * ((2.*3.14)/360.);
 
 	  UserEquipment* ue = new UserEquipment (idUE,
-			                                 posX, posY, speed, speedDirection,
-											 cells->at (0),
-											 eNBs->at (0),
-			                                 0, //handover false!
-			                                 //Mobility::CONSTANT_POSITION);
-											 Mobility::MANHATTAN);
+			                  posX, posY, speed, speedDirection,
+											  cells->at (0),
+											  eNBs->at (0),
+			                  0, //handover false!
+			                  //Mobility::CONSTANT_POSITION);
+											  Mobility::MANHATTAN);
 
 	  std::cout << "Created UE - id " << idUE << " position " << posX << " " << posY << " direction " << speedDirection << std::endl;
 
