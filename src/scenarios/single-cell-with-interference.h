@@ -68,7 +68,6 @@ static void SingleCellWithInterference (int nbCells, double radius,
   double duration = 12;
   double flow_duration = 12;
 
-
   int cluster = 3;
   double bandwidth = 20;
 
@@ -305,8 +304,6 @@ static void SingleCellWithInterference (int nbCells, double radius,
 
 
 	  // CREATE DOWNLINK APPLICATION FOR THIS UE
-	  //double start_time = 0.1 + GetRandomVariable (5.);
-	  //double duration_time = start_time + flow_duration;
 	  double start_time = 0.1;
 	  double duration_time = start_time + flow_duration;
 
@@ -590,5 +587,6 @@ static void SingleCellWithInterference (int nbCells, double radius,
   delete frameManager;
   //delete nm;
   delete simulator;
-
+  delete dlChannels;
+  delete ulChannels;
 }
