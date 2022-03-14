@@ -59,9 +59,10 @@ static void SingleCellWithInterference (int nbCells, double radius,
                                         int sched_type,
                                         int frame_struct,
                                         int speed,
-		                                double maxDelay, int videoBitRate,
+                                        double maxDelay, int videoBitRate,
                                         int seed,
-										string config_fname)
+                                        string config_fname,
+                                        string channel)
 {
 
   // define simulation times
@@ -131,6 +132,10 @@ static void SingleCellWithInterference (int nbCells, double radius,
     case 10:
       downlink_scheduler_type = ENodeB::DLScheduler_UpperBound;
       std::cout << "Scheduler UpperBound " << std::endl;
+      break;
+    case 11:
+      downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
+      std::cout << "Scheduler MaxCell " << std::endl;
       break;
 		// case 10:
 		//   downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
@@ -267,8 +272,8 @@ static void SingleCellWithInterference (int nbCells, double radius,
 											  cells->at (0),
 											  eNBs->at (0),
 			                  0, //handover false!
-			                  //Mobility::CONSTANT_POSITION);
-											  Mobility::MANHATTAN);
+			                  Mobility::CONSTANT_POSITION);
+											  //Mobility::MANHATTAN);
 
 	  std::cout << "Created UE - id " << idUE << " position " << posX << " " << posY << " direction " << speedDirection << std::endl;
 
@@ -291,20 +296,23 @@ static void SingleCellWithInterference (int nbCells, double radius,
 	  // register ue to the enb
 	  eNBs->at (0)->RegisterUserEquipment (ue);
 
-	  // define the channel realization
-	  // MacroCellUrbanAreaChannelRealization* c_dl = new MacroCellUrbanAreaChannelRealization (eNBs->at (0), ue);
-	  // eNBs->at (0)->GetPhy ()->GetDlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_dl);
-	  // MacroCellUrbanAreaChannelRealization* c_ul = new MacroCellUrbanAreaChannelRealization (ue, eNBs->at (0));
-	  // eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
+	  //define the channel realization
     
-    MacroCellRuralAreaChannelRealization* c_dl = new MacroCellRuralAreaChannelRealization (eNBs->at (0), ue);
-	  eNBs->at (0)->GetPhy ()->GetDlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_dl);
-	  MacroCellRuralAreaChannelRealization* c_ul = new MacroCellRuralAreaChannelRealization (ue, eNBs->at (0));
-	  eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
-
+    if (channel == "rural") {
+      MacroCellRuralAreaChannelRealization* c_dl = new MacroCellRuralAreaChannelRealization (eNBs->at (0), ue);
+	    eNBs->at (0)->GetPhy ()->GetDlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_dl);
+	    MacroCellRuralAreaChannelRealization* c_ul = new MacroCellRuralAreaChannelRealization (ue, eNBs->at (0));
+	    eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
+    }
+    else {
+	    MacroCellUrbanAreaChannelRealization* c_dl = new MacroCellUrbanAreaChannelRealization (eNBs->at (0), ue);
+	    eNBs->at (0)->GetPhy ()->GetDlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_dl);
+	    MacroCellUrbanAreaChannelRealization* c_ul = new MacroCellUrbanAreaChannelRealization (ue, eNBs->at (0));
+	    eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
+    }
 
 	  // CREATE DOWNLINK APPLICATION FOR THIS UE
-	  double start_time = 0.1;
+	  double start_time = 0;
 	  double duration_time = start_time + flow_duration;
 
 	  // *** voip application

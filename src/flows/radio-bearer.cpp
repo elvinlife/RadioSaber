@@ -127,6 +127,9 @@ RadioBearer::UpdateAverageTransmissionRate ()
    * R'(t+1) = (0.8 * R'(t)) + (0.2 * r(t))
    */
 
+  if (Simulator::Init()->Now() == GetLastUpdate())
+    return;
+
   double rate = (GetTransmittedBytes () * 8)/(Simulator::Init()->Now() - GetLastUpdate());
 
   double beta = 0.1;
@@ -138,17 +141,6 @@ RadioBearer::UpdateAverageTransmissionRate ()
     {
 	  m_averageTransmissionRate = 1;
     }
-  
-/*
-#ifdef SCHEDULER_DEBUG
-  std::cout << "UPDATE AVG RATE, bearer " << GetApplication ()->GetApplicationID () <<
-		  "\n\t tx byte " << GetTransmittedBytes () <<
-	 	  "\n\t ts: " << Simulator::Init()->Now() <<
-		  "\n\t old rate " << m_averageTransmissionRate <<
-          "\n\t new rate " << rate <<
-		  "\n\t new estimated rate " << m_averageTransmissionRate << std::endl;
-#endif
-*/
 
   ResetTransmittedBytes();
 }

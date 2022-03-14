@@ -163,17 +163,18 @@ MacroCellRuralAreaChannelRealization::GetLoss ()
 		  << GetDestinationNode ()->GetIDNetworkNode () << std::endl;
 #endif
 
-  if (NeedForUpdate ())
-    {
-	   UpdateModels ();
-    }
+  // if (NeedForUpdate ())
+  //   {
+	//    UpdateModels ();
+  //   }
 
   std::vector<double> loss;
 
 
   int now_ms = Simulator::Init()->Now () * 1000;
   int lastUpdate_ms = GetLastUpdate () * 1000;
-  int index = now_ms - lastUpdate_ms;
+  //int index = now_ms - lastUpdate_ms;
+  int index = now_ms % (int)(GetSamplingPeriod() * 1000); // sample period is 500ms here
 
   int nbOfSubChannels = GetSourceNode ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
 

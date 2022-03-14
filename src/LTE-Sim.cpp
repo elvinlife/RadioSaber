@@ -109,7 +109,7 @@ main (int argc, char *argv[])
 	      int frame_struct = atoi(argv[9]);
 	      int speed = atoi(argv[10]);
 	      double maxDelay = atof(argv[11]);
-		  int video_bit_rate = atoi(argv[12]);
+		    int video_bit_rate = atoi(argv[12]);
 	      int seed;
 	      if (argc==14) seed = atoi(argv[13]);
 	      else seed = -1;
@@ -117,8 +117,8 @@ main (int argc, char *argv[])
 	    }
 	  if (strcmp(argv[1], "SingleCellWithI")==0)
 	    {
-		  int nbCells = atoi(argv[2]);
-		  double radius = atof(argv[3]);
+		    int nbCells = atoi(argv[2]);
+		    double radius = atof(argv[3]);
 	      int nbUE = atoi(argv[4]);
 	      int nbVoIP = atoi(argv[5]);
 	      int nbVideo = atoi(argv[6]);
@@ -128,16 +128,14 @@ main (int argc, char *argv[])
 	      int frame_struct = atoi(argv[10]);
 	      int speed = atoi(argv[11]);
 	      double maxDelay = atof(argv[12]);
-		  int video_bit_rate = atoi(argv[13]);
-	      int seed;
-		  string config_fname;
-	      if (argc >= 15) {
-			seed = atoi(argv[14]);
-			if (argc==16)
-			config_fname = string(argv[15]);
-		  }
-		  else seed = -1;
-      SingleCellWithInterference (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname);
+		    int video_bit_rate = atoi(argv[13]);
+	      int seed = atoi(argv[14]);
+		    string config_fname = string(argv[15]);
+        string channel = "";
+		    if (argc > 16) {
+          channel = string(argv[16]);
+		    }
+        SingleCellWithInterference (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname, channel);
 	    }
 		if (strcmp(argv[1], "SingleCellCustomize") == 0)
     {
