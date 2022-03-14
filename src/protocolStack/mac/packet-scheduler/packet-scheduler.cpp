@@ -259,6 +259,11 @@ PacketScheduler::InsertFlowToSchedule (RadioBearer* bearer, int dataToTransmit, 
   double wideSINR = GetEesmEffectiveSinr(sinrs);
   flowToSchedule->SetWidebandCQI(amc->GetCQIFromSinr(wideSINR));
 
+  // std::cout << "app_id: " << bearer->GetApplication()->GetApplicationID();
+  // for (int i = 0; i < numberOfCqi; i++)
+  //   std::cout << "\t" << cqiFeedbacks.at(i);
+  // std::cout << std::endl;
+
 #ifdef SCHEDULER_DEBUG
 	std::cout << "\t  --> selected flow: "
 			<< bearer->GetApplication ()->GetApplicationID ()

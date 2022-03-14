@@ -381,6 +381,11 @@ static vector<int> MaximizeCell(double** flow_spectraleff, vector<int>& slice_qu
         slice_rbgs[slice_id] += 1;
     } 
   }
+  double sum_bits = 0;
+  for (int i = 0; i < nb_rbgs; ++i) {
+    sum_bits += flow_spectraleff[i][rbg_to_slice[i]];
+  }
+  fprintf(stderr, "all_bytes: %.0f\n", sum_bits * 180 / 8 * 4); // 4 for rbg_size
   return rbg_to_slice;
 }
 
@@ -451,6 +456,11 @@ static vector<int> VogelApproximate(double** flow_spectraleff, vector<int>& slic
     rbg_to_slice[coord_1st.first] = coord_1st.second;
     slice_rbgs[coord_1st.second] += 1;
   }
+  double sum_bits = 0;
+  for (int i = 0; i < nb_rbgs; ++i) {
+    sum_bits += flow_spectraleff[i][rbg_to_slice[i]];
+  }
+  fprintf(stderr, "all_bytes: %.0f\n", sum_bits * 180 / 8 * 4); // 4 for rbg_size
   return rbg_to_slice;
 }
 
@@ -504,13 +514,6 @@ DownlinkTransportScheduler::RBsAllocation ()
     slice_quota_rbgs[extra_rbgs % num_type2_slices_] += 1;
     extra_rbgs -= 1;
   }
-  // while (extra_rbgs > 0) {
-  //   int rand_id = rand() % num_type2_slices_;
-  //   if (slice_with_data[rand_id]) {
-  //     slice_quota_rbgs[rand_id] += 1;
-  //     extra_rbgs -= 1;
-  //   }
-  // }
   std::cout << "slice target RBs:";
   for (int i = 0; i < num_type2_slices_; ++i) {
     std::cout << "(" << i << ", " << slice_target_rbs[i] << ", " << slice_quota_rbgs[i] << ") ";
@@ -574,6 +577,21 @@ DownlinkTransportScheduler::RBsAllocation ()
       }
     }
   }
+
+  // print the slice_quota and slice_cqi for debugging
+  // if (GetTimeStamp() << 1000) {
+  //   fprintf(stderr, "slice quota: ");
+  //   for (int i = 0; i < num_type2_slices_; i++) {
+  //     fprintf(stderr, "%d ", slice_quota_rbgs[i]);
+  //   }
+  //   fprintf(stderr, "\n");
+  //   for (int i = 0; i < nb_rbgs; i++) {
+  //     for (int j = 0; j < num_type2_slices_; j++) {
+  //       fprintf(stderr, "(%d, %.0f) ", flow_id[i][j], flow_spectraleff[i][j] * 180 / 8 * 4);
+  //     }
+  //     fprintf(stderr, "\n");
+  //   }
+  // }
 
   // calculate the assignment of rbgs to slices
   vector<int> rbg_to_slice;
