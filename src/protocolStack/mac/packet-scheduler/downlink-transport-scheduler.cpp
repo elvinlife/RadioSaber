@@ -579,7 +579,7 @@ DownlinkTransportScheduler::RBsAllocation ()
   }
 
   // print the slice_quota and slice_cqi for debugging
-  // if (GetTimeStamp() << 1000) {
+  // if (GetTimeStamp() < 1000) {
   //   fprintf(stderr, "slice quota: ");
   //   for (int i = 0; i < num_type2_slices_; i++) {
   //     fprintf(stderr, "%d ", slice_quota_rbgs[i]);
@@ -684,6 +684,14 @@ DownlinkTransportScheduler::RBsAllocation ()
       int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
       //define the amount of bytes to transmit
       int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
+
+      // int mcs = 2;
+      // int transportBlockSize = 0;
+      // double effectiveSinr = 2;
+      // for (int i = 0; i < estimatedSinrValues.size(); i++) {
+      //   transportBlockSize += amc->GetTBSizeFromMCS(amc->GetMCSFromCQI(amc->GetCQIFromSinr(estimatedSinrValues[i])), 1);
+      // }
+
       flow->UpdateAllocatedBits (transportBlockSize);
 #ifdef SCHEDULER_DEBUG
 		  std::cout << "\t\t --> flow "	<< flow->GetBearer ()->GetApplication ()->GetApplicationID ()

@@ -118,7 +118,7 @@ MacroCellUrbanAreaChannelRealization::GetPathLoss (void)
     }
   */
 
-  //m_pathLoss = 128.1 + (37.6 * log10 (distance * 0.001));
+  //m_pathLoss = 128.1 + (37.6 * log10 (distance * 0.001)); // 80.4-106(100-1000)
   m_pathLoss = 118.1 + (37.6 * log10 (distance * 0.001));
 
   UserEquipment* ue;
@@ -212,7 +212,7 @@ MacroCellUrbanAreaChannelRealization::GetLoss ()
   for (int i = 0; i < nbOfSubChannels; i++)
     {
 	  double l = GetFastFading ()->at (i).at (index) - GetPathLoss () - GetPenetrationLoss () - GetShadowing ();
-	  loss.push_back (l);
+    loss.push_back (l);
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
        std::cout << "\t\t mlp = " << GetFastFading ()->at (i).at (index)

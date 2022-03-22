@@ -59,8 +59,10 @@ def get_throughput(dname, ues):
         cumu_bytes['greedy'].append(b/ratio)
         b, _ = get_onetrace( dname + "/subopt_" + INTRA + str(i) + ".log", ues)
         cumu_bytes['subopt'].append(b/ratio)
+        b, _ = get_onetrace( dname + "/maxcell_" + INTRA + str(i) + ".log", ues)
+        cumu_bytes['maxcell'].append(b/ratio)
         b, _ = get_onetrace( dname + "/upperbound_" + INTRA + str(i) + ".log", ues)
-        cumu_bytes['single'].append(b/ratio)
+        cumu_bytes['upperbound'].append(b/ratio)
     return cumu_bytes
 
 def plot_bar_ratio():
@@ -137,16 +139,18 @@ def plot_bar_ratio():
 
 def plot_bar_throughput():
     dnames = ['4ues', '10ues', '20ues', '32ues']
-    x_array = np.arange(0, 8, 2)
+    x_array = np.arange(0, 12, 3)
     ue_array = [4, 10, 20, 32]
     y1_array = []
     y2_array = []
     y3_array = []
     y4_array = []
+    y5_array = []
     yerr1_array = []
     yerr2_array = []
     yerr3_array = []
     yerr4_array = []
+    yerr5_array = []
     for i in range(len(dnames)):
         cumu_bytes = get_throughput( dnames[i], ue_array[i]*10 )
         y1_array.append( np.mean( cumu_bytes['nvs'] ) )
@@ -155,17 +159,21 @@ def plot_bar_throughput():
         yerr2_array.append( np.std( cumu_bytes['greedy'] ) )
         y3_array.append( np.mean( cumu_bytes['subopt'] ) )
         yerr3_array.append( np.std( cumu_bytes['subopt'] ) )
-        y4_array.append( np.mean( cumu_bytes['single'] ) )
-        yerr4_array.append( np.std( cumu_bytes['single'] ) )
+        y4_array.append( np.mean( cumu_bytes['maxcell'] ) )
+        yerr4_array.append( np.std( cumu_bytes['maxcell'] ) )
+        y5_array.append( np.mean( cumu_bytes['upperbound'] ) )
+        yerr5_array.append( np.std( cumu_bytes['upperbound'] ) )
     fig, ax = plt.subplots(figsize=(8, 6))
-    ax.bar( x_array - 0.6, y1_array, color="cornflowerblue", width=0.4, label="NVS")
-    ax.bar( x_array - 0.2, y2_array, color="orange", width=0.4, label="Greedy")
-    ax.bar( x_array + 0.2, y3_array, color="green", width=0.4, label="Subopt")
-    ax.bar( x_array + 0.6, y4_array, color="blue", width=0.4, label="UpperBound")
-    ax.errorbar(x_array - 0.6, y1_array, yerr1_array, fmt=".", elinewidth=0.3, capsize=10)
-    ax.errorbar(x_array - 0.2, y2_array, yerr2_array, fmt=".", elinewidth=0.3, capsize=10)
-    ax.errorbar(x_array + 0.2, y3_array, yerr3_array, fmt=".", elinewidth=0.3, capsize=10)
-    ax.errorbar(x_array + 0.6, y4_array, yerr4_array, fmt=".", elinewidth=0.3, capsize=10)
+    ax.bar( x_array - 0.8, y1_array, color="cornflowerblue", width=0.4, label="NVS")
+    ax.bar( x_array - 0.4, y2_array, color="orange", width=0.4, label="Greedy")
+    ax.bar( x_array , y3_array, color="green", width=0.4, label="Subopt")
+    ax.bar( x_array + 0.4, y4_array, color="red", width=0.4, label="MaxCell")
+    ax.bar( x_array + 0.8, y5_array, color="blue", width=0.4, label="UpperBound")
+    ax.errorbar(x_array - 0.8, y1_array, yerr1_array, fmt=".", elinewidth=0.3, capsize=10)
+    ax.errorbar(x_array - 0.4, y2_array, yerr2_array, fmt=".", elinewidth=0.3, capsize=10)
+    ax.errorbar(x_array , y3_array, yerr3_array, fmt=".", elinewidth=0.3, capsize=10)
+    ax.errorbar(x_array + 0.4, y4_array, yerr4_array, fmt=".", elinewidth=0.3, capsize=10)
+    ax.errorbar(x_array + 0.8, y5_array, yerr5_array, fmt=".", elinewidth=0.3, capsize=10)
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

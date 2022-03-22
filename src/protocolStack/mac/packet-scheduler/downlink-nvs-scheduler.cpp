@@ -40,8 +40,6 @@
 #include <fstream>
 #include <cassert>
 
-#define SCHEDULER_DEBUG 1
-
 DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
 {
   std::ifstream ifs(config_fname, std::ifstream::in);
@@ -453,13 +451,18 @@ DownlinkNVSScheduler::RBsAllocation ()
 
           //compute the effective sinr
           double effectiveSinr = GetEesmEffectiveSinr (estimatedSinrValues);
-
           //get the MCS for transmission
           int mcs = amc->GetMCSFromCQI (amc->GetCQIFromSinr (effectiveSinr));
-
           //define the amount of bytes to transmit
-          //int transportBlockSize = amc->GetTBSizeFromMCS (mcs);
           int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
+
+          // double effectiveSinr = 2;
+          // int mcs = 2;
+          // int transportBlockSize = 0;
+          // for (int i = 0; i < estimatedSinrValues.size(); ++i) {
+          //   transportBlockSize += amc->GetTBSizeFromMCS(amc->GetMCSFromCQI(amc->GetCQIFromSinr(estimatedSinrValues[i])), 1);
+          // }
+
           flow->UpdateAllocatedBits (transportBlockSize);
 
 #ifdef SCHEDULER_DEBUG

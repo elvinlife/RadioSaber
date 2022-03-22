@@ -107,7 +107,7 @@ MacroCellRuralAreaChannelRealization::GetPathLoss (void)
 	  distance =  ue->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (enb->GetMobilityModel ()->GetAbsolutePosition ());
     }
 
-  m_pathLoss = 100.54 + (34.1 * log10 (distance * 0.001));
+  m_pathLoss = 100.54 + (34.1 * log10 (distance * 0.001)); //76.7-97.23(200-800)
 
 
   return m_pathLoss;

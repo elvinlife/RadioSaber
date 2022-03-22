@@ -70,7 +70,7 @@ static void SingleCellWithInterference (int nbCells, double radius,
   double flow_duration = 12;
 
   int cluster = 3;
-  double bandwidth = 20;
+  double bandwidth = 100;
 
   // CREATE COMPONENT MANAGER
   Simulator *simulator = Simulator::Init();
@@ -136,6 +136,10 @@ static void SingleCellWithInterference (int nbCells, double radius,
     case 11:
       downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
       std::cout << "Scheduler MaxCell " << std::endl;
+      break;
+    case 12:
+      downlink_scheduler_type = ENodeB::DLScheduler_VOGEL;
+      std::cout << "Scheduler Vogel " << std::endl;
       break;
 		// case 10:
 		//   downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
@@ -259,8 +263,8 @@ static void SingleCellWithInterference (int nbCells, double radius,
   for (int i = 0; i < nbUE; i++)
 	{
 
-		double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.6 + 200;
-		double posY = (double)rand() / RAND_MAX * radius * 1000 * 0.6 + 200;
+		double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 100;
+		double posY = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 100;
 		posX = rand() % 2 == 0 ? posX : -posX;
 		posY = rand() % 2 == 0 ? posY : -posY;
 
