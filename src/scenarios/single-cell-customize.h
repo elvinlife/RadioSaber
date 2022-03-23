@@ -67,8 +67,8 @@ UserEquipment* genNewUE(int idUE, double radius, int speed, Cell* cell, ENodeB* 
   Have tested it with 100 128kbps flows;
   */
 
-	double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 200;
-	double posY = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 200;
+	double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 100;
+	double posY = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 100;
 	posX = rand() % 2 == 0 ? posX : -posX;
 	posY = rand() % 2 == 0 ? posY : -posY;
 
@@ -121,9 +121,8 @@ static void SingleCellCustomize (int nbCells, double radius,
   double duration = 12;
   double flow_duration = 12;
 
-
-  int cluster = 4;
-  double bandwidth = 20;
+  int cluster = 3;
+  double bandwidth = 100;
 
   // CREATE COMPONENT MANAGER
   Simulator *simulator = Simulator::Init();
@@ -175,12 +174,25 @@ static void SingleCellCustomize (int nbCells, double radius,
       std::cout << "Scheduler NVS " << std::endl;
       break;
     case 8:
-      downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
-      std::cout << "Scheduler Greedy " << std::endl;
+		  downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
+		  std::cout << "Scheduler Greedy " << std::endl;
+		  break;
+		case 9:
+		  downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
+		  std::cout << "Scheduler Oracle " << std::endl;
+		  break;
+    case 10:
+      downlink_scheduler_type = ENodeB::DLScheduler_UpperBound;
+      std::cout << "Scheduler UpperBound " << std::endl;
       break;
-    case 9:
-      downlink_scheduler_type = ENodeB::DLScheduler_SUBOPT;
-      std::cout << "Scheduler SubOptimal" << std::endl;
+    case 11:
+      downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
+      std::cout << "Scheduler MaxCell " << std::endl;
+      break;
+    case 12:
+      downlink_scheduler_type = ENodeB::DLScheduler_VOGEL;
+      std::cout << "Scheduler Vogel " << std::endl;
+      break;
     default:
       string error_log = "Undefined Scheduler: " + std::to_string(sched_type);
       throw std::runtime_error(error_log);

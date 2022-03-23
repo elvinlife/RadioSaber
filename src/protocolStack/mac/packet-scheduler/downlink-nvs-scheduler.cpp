@@ -510,7 +510,7 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectr
       break;
     case MLWDF:
     {
-      double a = -log10 (0.05) / 1;
+      double a = -log10 (0.01) / 1;
       double HOL = bearer->GetHeadOfLinePacketDelay ();
       metric = (a * HOL) * ((spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate ());
       break;

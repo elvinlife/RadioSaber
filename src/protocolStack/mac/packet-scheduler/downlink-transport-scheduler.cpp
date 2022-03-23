@@ -481,6 +481,7 @@ DownlinkTransportScheduler::RBsAllocation ()
   // we can estimate the required rbs for every slice as the future work (to guide the reallocation)
   std::vector<bool> slice_with_data(num_type2_slices_, false);
   std::vector<int> slice_target_rbs(num_type2_slices_, 0);
+  int num_nonempty_slices = 0;
   int extra_rbs = nb_rbs;
   for (int k = 0; k < flows->size(); k++)
   {
@@ -488,16 +489,23 @@ DownlinkTransportScheduler::RBsAllocation ()
     int slice_id = type2_app_[app_id];
     if (slice_with_data[slice_id])
       continue;
+    num_nonempty_slices += 1;
     slice_with_data[slice_id] = true;
     slice_target_rbs[slice_id] = (int)(nb_rbs * type2_weights_[slice_id] + type2_rbs_offset_[slice_id]);
     extra_rbs -= slice_target_rbs[slice_id];
   }
-  
-  int rand_begin_idx = rand() % num_type2_slices_;
-  while (extra_rbs > 0) {
-    slice_target_rbs[rand_begin_idx % num_type2_slices_] += 1;
-    extra_rbs -= 1;
-    rand_begin_idx += 1;
+  assert(num_nonempty_slices != 0);
+
+  // we enable reallocation between slices, but not flows
+  bool is_first_slice = true;
+  for (int k = 0; k < num_type2_slices_; ++k) {
+    if (slice_with_data[k]) {
+      slice_target_rbs[k] += extra_rbs / num_nonempty_slices;
+      if (is_first_slice) {
+        slice_target_rbs[k] += extra_rbs % num_nonempty_slices;
+        is_first_slice = false;
+      }
+    }
   }
 
   int nb_rbgs = nb_rbs / rbg_size;
@@ -509,11 +517,17 @@ DownlinkTransportScheduler::RBsAllocation ()
     slice_quota_rbgs[i] = (int)(slice_target_rbs[i] / rbg_size);
     extra_rbgs -= slice_quota_rbgs[i];
   }
-  std::cout << std::endl;
-  while (extra_rbgs > 0) {
-    slice_quota_rbgs[extra_rbgs % num_type2_slices_] += 1;
-    extra_rbgs -= 1;
+  is_first_slice = true;
+  for (int k = 0; k < num_type2_slices_; ++k) {
+    if(slice_with_data[k]) {
+      slice_quota_rbgs[k] += extra_rbgs / num_nonempty_slices;
+      if (is_first_slice) {
+        slice_quota_rbgs[k] += extra_rbgs % num_nonempty_slices;
+        is_first_slice = false;
+      }
+    }
   }
+
   std::cout << "slice target RBs:";
   for (int i = 0; i < num_type2_slices_; ++i) {
     std::cout << "(" << i << ", " << slice_target_rbs[i] << ", " << slice_quota_rbgs[i] << ") ";
@@ -616,8 +630,8 @@ DownlinkTransportScheduler::RBsAllocation ()
   if (inter_sched_ < 4 ) {
     for (int i = 0; i < rbg_to_slice.size(); ++i) {
       int fid = flow_id[i][rbg_to_slice[i]];
-      int sid = type2_app_[flows->at(fid)->GetBearer()->GetApplication()->GetApplicationID()];
       assert(fid != -1);
+      int sid = type2_app_[flows->at(fid)->GetBearer()->GetApplication()->GetApplicationID()];
       assert(sid == rbg_to_slice[i]);
       slice_final_rbgs[sid] += 1;
       int l = i * rbg_size, r = (i+1) * rbg_size;
@@ -653,6 +667,17 @@ DownlinkTransportScheduler::RBsAllocation ()
   }
   delete[] flow_id;
   delete[] flow_spectraleff;
+
+  FinalizeAllocation();  
+}
+
+void
+DownlinkTransportScheduler::FinalizeAllocation()
+{
+  FlowsToSchedule* flows = GetFlowsToSchedule ();
+  AMCModule *amc = GetMacEntity ()->GetAmcModule ();
+  int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int rbg_size = get_rbg_size(nb_rbs);
 
   //Finalize the allocation
   PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage ();
@@ -705,19 +730,19 @@ DownlinkTransportScheduler::RBsAllocation ()
 #endif
 		//create PDCCH messages
 		for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
-		  {
+		{
 		  pdcchMsg->AddNewRecord (PdcchMapIdealControlMessage::DOWNLINK,
 				  flow->GetListOfAllocatedRBs ()->at (rb),
 								  flow->GetBearer ()->GetDestination (),
 								  mcs);
-		  }
+		}
 	  }
   }
 
   if (pdcchMsg->GetMessage()->size () > 0)
-    {
-      GetMacEntity ()->GetDevice ()->GetPhy ()->SendIdealControlMessage (pdcchMsg);
-    }
+  {
+    GetMacEntity ()->GetDevice ()->GetPhy ()->SendIdealControlMessage (pdcchMsg);
+  }
   delete pdcchMsg;
 }
 
