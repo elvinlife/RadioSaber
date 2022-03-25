@@ -43,3 +43,4 @@ TOOLS/make_sum
 *.error
 *.png
 *.backup
+exp-results-beta1
