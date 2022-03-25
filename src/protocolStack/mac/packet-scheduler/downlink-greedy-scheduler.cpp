@@ -255,7 +255,7 @@ DownlinkGreedyScheduler::RBsAllocation ()
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
-        i, flows->at(j)->GetAllEfficiency());
+        i);
 	  }
   }
 
@@ -439,7 +439,7 @@ DownlinkGreedyScheduler::RBsAllocation ()
 }
 
 double
-DownlinkGreedyScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
+DownlinkGreedyScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
 {
   double metric = 0;
   switch (intra_sched_) {
@@ -448,9 +448,6 @@ DownlinkGreedyScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spe
       break;
     case PF:
       metric = (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
-      break;
-    case TTA:
-      metric = spectralEfficiency / wbEff;
       break;
     case MLWDF:
     {

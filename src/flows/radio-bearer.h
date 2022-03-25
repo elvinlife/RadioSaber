@@ -42,6 +42,7 @@ public:
 
 	void SetApplication (Application* a);
 	Application* GetApplication (void);
+	int GetUserID (void);
 
 	void UpdateTransmittedBytes (int bytes);
 	int GetTransmittedBytes (void) const;

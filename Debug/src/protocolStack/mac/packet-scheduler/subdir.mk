@@ -20,7 +20,6 @@ CPP_SRCS += \
 ../src/protocolStack/mac/packet-scheduler/uplink-packet-scheduler.cpp \
 ../src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.cpp \
 ../src/protocolStack/mac/packet-scheduler/downlink-greedy-scheduler.cpp \
-../src/protocolStack/mac/packet-scheduler/downlink-suboptimal-scheduler.cpp \
 ../src/protocolStack/mac/packet-scheduler/downlink-transport-scheduler.cpp
 
 OBJS += \
@@ -40,7 +39,6 @@ OBJS += \
 ./src/protocolStack/mac/packet-scheduler/uplink-packet-scheduler.o \
 ./src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.o \
 ./src/protocolStack/mac/packet-scheduler/downlink-greedy-scheduler.o \
-./src/protocolStack/mac/packet-scheduler/downlink-suboptimal-scheduler.o \
 ./src/protocolStack/mac/packet-scheduler/downlink-transport-scheduler.o
 
 CPP_DEPS += \
@@ -60,7 +58,6 @@ CPP_DEPS += \
 ./src/protocolStack/mac/packet-scheduler/uplink-packet-scheduler.d \
 ./src/protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.d \
 ./src/protocolStack/mac/packet-scheduler/downlink-greedy-scheduler.d \
-./src/protocolStack/mac/packet-scheduler/downlink-suboptimal-scheduler.d \
 ./src/protocolStack/mac/packet-scheduler/downlink-transport-scheduler.d
 
 

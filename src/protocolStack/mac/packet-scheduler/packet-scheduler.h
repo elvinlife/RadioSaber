@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include "../../../core/idealMessages/ideal-control-messages.h"
 
 const int MAX_SLICES = 100;
@@ -37,6 +38,69 @@ class RadioBearer;
 
 class PacketScheduler {
 public:
+
+  struct FlowToSchedule
+  {
+    FlowToSchedule(RadioBearer* bearer,
+        int dataToTransmit);
+    virtual ~FlowToSchedule();
+    RadioBearer* m_bearer;
+    int m_allocatedBits;		//bits
+    int m_transmittedData;		//bytes
+    int m_dataToTransmit;		//bytes
+
+    std::vector<double> m_spectralEfficiency;
+    std::vector<int> m_listOfAllocatedRBs;
+    std::vector<int> m_listOfSelectedMCS;
+    std::vector<int> m_cqiFeedbacks;
+    int					m_wideBandCQI;
+
+    RadioBearer* GetBearer (void);
+
+    void UpdateAllocatedBits (int allocatedBits);
+    int GetAllocatedBits (void) const;
+    int GetTransmittedData (void) const;
+    void SetDataToTransmit (int dataToTransmit);
+    int GetDataToTransmit (void) const;
+
+    void SetSpectralEfficiency (std::vector<double>& s);
+    std::vector<double> GetSpectralEfficiency (void);
+
+    void SetWidebandCQI (int);
+    int GetWidebandCQI (void);
+
+    std::vector<int>* GetListOfAllocatedRBs ();
+    std::vector<int>* GetListOfSelectedMCS ();
+
+    void SetCqiFeedbacks (std::vector<int>& cqiFeedbacks);
+    std::vector<int> GetCqiFeedbacks (void);
+  };
+
+	struct UserToSchedule
+  {
+    UserToSchedule();
+    virtual ~UserToSchedule();
+    std::vector<RadioBearer*> m_bearers;
+    int m_allocatedBits;		//bits
+    int m_transmittedData;		//bytes
+    int m_dataToTransmit;		//bytes
+
+    std::vector<double> m_spectralEfficiency;
+    std::vector<int> m_listOfAllocatedRBs;
+    std::vector<int> m_cqiFeedbacks;
+
+    int GetUserID (void) { return 0; }
+    std::vector<RadioBearer*> GetBearers (void);
+
+    void SetSpectralEfficiency (std::vector<double>& s);
+    std::vector<double> GetSpectralEfficiency (void);
+
+    std::vector<int>* GetListOfAllocatedRBs ();
+
+    void SetCqiFeedbacks (std::vector<int>& cqiFeedbacks);
+    std::vector<int> GetCqiFeedbacks (void);
+  };
+
 	PacketScheduler();
 	virtual ~PacketScheduler();
 
@@ -50,54 +114,6 @@ public:
 
 	void StopSchedule ();
 	virtual void DoStopSchedule ();
-
-	struct FlowToSchedule
-	  {
-	    FlowToSchedule(RadioBearer* bearer,
-		  		       int dataToTransmit);
-	    virtual ~FlowToSchedule();
-	    RadioBearer* m_bearer;
-	    int m_allocatedBits;		//bits
-	    int m_transmittedData;	//bytes
-	    int m_dataToTransmit;		//bytes
-
-	    std::vector<double> m_spectralEfficiency;
-	    std::vector<int> m_listOfAllocatedRBs;
-	    std::vector<int> m_listOfSelectedMCS;
-	    std::vector<int> m_cqiFeedbacks;
-		double				m_allEfficiency;
-		int					m_wideBandCQI;
-
-		RadioBearer* GetBearer (void);
-
-		void UpdateAllocatedBits (int allocatedBits);
-		int GetAllocatedBits (void) const;
-		int GetTransmittedData (void) const;
-		void SetDataToTransmit (int dataToTransmit);
-		int GetDataToTransmit (void) const;
-
-		void SetSpectralEfficiency (std::vector<double>& s);
-		std::vector<double> GetSpectralEfficiency (void);
-
-		void SetWidebandCQI (int);
-		int GetWidebandCQI (void);
-		void SetAllEfficiency (double);
-		double GetAllEfficiency (void);
-
-		std::vector<int>* GetListOfAllocatedRBs ();
-		std::vector<int>* GetListOfSelectedMCS ();
-
-		void SetCqiFeedbacks (std::vector<int>& cqiFeedbacks);
-		std::vector<int> GetCqiFeedbacks (void);
-	  };
-
-	typedef std::vector<FlowToSchedule*> FlowsToSchedule;
-
-	void CreateFlowsToSchedule (void);
-	void DeleteFlowsToSchedule (void);
-	void ClearFlowsToSchedule ();
-
-	FlowsToSchedule* GetFlowsToSchedule (void) const;
 
 	void InsertFlowToSchedule (RadioBearer* bearer,
 						       int dataToTransmit,
@@ -115,10 +131,23 @@ public:
 
 	unsigned long GetTimeStamp();
 
+	typedef std::vector<FlowToSchedule*> FlowsToSchedule;
+	void CreateFlowsToSchedule (void);
+	void DeleteFlowsToSchedule (void);
+	void ClearFlowsToSchedule ();
+	FlowsToSchedule* GetFlowsToSchedule (void) const;
+
+	typedef std::unordered_map<int, UserToSchedule*> UsersToSchedule;
+  void CreateUsersToSchedule (void);
+  void DeleteUsersToSchedule (void);
+  void ClearUsersToSchedule ();
+  UsersToSchedule* GetUsersToSchedule (void) const;
+
 
 private:
 	MacEntity *m_mac;
 	FlowsToSchedule *m_flowsToSchedule;
+  UsersToSchedule *m_usersToSchedule;
 	unsigned long m_ts;
 };
 

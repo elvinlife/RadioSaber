@@ -128,11 +128,33 @@ PacketScheduler::ClearFlowsToSchedule ()
     throw std::runtime_error("FLowstoSchedule is Null");
 
   for (iter = records->begin(); iter != records->end (); iter++)
-    {
-	  delete *iter;
-    }
+  {
+    delete *iter;
+  }
 
   GetFlowsToSchedule ()->clear ();
+}
+
+void
+PacketScheduler::CreateUsersToSchedule (void)
+{
+  m_usersToSchedule = new UsersToSchedule();
+}
+
+void
+PacketScheduler::DeleteUsersToSchedule (void)
+{
+  ClearUsersToSchedule();
+  delete m_usersToSchedule;
+}
+
+void
+PacketScheduler::ClearUsersToSchedule()
+{
+  for (auto it = m_usersToSchedule->begin(); it != m_usersToSchedule->end(); ++it) {
+    delete it->second;
+  }
+  m_usersToSchedule->clear();
 }
 
 RadioBearer*
@@ -141,14 +163,32 @@ PacketScheduler::FlowToSchedule::GetBearer (void)
   return m_bearer;
 }
 
+std::vector<RadioBearer*>
+PacketScheduler::UserToSchedule::GetBearers (void)
+{
+  return m_bearers;
+}
+
 void
 PacketScheduler::FlowToSchedule::SetSpectralEfficiency (std::vector<double>& s)
 {
   m_spectralEfficiency = s;
 }
 
+void
+PacketScheduler::UserToSchedule::SetSpectralEfficiency (std::vector<double>& s)
+{
+  m_spectralEfficiency = s;
+}
+
 std::vector<double>
 PacketScheduler::FlowToSchedule::GetSpectralEfficiency (void)
+{
+  return m_spectralEfficiency;
+}
+
+std::vector<double>
+PacketScheduler::UserToSchedule::GetSpectralEfficiency (void)
 {
   return m_spectralEfficiency;
 }
@@ -166,18 +206,6 @@ PacketScheduler::FlowToSchedule::GetWidebandCQI()
 }
 
 void
-PacketScheduler::FlowToSchedule::SetAllEfficiency (double s)
-{
-  m_allEfficiency = s;
-}
-
-double
-PacketScheduler::FlowToSchedule::GetAllEfficiency(void)
-{
-  return m_allEfficiency;
-}
-
-void
 PacketScheduler::FlowToSchedule::UpdateAllocatedBits (int allocatedBits)
 {
   m_allocatedBits += allocatedBits;
@@ -186,11 +214,12 @@ PacketScheduler::FlowToSchedule::UpdateAllocatedBits (int allocatedBits)
   int transmittedPackets = ceil
 			  (availableBytes/1513.0);
 
+  // I guess this is to calculate the payload  
   m_transmittedData = availableBytes - (transmittedPackets * 8);
   if (m_transmittedData < 0)
-    {
+  {
 	  m_transmittedData = 0;
-    }
+  }
 }
 
 int
@@ -224,6 +253,12 @@ PacketScheduler::FlowToSchedule::GetListOfAllocatedRBs ()
 }
 
 std::vector<int>*
+PacketScheduler::UserToSchedule::GetListOfAllocatedRBs ()
+{
+  return &m_listOfAllocatedRBs;
+}
+
+std::vector<int>*
 PacketScheduler::FlowToSchedule::GetListOfSelectedMCS ()
 {
   return &m_listOfSelectedMCS;
@@ -235,8 +270,20 @@ PacketScheduler::FlowToSchedule::SetCqiFeedbacks (std::vector<int>& cqiFeedbacks
   m_cqiFeedbacks = cqiFeedbacks;
 }
 
+void
+PacketScheduler::UserToSchedule::SetCqiFeedbacks (std::vector<int>& cqiFeedbacks)
+{
+  m_cqiFeedbacks = cqiFeedbacks;
+}
+
 std::vector<int>
 PacketScheduler::FlowToSchedule::GetCqiFeedbacks (void)
+{
+  return m_cqiFeedbacks;
+}
+
+std::vector<int>
+PacketScheduler::UserToSchedule::GetCqiFeedbacks (void)
 {
   return m_cqiFeedbacks;
 }
@@ -259,11 +306,6 @@ PacketScheduler::InsertFlowToSchedule (RadioBearer* bearer, int dataToTransmit, 
   double wideSINR = GetEesmEffectiveSinr(sinrs);
   flowToSchedule->SetWidebandCQI(amc->GetCQIFromSinr(wideSINR));
 
-  // std::cout << "app_id: " << bearer->GetApplication()->GetApplicationID();
-  // for (int i = 0; i < numberOfCqi; i++)
-  //   std::cout << "\t" << cqiFeedbacks.at(i);
-  // std::cout << std::endl;
-
 #ifdef SCHEDULER_DEBUG
 	std::cout << "\t  --> selected flow: "
 			<< bearer->GetApplication ()->GetApplicationID ()
@@ -281,7 +323,6 @@ PacketScheduler::UpdateAllocatedBits (FlowToSchedule* scheduledFlow, int allocat
   scheduledFlow->GetListOfAllocatedRBs()->push_back(allocatedRB);
   scheduledFlow->GetListOfSelectedMCS()->push_back(selectedMCS);
 }
-
 
 void
 PacketScheduler::CheckForDLDropPackets ()

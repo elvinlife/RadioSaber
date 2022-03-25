@@ -40,7 +40,7 @@ private:
 
 	const double beta_			= 0.1;
 	
-	Scheduler	intra_sched_ = PF;
+	Scheduler	intra_sched_ = MLWDF;
 	int			inter_sched_ = 0;
 
 public:
@@ -56,8 +56,7 @@ public:
 	void FinalizeAllocation();
 	virtual double ComputeSchedulingMetric (RadioBearer *bearer,
 			double spectralEfficiency,
-			int subChannel,
-			double widebandEfficiency);
+			int subChannel);
 
 	void UpdateAverageTransmissionRate (void);
 };

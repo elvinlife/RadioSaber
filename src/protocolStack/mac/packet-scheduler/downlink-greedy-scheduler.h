@@ -56,8 +56,7 @@ public:
 	virtual void RBsAllocation ();
 	virtual double ComputeSchedulingMetric (RadioBearer *bearer,
 			double spectralEfficiency,
-			int subChannel,
-			double widebandEfficiency);
+			int subChannel);
 
 	void UpdateAverageTransmissionRate (void);
 };

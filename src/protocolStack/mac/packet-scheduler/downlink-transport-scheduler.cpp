@@ -92,6 +92,7 @@ DownlinkTransportScheduler::~DownlinkTransportScheduler()
   Destroy ();
 }
 
+
 void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 {
 #ifdef SCHEDULER_DEBUG
@@ -478,7 +479,6 @@ DownlinkTransportScheduler::RBsAllocation ()
   assert(nb_rbs % rbg_size == 0);
 
   // find out slices without data/flows at all, and assign correct rb target
-  // we can estimate the required rbs for every slice as the future work (to guide the reallocation)
   std::vector<bool> slice_with_data(num_type2_slices_, false);
   std::vector<int> slice_target_rbs(num_type2_slices_, 0);
   int num_nonempty_slices = 0;
@@ -495,7 +495,6 @@ DownlinkTransportScheduler::RBsAllocation ()
     extra_rbs -= slice_target_rbs[slice_id];
   }
   assert(num_nonempty_slices != 0);
-
   // we enable reallocation between slices, but not flows
   bool is_first_slice = true;
   for (int k = 0; k < num_type2_slices_; ++k) {
@@ -507,7 +506,6 @@ DownlinkTransportScheduler::RBsAllocation ()
       }
     }
   }
-
   int nb_rbgs = nb_rbs / rbg_size;
   // calculate the rbg quota for slices
   std::vector<int> slice_quota_rbgs(num_type2_slices_, 0);
@@ -542,7 +540,7 @@ DownlinkTransportScheduler::RBsAllocation ()
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
-        i, flows->at(j)->GetAllEfficiency());
+        i);
 	  }
   }
 
@@ -747,7 +745,7 @@ DownlinkTransportScheduler::FinalizeAllocation()
 }
 
 double
-DownlinkTransportScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
+DownlinkTransportScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
 {
   double metric = 0;
   switch (intra_sched_) {
@@ -756,9 +754,6 @@ DownlinkTransportScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double 
       break;
     case PF:
       metric = (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
-      break;
-    case TTA:
-      metric = spectralEfficiency / wbEff;
       break;
     case MLWDF:
     {
@@ -776,6 +771,7 @@ DownlinkTransportScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double 
 void
 DownlinkTransportScheduler::UpdateAverageTransmissionRate (void)
 {
+  // we should update the user average transmission rate instead of the flow transmission rate
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 

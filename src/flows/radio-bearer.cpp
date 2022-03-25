@@ -80,6 +80,12 @@ RadioBearer::GetApplication (void)
   return m_application;
 }
 
+int
+RadioBearer::GetUserID(void)
+{
+  return GetDestination()->GetIDNetworkNode();
+}
+
 void
 RadioBearer::UpdateCumulateRBs (int rbs)
 {

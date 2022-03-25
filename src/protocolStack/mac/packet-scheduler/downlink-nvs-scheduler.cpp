@@ -88,27 +88,6 @@ DownlinkNVSScheduler::~DownlinkNVSScheduler()
 void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
 {
   double max_score = 0;
-  // for (int i = 0; i < num_type1_slices_; ++i) {
-  //   std::cout << i << ": gbr: " << type1_bitrates_[i] << " average: " << type1_exp_bitrates_[i] << std::endl;
-  // }
-  // currently no type1 slice
-  /*
-  for (int i = 0; i < num_type1_slices_; ++i) {
-    if (type1_exp_bitrates_[i] == 0) {
-      slice_id = i;
-      is_type1 = true;
-      return;
-    }
-    else {
-      double score = (double)type1_bitrates_[i] / type1_exp_bitrates_[i];
-      if (score > max_score) {
-        max_score = score;
-        slice_id = i;
-        is_type1 = true;
-      }
-    }
-  }
-  */
 
 #ifdef SCHEDULER_DEBUG
   for(int i = 0; i < num_type2_slices_; ++i) {
@@ -174,9 +153,6 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
 	  RadioBearer *bearer = (*it);
     int app_id = bearer->GetApplication()->GetApplicationID();
 
-    // if ( !(isType1(app_id) && is_type1 && type1_app_[app_id] == slice_serve)
-    //   && !(!isType1(app_id) && !is_type1 && type2_app_[app_id] == slice_serve) )
-    //   continue;
     if (type2_app_[app_id] != slice_serve)
       continue;
 
@@ -345,8 +321,7 @@ DownlinkNVSScheduler::RBsAllocation ()
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
-        i,
-        flows->at (j)->GetAllEfficiency());
+        i );
 	  }
   }
 
@@ -375,8 +350,10 @@ DownlinkNVSScheduler::RBsAllocation ()
   //RBs allocation
   for (int s = 0; s < nb_rbgs; s++)
     {
-      if (l_iScheduledFlows == flows->size ())
-          break;
+      if (l_iScheduledFlows == flows->size ()) {
+        std::cerr << "waste rbs: " << (nb_rbgs - s) * rbg_size << std::endl;;
+        break;
+      }
 
       double targetMetric = std::numeric_limits<double>::lowest();
       bool SubbandAllocated = false;
@@ -495,7 +472,7 @@ DownlinkNVSScheduler::RBsAllocation ()
 }
 
 double
-DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel, double wbEff)
+DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
 {
   double metric = 0;
   switch (intra_sched_) {
@@ -504,9 +481,6 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectr
       break;
     case PF:
       metric = (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
-      break;
-    case TTA:
-      metric = spectralEfficiency / wbEff;
       break;
     case MLWDF:
     {
