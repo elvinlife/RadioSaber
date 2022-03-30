@@ -497,7 +497,9 @@ DownlinkTransportScheduler::RBsAllocation ()
   assert(num_nonempty_slices != 0);
   // we enable reallocation between slices, but not flows
   bool is_first_slice = true;
-  for (int k = 0; k < num_type2_slices_; ++k) {
+  int rand_begin_idx = rand();
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    int k = (i + rand_begin_idx) % num_type2_slices_;
     if (slice_with_data[k]) {
       slice_target_rbs[k] += extra_rbs / num_nonempty_slices;
       if (is_first_slice) {
@@ -516,7 +518,9 @@ DownlinkTransportScheduler::RBsAllocation ()
     extra_rbgs -= slice_quota_rbgs[i];
   }
   is_first_slice = true;
-  for (int k = 0; k < num_type2_slices_; ++k) {
+  rand_begin_idx = rand();
+  for (int i = 0; i < num_type2_slices_; ++i) {
+    int k = (rand_begin_idx + i) % num_type2_slices_;
     if(slice_with_data[k]) {
       slice_quota_rbgs[k] += extra_rbgs / num_nonempty_slices;
       if (is_first_slice) {
@@ -708,11 +712,14 @@ DownlinkTransportScheduler::FinalizeAllocation()
       //define the amount of bytes to transmit
       int transportBlockSize = amc->GetTBSizeFromMCS (mcs, flow->GetListOfAllocatedRBs ()->size ());
 
-      // int mcs = 2;
+      // double effectiveSinr = estimatedSinrValues[0];
+      // int mcs = amc->GetMCSFromCQI(amc->GetCQIFromSinr(effectiveSinr));
       // int transportBlockSize = 0;
-      // double effectiveSinr = 2;
       // for (int i = 0; i < estimatedSinrValues.size(); i++) {
-      //   transportBlockSize += amc->GetTBSizeFromMCS(amc->GetMCSFromCQI(amc->GetCQIFromSinr(estimatedSinrValues[i])), 1);
+      //   transportBlockSize += amc->GetTBSizeFromMCS(
+      //     amc->GetMCSFromCQI(
+      //       amc->GetCQIFromSinr(
+      //         estimatedSinrValues[i])), 1);
       // }
 
       flow->UpdateAllocatedBits (transportBlockSize);
