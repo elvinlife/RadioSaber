@@ -253,7 +253,7 @@ int
 AMCModule::GetCQIFromSinr (double sinr)
 {
   int cqi = 1; // == CQIIndex[0]
-  while (SINRForCQIIndex[cqi] < sinr && cqi <= 14)
+  while (SINRForCQIIndex[cqi] <= sinr && cqi <= 14)
     {
 	  cqi++;
     }
@@ -297,7 +297,8 @@ AMCModule::GetMCSIndexFromEfficiency(double efficiency)
 int
 AMCModule::GetTBSizeFromMCS (int mcs)
 {
-  return TransportBlockSize[mcs];
+  //return TransportBlockSize[mcs];
+  return TransportBlockSizeTable[0][McsToItbs[mcs]];
 }
 
 int
