@@ -27,43 +27,36 @@
 class DownlinkNVSScheduler: public PacketScheduler {
 	enum Scheduler {MT, PF, TTA, MLWDF};
 private:
-	int		type1_app_[MAX_APPS];
-	int		type2_app_[MAX_APPS];
-	int		type1_bitrates_[MAX_SLICES];
-	int		type1_exp_bitrates_[MAX_SLICES];
-	double	type2_weights_[MAX_SLICES];
-	double 	type2_exp_time_[MAX_SLICES];
+	int		user_to_slice_[MAX_APPS];
+	double	slice_weights_[MAX_SLICES];
+	double 	slice_exp_time_[MAX_SLICES];
 
-	int		num_type2_slices_		= 1;
-	int		num_type1_slices_		= 1;
-	int		num_type1_apps_			= 0;
+	int				num_slices_ = 1;
+	int				schedule_scheme_ = 1;
 
-	const double beta_			= 0.1;
-
-	Scheduler intra_sched_ = MLWDF;
-
-
+	const double	beta_ = 0.1;
+	Scheduler		intra_sched_ = MLWDF;
 
 public:
 	DownlinkNVSScheduler(std::string config_fname="");
 	virtual ~DownlinkNVSScheduler();
 
-	void SelectSliceToServe(int&, bool&);
-	void SelectFlowsToSchedule (int );
+	void SelectSliceToServe( int& );
+	void SelectFlowsToSchedule ( int );
 
 	virtual void DoSchedule (void);
 	virtual void DoStopSchedule (void);
 
 	virtual void RBsAllocation ();
+	void RBsAllocationForUE();
 	virtual double ComputeSchedulingMetric (
-		RadioBearer *bearer, double spectralEfficiency,
-		int subChannel);
+		RadioBearer* bearer, double spectralEfficiency,
+		int subChannel );
+	virtual double ComputeSchedulingMetric (
+		UserToSchedule* user, double spectralEfficiency );
 
 	void UpdateAverageTransmissionRate (int);
 
-	bool isType1(int app_id) {
-		return app_id < num_type1_apps_;
-	}
 };
 
 #endif /* DOWNLINKPACKETSCHEDULER_H_ */

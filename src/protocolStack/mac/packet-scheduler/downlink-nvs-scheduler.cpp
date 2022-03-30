@@ -44,31 +44,17 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
 {
   std::ifstream ifs(config_fname, std::ifstream::in);
   if (ifs.is_open()) {
-    int begin_id = 0;
-    ifs >> num_type1_slices_ >> num_type2_slices_;
-    for (int i = 0; i < num_type1_slices_; ++i)
-      ifs >> type1_bitrates_[i];
-    for (int i = 0; i < num_type1_slices_; ++i) {
-      type1_exp_bitrates_[i] = type1_bitrates_[i];
-      int num_ue;
-      ifs >> num_ue;
-      for (int j = 0; j < num_ue; ++j) {
-        type1_app_[begin_id + j] = i;
-      }
-      begin_id += num_ue;
-    }
-    num_type1_apps_ = begin_id;
+    ifs >> schedule_scheme_ >> num_slices_;
 
-    for (int i = 0; i < num_type2_slices_; ++i)
-      ifs >> type2_weights_[i];
-    for (int i = 0; i < num_type2_slices_; ++i) {
-      type2_exp_time_[i] = type2_weights_[i];
+    for (int i = 0; i < num_slices_; ++i)
+      ifs >> slice_weights_[i];
+    for (int i = 0; i < num_slices_; ++i) {
+      slice_exp_time_[i] = slice_weights_[i];
       int num_ue;
       ifs >> num_ue;
       for (int j = 0; j < num_ue; ++j) {
-        type2_app_[begin_id + j] = i;
+        user_to_slice_[j] = i;
       }
-      begin_id += num_ue;
     }
   }
   else {
@@ -77,7 +63,8 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
   ifs.close();
 
   SetMacEntity (0);
-  CreateFlowsToSchedule ();
+  //CreateFlowsToSchedule ();
+  CreateUsersToSchedule();
 }
 
 DownlinkNVSScheduler::~DownlinkNVSScheduler()
@@ -85,7 +72,7 @@ DownlinkNVSScheduler::~DownlinkNVSScheduler()
   Destroy ();
 }
 
-void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
+void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id)
 {
   double max_score = 0;
 
@@ -97,10 +84,11 @@ void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
 
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
-  std::vector<bool> slice_with_queue(num_type2_slices_, false);
+  std::vector<bool> slice_with_queue(num_slices_, false);
   for (auto it = bearers->begin(); it != bearers->end(); it++) {
     RadioBearer *bearer = (*it);
-    int app_id = bearer->GetApplication()->GetApplicationID();
+    int user_id = bearer->GetUserID();
+
     if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
 		{
 		  int dataToTransmit;
@@ -111,38 +99,37 @@ void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id, bool& is_type1)
 			  dataToTransmit = bearer->GetQueueSize ();
 			}
       if (dataToTransmit > 0) {
-        slice_with_queue[type2_app_[app_id]] = true;
+        slice_with_queue[user_to_slice_[user_id]] = true;
       }
     }
   }
-  for (int i = 0; i < num_type2_slices_; ++i) {
+  for (int i = 0; i < num_slices_; ++i) {
     if (! slice_with_queue[i]) continue;
-    if (type2_exp_time_[i] == 0) {
+    if (slice_exp_time_[i] == 0) {
       slice_id = i;
-      is_type1 = false;
       break;
     }
     else {
-      double score = type2_weights_[i] / type2_exp_time_[i];
+      double score = slice_weights_[i] / slice_exp_time_[i];
       if (score >= max_score) {
         max_score = score;
         slice_id = i;
-        is_type1 = false;
       }
     }
   }
-  for (int i = 0; i < num_type2_slices_; ++i) {
+  for (int i = 0; i < num_slices_; ++i) {
     if (! slice_with_queue[i]) continue;
-    type2_exp_time_[i] = (1-beta_) * type2_exp_time_[i];
+    slice_exp_time_[i] = (1-beta_) * slice_exp_time_[i];
     if (i == slice_id) {
-      type2_exp_time_[i] += beta_ * 1;
+      slice_exp_time_[i] += beta_ * 1;
     }
   }
 }
 
 void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
 {
-  ClearFlowsToSchedule ();
+  //ClearFlowsToSchedule ();
+  ClearUsersToSchedule();
 
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
@@ -151,12 +138,13 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
 	{
 	  //SELECT FLOWS TO SCHEDULE
 	  RadioBearer *bearer = (*it);
-    int app_id = bearer->GetApplication()->GetApplicationID();
+    int user_id = bearer->GetUserID();
 
-    if (type2_app_[app_id] != slice_serve)
+    if (user_to_slice_[user_id] != slice_serve)
       continue;
 
-	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
+	  //if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
+    if (bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
 		{
 		  //compute data to transmit
 		  int dataToTransmit;
@@ -182,8 +170,8 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
 			}
 
 		  //create flow to scheduler record
-		  InsertFlowToSchedule(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
-		}
+      InsertFlowToUser(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
+    }
 	  else
 	    {}
 	}
@@ -200,103 +188,193 @@ DownlinkNVSScheduler::DoSchedule (void)
 
   // some logic to determine the slice to serve
   int slice_serve = 0;
-  bool is_type1 = true;
-  SelectSliceToServe(slice_serve, is_type1);
+  SelectSliceToServe(slice_serve);
   UpdateAverageTransmissionRate (slice_serve);
   SelectFlowsToSchedule (slice_serve);
 
-  if (GetFlowsToSchedule ()->size() == 0)
-	{}
-  else
-	{
-	  RBsAllocation ();
-	}
+  if (GetUsersToSchedule()->size() == 0) {
+  }
+  else {
+	  //RBsAllocation ();
+    RBsAllocationForUE();
+  }
 
   StopSchedule ();
 }
 
 void
-DownlinkNVSScheduler::DoStopSchedule (void)
+DownlinkNVSScheduler::DoStopSchedule(void)
 {
-  PacketBurst* pb = new PacketBurst ();
+  PacketBurst* pb = new PacketBurst();
+  UsersToSchedule *uesToSchedule = GetUsersToSchedule();
+  for (auto it = uesToSchedule->begin(); it != uesToSchedule->end(); it++) {
+    UserToSchedule* user = it->second;
+    int availableBytes = user->GetAllocatedBits() / 8;
+    if (availableBytes > 0) {
+      // let's not reallocate RBs between flows firstly
+      for (int i = MAX_BEARERS-1; i >= 0; i--) {
+        if (user->m_dataToTransmit[i] > 0) {
+          assert(user->m_bearers[i] != NULL);
+          user->m_bearers[i]->UpdateTransmittedBytes(
+            min(availableBytes, user->m_dataToTransmit[i])
+            );
+          user->m_bearers[i]->UpdateCumulateRBs(
+            user->GetListOfAllocatedRBs()->size()
+            );
+          std::cerr << GetTimeStamp()
+              << " user: " << user->GetUserID()
+              << " flow: " << user->m_bearers[i]->GetApplication()->GetApplicationID()
+              << " cumu_bytes: " << user->m_bearers[i]->GetCumulateBytes()
+              << " cumu_rbs: " << user->m_bearers[i]->GetCumulateRBs()
+              << " hol_delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
+              << std::endl;
 
-  //Create Packet Burst
-  FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
-  
-  bool is_type1 = true;
-  int slice_id = -1;
-  int aggregate_bits = 0;
+	        RlcEntity *rlc = user->m_bearers[i]->GetRlcEntity ();
+	        PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
 
-  for (FlowsToSchedule::iterator it = flowsToSchedule->begin (); it != flowsToSchedule->end (); it++)
-    {
-	  FlowToSchedule *flow = (*it);
-
-	  int availableBytes = flow->GetAllocatedBits ()/8;
-
-    if (slice_id == -1) {
-      int app_id = flow->GetBearer()->GetApplication()->GetApplicationID();
-      if (isType1( app_id ) ){
-        slice_id = type1_app_[app_id];
-      }
-      else {
-        slice_id = type2_app_[app_id];
-        is_type1 = false;
+	        if (pb2->GetNPackets () > 0)
+	        {
+	    	    std::list<Packet*> packets = pb2->GetPackets ();
+	    	    std::list<Packet* >::iterator it;
+	    	    for (it = packets.begin (); it != packets.end (); it++)
+	    	    {
+	    	  	  Packet *p = (*it);
+	    	  	  pb->AddPacket (p->Copy ());
+	    	    }
+	        }
+	        delete pb2;  
+        }
       }
     }
-    aggregate_bits += flow->GetAllocatedBits();
-
-	  if (availableBytes > 0)
-	    {
-		  flow->GetBearer()->UpdateTransmittedBytes (min(availableBytes, flow->GetDataToTransmit()));
-      
-      flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
-
-      std::cerr << GetTimeStamp()
-          << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
-          << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
-          << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
-          << " hol_delay: " << flow->GetBearer()->GetHeadOfLinePacketDelay()
-          << std::endl;
-
-	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
-	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
-
-// #ifdef SCHEDULER_DEBUG
-// 	      std::cout << "\t\t  nb of packets: " << pb2->GetNPackets () << std::endl;
-// #endif
-
-	      if (pb2->GetNPackets () > 0)
-	      {
-	    	  std::list<Packet*> packets = pb2->GetPackets ();
-	    	  std::list<Packet* >::iterator it;
-	    	  for (it = packets.begin (); it != packets.end (); it++)
-	    	  {
-// #ifdef SCHEDULER_DEBUG
-// 	    		  std::cout << "\t\t  added packet of bytes " << (*it)->GetSize () << std::endl;
-// #endif
-	    		  Packet *p = (*it);
-	    		  pb->AddPacket (p->Copy ());
-	    	  }
-	      }
-	      delete pb2;
-	    }
-	  else
-	    {}
-    }
-
-
+  }
   UpdateTimeStamp();
 
-  //UpdateAverageTransmissionRate ();
-
-  //SEND PACKET BURST
-
-#ifdef SCHEDULER_DEBUG
-  if (pb->GetNPackets () == 0)
-    std::cout << "\t Send only reference symbols" << std::endl;
-#endif
-
   GetMacEntity ()->GetDevice ()->SendPacketBurst (pb);
+}
+
+//void
+//DownlinkNVSScheduler::DoStopSchedule (void)
+//{
+//  PacketBurst* pb = new PacketBurst ();
+//
+//  //Create Packet Burst
+//  FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
+//  
+//  int aggregate_bits = 0;
+//
+//  for (FlowsToSchedule::iterator it = flowsToSchedule->begin (); it != flowsToSchedule->end (); it++)
+//  {
+//	  FlowToSchedule *flow = (*it);
+//
+//	  int availableBytes = flow->GetAllocatedBits ()/8;
+//
+//    aggregate_bits += flow->GetAllocatedBits();
+//
+//	  if (availableBytes > 0)
+//	    {
+//		  flow->GetBearer()->UpdateTransmittedBytes (min(availableBytes, flow->GetDataToTransmit()));
+//      
+//      flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
+//
+//      std::cerr << GetTimeStamp()
+//          << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
+//          << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
+//          << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
+//          << " hol_delay: " << flow->GetBearer()->GetHeadOfLinePacketDelay()
+//          << std::endl;
+//
+//	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
+//	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
+//
+//	      if (pb2->GetNPackets () > 0)
+//	      {
+//	    	  std::list<Packet*> packets = pb2->GetPackets ();
+//	    	  std::list<Packet* >::iterator it;
+//	    	  for (it = packets.begin (); it != packets.end (); it++)
+//	    	  {
+//	    		  Packet *p = (*it);
+//	    		  pb->AddPacket (p->Copy ());
+//	    	  }
+//	      }
+//	      delete pb2;
+//	    }
+//	  else
+//	    {}
+//  }
+//  UpdateTimeStamp();
+//
+//#ifdef SCHEDULER_DEBUG
+//  if (pb->GetNPackets () == 0)
+//    std::cout << "\t Send only reference symbols" << std::endl;
+//#endif
+//
+//  GetMacEntity ()->GetDevice ()->SendPacketBurst (pb);
+//}
+
+void
+DownlinkNVSScheduler::RBsAllocationForUE()
+{
+  int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int rbg_size = get_rbg_size(nb_rbs);
+  // currently nb_rbgs should be divisible
+  nb_rbs = nb_rbs - (nb_rbs % rbg_size);
+  int nb_rbgs = (nb_rbs + rbg_size - 1) / rbg_size;
+  UsersToSchedule* users = GetUsersToSchedule();
+  double metrics[nb_rbgs][users->size()];
+  for (int i = 0; i < nb_rbgs; i++) {
+    for (auto it = users->begin(); it != users->end(); ++it) {
+      metrics[i][it->first] = ComputeSchedulingMetric(
+        it->second,
+        it->second->GetSpectralEfficiency().at(i * rbg_size)
+      );
+    }
+  }
+  for (int s = 0; s < nb_rbgs; s++) {
+    double targetMetric = std::numeric_limits<double>::lowest();
+    UserToSchedule * scheduledUE = NULL;
+    for (auto it = users->begin(); it != users->end(); ++it) {
+      if (metrics[s][it->first] > targetMetric) {
+        targetMetric = metrics[s][it->first];
+        scheduledUE = it->second;
+      }
+    }
+    if (scheduledUE) {
+      int l = s*rbg_size, r = (s+1)*rbg_size;
+      for (int i = l; i < r; ++i) {
+        scheduledUE->GetListOfAllocatedRBs()->push_back(i);
+      }
+    }
+  }
+  AMCModule *amc = GetMacEntity()->GetAmcModule();
+  PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage();
+  for (auto it = users->begin(); it != users->end(); it++) {
+    UserToSchedule *ue = it->second;
+    if (ue->GetListOfAllocatedRBs()->size() > 0) {
+      std::vector<double> estimatedSinrValues;
+      for (int rb = 0; rb < ue->GetListOfAllocatedRBs()->size (); rb++ ) {
+        double sinr = amc->GetSinrFromCQI (
+        ue->GetCqiFeedbacks ().at (
+          ue->GetListOfAllocatedRBs ()->at (rb)));
+        estimatedSinrValues.push_back (sinr);
+      }
+      double effectiveSinr = GetEesmEffectiveSinr(estimatedSinrValues);
+      int mcs = amc->GetMCSFromCQI(amc->GetCQIFromSinr(effectiveSinr));
+      int transportBlockSize = amc->GetTBSizeFromMCS(mcs, ue->GetListOfAllocatedRBs()->size());
+      ue->UpdateAllocatedBits(transportBlockSize);
+      for (int rb = 0; rb < ue->GetListOfAllocatedRBs()->size(); rb++) {
+        pdcchMsg->AddNewRecord(
+            PdcchMapIdealControlMessage::DOWNLINK,
+            ue->GetListOfAllocatedRBs()->at(rb),
+            ue->GetUserNode(),
+            mcs
+          );
+      }
+    }
+  }
+  if (pdcchMsg->GetMessage()->size() > 0) {
+    GetMacEntity()->GetDevice()->GetPhy()->SendIdealControlMessage(pdcchMsg);
+  }
+  delete pdcchMsg;
 }
 
 void
@@ -324,22 +402,18 @@ DownlinkNVSScheduler::RBsAllocation ()
         i );
 	  }
   }
-
 #ifdef SCHEDULER_DEBUG
-  for (int ii = 0; ii < flows->size (); ii++)
-    {
+  for (int ii = 0; ii < flows->size (); ii++) {
 	  std::cout << "\t metrics for flow "
 			  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
-	  for (int jj = 0; jj < nb_rbgs; jj++)
-	  {
+	  for (int jj = 0; jj < nb_rbgs; jj++) {
       fprintf(stdout, " (%d, %.3f, %d)",
           jj, metrics[jj][ii], 
           flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size));
 	  }
 	  std::cout << std::endl;
-    }
+  }
 #endif
-
   AMCModule *amc = GetMacEntity ()->GetAmcModule ();
   bool * l_bFlowScheduled = new bool[flows->size ()];
   int l_iScheduledFlows = 0;
@@ -493,6 +567,48 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectr
     default:
       metric = spectralEfficiency;
   }
+  return metric;
+}
+
+double
+DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spectralEfficiency)
+{
+  double metric = 0;
+  double averageRate = 0;
+  for (int i = 0; i < MAX_BEARERS; ++i)
+    averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
+  if (schedule_scheme_ == 0) {
+    switch (intra_sched_) {
+      case MT:
+        metric = spectralEfficiency;
+        break;
+      case PF:
+        metric = (spectralEfficiency * 180000.) / averageRate;
+        break;
+      default:
+        metric = spectralEfficiency;
+    }
+  }
+  else if (schedule_scheme_ == 1) {
+    if (user->m_dataToTransmit[GetHighestPriority()] == 0){
+      metric = 0;
+    }
+    else {
+      if (GetHighestPriority() == 1) {
+        RadioBearer* bearer = user->m_bearers[1];
+        double HoL = bearer->GetHeadOfLinePacketDelay();
+        metric = HoL * (spectralEfficiency * 180000.) / averageRate;
+      }
+      else if (GetHighestPriority() == 0) {
+        metric = (spectralEfficiency * 180000.) / averageRate;
+      }
+      else {
+        throw std::runtime_error(
+          "Invalid bearer priority: " + std::to_string(GetHighestPriority()));
+      }
+    }
+  }
+
   return metric;
 }
 

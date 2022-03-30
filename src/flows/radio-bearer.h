@@ -43,6 +43,8 @@ public:
 	void SetApplication (Application* a);
 	Application* GetApplication (void);
 	int GetUserID (void);
+	// higher value means higher priority
+	int GetPriority(void);
 
 	void UpdateTransmittedBytes (int bytes);
 	int GetTransmittedBytes (void) const;

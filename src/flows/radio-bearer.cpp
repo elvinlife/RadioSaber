@@ -86,6 +86,17 @@ RadioBearer::GetUserID(void)
   return GetDestination()->GetIDNetworkNode();
 }
 
+int
+RadioBearer::GetPriority(void)
+{
+  if (m_application->GetApplicationType() == Application::APPLICATION_TYPE_TRACE_BASED) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
 void
 RadioBearer::UpdateCumulateRBs (int rbs)
 {
@@ -144,9 +155,9 @@ RadioBearer::UpdateAverageTransmissionRate ()
       ((1 - beta) * m_averageTransmissionRate) + (beta * rate);
 
   if (m_averageTransmissionRate < 1)
-    {
+  {
 	  m_averageTransmissionRate = 1;
-    }
+  }
 
   ResetTransmittedBytes();
 }

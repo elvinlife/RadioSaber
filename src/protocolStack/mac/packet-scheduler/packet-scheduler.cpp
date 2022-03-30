@@ -33,6 +33,7 @@
 #include "../../../flows/QoS/QoSParameters.h"
 #include "../../rlc/am-rlc-entity.h"
 #include "../../../utility/eesm-effective-sinr.h"
+#include <cassert>
 
 PacketScheduler::PacketScheduler()
 {
@@ -88,7 +89,6 @@ void
 PacketScheduler::DoStopSchedule ()
 {}
 
-
 PacketScheduler::FlowToSchedule::FlowToSchedule(RadioBearer* bearer, int dataToTransmit)
 {
   m_bearer = bearer;
@@ -98,7 +98,8 @@ PacketScheduler::FlowToSchedule::FlowToSchedule(RadioBearer* bearer, int dataToT
 }
 
 PacketScheduler::FlowToSchedule::~FlowToSchedule()
-{}
+{
+}
 
 void
 PacketScheduler::CreateFlowsToSchedule (void)
@@ -135,38 +136,10 @@ PacketScheduler::ClearFlowsToSchedule ()
   GetFlowsToSchedule ()->clear ();
 }
 
-void
-PacketScheduler::CreateUsersToSchedule (void)
-{
-  m_usersToSchedule = new UsersToSchedule();
-}
-
-void
-PacketScheduler::DeleteUsersToSchedule (void)
-{
-  ClearUsersToSchedule();
-  delete m_usersToSchedule;
-}
-
-void
-PacketScheduler::ClearUsersToSchedule()
-{
-  for (auto it = m_usersToSchedule->begin(); it != m_usersToSchedule->end(); ++it) {
-    delete it->second;
-  }
-  m_usersToSchedule->clear();
-}
-
 RadioBearer*
 PacketScheduler::FlowToSchedule::GetBearer (void)
 {
   return m_bearer;
-}
-
-std::vector<RadioBearer*>
-PacketScheduler::UserToSchedule::GetBearers (void)
-{
-  return m_bearers;
 }
 
 void
@@ -175,20 +148,8 @@ PacketScheduler::FlowToSchedule::SetSpectralEfficiency (std::vector<double>& s)
   m_spectralEfficiency = s;
 }
 
-void
-PacketScheduler::UserToSchedule::SetSpectralEfficiency (std::vector<double>& s)
-{
-  m_spectralEfficiency = s;
-}
-
 std::vector<double>
 PacketScheduler::FlowToSchedule::GetSpectralEfficiency (void)
-{
-  return m_spectralEfficiency;
-}
-
-std::vector<double>
-PacketScheduler::UserToSchedule::GetSpectralEfficiency (void)
 {
   return m_spectralEfficiency;
 }
@@ -253,12 +214,6 @@ PacketScheduler::FlowToSchedule::GetListOfAllocatedRBs ()
 }
 
 std::vector<int>*
-PacketScheduler::UserToSchedule::GetListOfAllocatedRBs ()
-{
-  return &m_listOfAllocatedRBs;
-}
-
-std::vector<int>*
 PacketScheduler::FlowToSchedule::GetListOfSelectedMCS ()
 {
   return &m_listOfSelectedMCS;
@@ -270,20 +225,8 @@ PacketScheduler::FlowToSchedule::SetCqiFeedbacks (std::vector<int>& cqiFeedbacks
   m_cqiFeedbacks = cqiFeedbacks;
 }
 
-void
-PacketScheduler::UserToSchedule::SetCqiFeedbacks (std::vector<int>& cqiFeedbacks)
-{
-  m_cqiFeedbacks = cqiFeedbacks;
-}
-
 std::vector<int>
 PacketScheduler::FlowToSchedule::GetCqiFeedbacks (void)
-{
-  return m_cqiFeedbacks;
-}
-
-std::vector<int>
-PacketScheduler::UserToSchedule::GetCqiFeedbacks (void)
 {
   return m_cqiFeedbacks;
 }
@@ -356,4 +299,117 @@ unsigned long
 PacketScheduler::GetTimeStamp()
 {
   return m_ts;
+}
+
+void
+PacketScheduler::InsertFlowToUser (RadioBearer* bearer, int dataToTransmit, std::vector<double> specEff, std::vector<int> cqiFeedbacks)
+{
+  std::cout << "insert_flow user: " << bearer->GetUserID() << "flow: " << bearer->GetApplication()->GetApplicationID() << std::endl;
+  int userID = bearer->GetUserID();
+  if (m_usersToSchedule->find(userID) == m_usersToSchedule->end()) {
+    UserToSchedule *userToSchedule = new UserToSchedule(userID, bearer->GetDestination());
+    userToSchedule->SetSpectralEfficiency(specEff);
+    userToSchedule->SetCqiFeedbacks(cqiFeedbacks);
+    m_usersToSchedule->insert({userID, userToSchedule});
+  }
+  int bearer_priority = bearer->GetPriority();
+  assert(m_usersToSchedule->at(userID)->m_bearers[bearer_priority] == NULL);
+  m_usersToSchedule->at(userID)->m_bearers[bearer_priority] = bearer;
+  m_usersToSchedule->at(userID)->m_dataToTransmit[bearer_priority] = dataToTransmit;
+}
+
+void
+PacketScheduler::CreateUsersToSchedule (void)
+{
+  m_usersToSchedule = new UsersToSchedule();
+}
+
+void
+PacketScheduler::DeleteUsersToSchedule (void)
+{
+  ClearUsersToSchedule();
+  delete m_usersToSchedule;
+}
+
+void
+PacketScheduler::ClearUsersToSchedule()
+{
+  for (auto it = m_usersToSchedule->begin(); it != m_usersToSchedule->end(); ++it) {
+    delete it->second;
+  }
+  m_highestPriority = 0;
+  m_usersToSchedule->clear();
+}
+
+PacketScheduler::UsersToSchedule*
+PacketScheduler::GetUsersToSchedule (void) const
+{
+  return m_usersToSchedule;
+}
+
+PacketScheduler::UserToSchedule::UserToSchedule(int id, NetworkNode* node)
+{
+  m_userNode = node;
+  m_userID = id;
+  m_allocatedBits = 0;
+  for (int i = 0; i < MAX_BEARERS; ++i) {
+    m_bearers[i] = NULL;
+    m_dataToTransmit[i] = 0;
+  }
+}
+
+PacketScheduler::UserToSchedule::~UserToSchedule()
+{}
+
+void
+PacketScheduler::UserToSchedule::SetSpectralEfficiency (std::vector<double>& s)
+{
+  m_spectralEfficiency = s;
+}
+
+std::vector<double>
+PacketScheduler::UserToSchedule::GetSpectralEfficiency (void)
+{
+  return m_spectralEfficiency;
+}
+
+void
+PacketScheduler::UserToSchedule::SetCqiFeedbacks (std::vector<int>& cqiFeedbacks)
+{
+  m_cqiFeedbacks = cqiFeedbacks;
+}
+
+std::vector<int>
+PacketScheduler::UserToSchedule::GetCqiFeedbacks (void)
+{
+  return m_cqiFeedbacks;
+}
+
+std::vector<int>*
+PacketScheduler::UserToSchedule::GetListOfAllocatedRBs ()
+{
+  return &m_listOfAllocatedRBs;
+}
+
+double
+PacketScheduler::UserToSchedule::GetAverageRate()
+{
+  double sum_rate = 0;
+  for (int i = 0; i < MAX_BEARERS; i++) {
+    if (m_bearers[i]) {
+      m_bearers[i]->GetAverageTransmissionRate();
+    }
+  }
+}
+
+void
+PacketScheduler::UserToSchedule::UpdateAllocatedBits (int allocatedBits)
+{
+  m_allocatedBits += allocatedBits;
+}
+
+int
+PacketScheduler::UserToSchedule::GetAllocatedBits()
+{
+  return m_allocatedBits;
 }

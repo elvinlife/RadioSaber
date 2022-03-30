@@ -244,7 +244,7 @@ static void SingleCellWithInterference (
   nm->GetGatewayContainer ()->push_back (gw);
 
   //Create UEs
-  int idUE = nbCells;
+  int idUE = 0;
 
   for (int i = 0; i < nbUE; i++)
   {

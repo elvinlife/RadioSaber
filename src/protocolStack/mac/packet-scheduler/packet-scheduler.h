@@ -30,6 +30,7 @@
 
 const int MAX_SLICES = 100;
 const int MAX_APPS = 1000;
+const int MAX_BEARERS = 2;
 
 class MacEntity;
 class PacketBurst;
@@ -78,27 +79,34 @@ public:
 
 	struct UserToSchedule
   {
-    UserToSchedule();
-    virtual ~UserToSchedule();
-    std::vector<RadioBearer*> m_bearers;
-    int m_allocatedBits;		//bits
-    int m_transmittedData;		//bytes
-    int m_dataToTransmit;		//bytes
+private:
+    int m_userID;
+    NetworkNode* m_userNode;
+    int m_allocatedBits;
 
     std::vector<double> m_spectralEfficiency;
     std::vector<int> m_listOfAllocatedRBs;
     std::vector<int> m_cqiFeedbacks;
 
-    int GetUserID (void) { return 0; }
+public:
+    RadioBearer* m_bearers[MAX_BEARERS];
+    int m_dataToTransmit[MAX_BEARERS];
+    UserToSchedule(int, NetworkNode*);
+    virtual ~UserToSchedule();
+
+    int GetUserID (void) { return m_userID; }
+    NetworkNode* GetUserNode(void) { return m_userNode; }
+    void UpdateAllocatedBits (int allocatedBits);
+    int GetAllocatedBits (void);
     std::vector<RadioBearer*> GetBearers (void);
 
     void SetSpectralEfficiency (std::vector<double>& s);
     std::vector<double> GetSpectralEfficiency (void);
-
-    std::vector<int>* GetListOfAllocatedRBs ();
-
     void SetCqiFeedbacks (std::vector<int>& cqiFeedbacks);
     std::vector<int> GetCqiFeedbacks (void);
+
+    std::vector<int>* GetListOfAllocatedRBs ();
+    double GetAverageRate();
   };
 
 	PacketScheduler();
@@ -123,7 +131,8 @@ public:
 	void UpdateAllocatedBits (FlowToSchedule* scheduledFlow,
 						      int allocatedBits,
 						      int allocatedRB,
-						      int selectedMCS);
+						      int selectedMCS
+                  );
 
 	void CheckForDLDropPackets();
 
@@ -137,17 +146,24 @@ public:
 	void ClearFlowsToSchedule ();
 	FlowsToSchedule* GetFlowsToSchedule (void) const;
 
+  // user-aware scheduling
 	typedef std::unordered_map<int, UserToSchedule*> UsersToSchedule;
+  void InsertFlowToUser(RadioBearer* bearer,
+              int dataToTransmit,
+              std::vector<double> specEff,
+              std::vector<int> TestCqiFeedbacks
+              );
   void CreateUsersToSchedule (void);
   void DeleteUsersToSchedule (void);
   void ClearUsersToSchedule ();
   UsersToSchedule* GetUsersToSchedule (void) const;
-
+  int GetHighestPriority() {return m_highestPriority;}
 
 private:
 	MacEntity *m_mac;
 	FlowsToSchedule *m_flowsToSchedule;
   UsersToSchedule *m_usersToSchedule;
+  int m_highestPriority;
 	unsigned long m_ts;
 };
 
