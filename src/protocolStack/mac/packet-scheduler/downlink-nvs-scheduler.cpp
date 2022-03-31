@@ -63,7 +63,6 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
   ifs.close();
 
   SetMacEntity (0);
-  //CreateFlowsToSchedule ();
   CreateUsersToSchedule();
 }
 
@@ -144,7 +143,7 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
       continue;
 
 	  //if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
-    if (bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
+    if (bearer->HasPackets() && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
 		{
 		  //compute data to transmit
 		  int dataToTransmit;
@@ -208,7 +207,7 @@ DownlinkNVSScheduler::DoStopSchedule(void)
   PacketBurst* pb = new PacketBurst();
   UsersToSchedule *uesToSchedule = GetUsersToSchedule();
   for (auto it = uesToSchedule->begin(); it != uesToSchedule->end(); it++) {
-    UserToSchedule* user = it->second;
+    UserToSchedule* user = *it;
     int availableBytes = user->GetAllocatedBits() / 8;
     if (availableBytes > 0) {
       // let's not reallocate RBs between flows firstly
@@ -322,24 +321,24 @@ DownlinkNVSScheduler::RBsAllocationForUE()
   UsersToSchedule* users = GetUsersToSchedule();
   double metrics[nb_rbgs][users->size()];
   for (int i = 0; i < nb_rbgs; i++) {
-    for (auto it = users->begin(); it != users->end(); ++it) {
-      metrics[i][it->first] = ComputeSchedulingMetric(
-        it->second,
-        it->second->GetSpectralEfficiency().at(i * rbg_size)
+    for (int j = 0; j < users->size(); j++) {
+      metrics[i][j] = ComputeSchedulingMetric(
+        users->at(j),
+        users->at(j)->GetSpectralEfficiency().at(i * rbg_size)
       );
     }
   }
-  for (int s = 0; s < nb_rbgs; s++) {
+  for (int i = 0; i < nb_rbgs; i++) {
     double targetMetric = std::numeric_limits<double>::lowest();
     UserToSchedule * scheduledUE = NULL;
-    for (auto it = users->begin(); it != users->end(); ++it) {
-      if (metrics[s][it->first] > targetMetric) {
-        targetMetric = metrics[s][it->first];
-        scheduledUE = it->second;
+    for (int j = 0; j < users->size(); ++j) {
+      if (metrics[i][j] > targetMetric) {
+        targetMetric = metrics[i][j];
+        scheduledUE = users->at(j);
       }
     }
     if (scheduledUE) {
-      int l = s*rbg_size, r = (s+1)*rbg_size;
+      int l = i*rbg_size, r = (i+1)*rbg_size;
       for (int i = l; i < r; ++i) {
         scheduledUE->GetListOfAllocatedRBs()->push_back(i);
       }
@@ -347,8 +346,9 @@ DownlinkNVSScheduler::RBsAllocationForUE()
   }
   AMCModule *amc = GetMacEntity()->GetAmcModule();
   PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage();
-  for (auto it = users->begin(); it != users->end(); it++) {
-    UserToSchedule *ue = it->second;
+  for (int j = 0; j < users->size(); j++) {
+    UserToSchedule* ue = users->at(j);
+
     if (ue->GetListOfAllocatedRBs()->size() > 0) {
       std::vector<double> estimatedSinrValues;
       for (int rb = 0; rb < ue->GetListOfAllocatedRBs()->size (); rb++ ) {
@@ -574,9 +574,12 @@ double
 DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spectralEfficiency)
 {
   double metric = 0;
-  double averageRate = 0;
-  for (int i = 0; i < MAX_BEARERS; ++i)
-    averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
+  double averageRate = 1;
+  for (int i = 0; i < MAX_BEARERS; ++i) {
+    if (user->m_bearers[i]) {
+      averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
+    }
+  }
   if (schedule_scheme_ == 0) {
     switch (intra_sched_) {
       case MT:
@@ -608,7 +611,6 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spect
       }
     }
   }
-
   return metric;
 }
 

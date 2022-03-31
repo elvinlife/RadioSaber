@@ -147,7 +147,8 @@ public:
 	FlowsToSchedule* GetFlowsToSchedule (void) const;
 
   // user-aware scheduling
-	typedef std::unordered_map<int, UserToSchedule*> UsersToSchedule;
+	//typedef std::unordered_map<int, UserToSchedule*> UsersToSchedule;
+  typedef std::vector<UserToSchedule*> UsersToSchedule;
   void InsertFlowToUser(RadioBearer* bearer,
               int dataToTransmit,
               std::vector<double> specEff,

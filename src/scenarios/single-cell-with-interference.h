@@ -67,8 +67,10 @@ static void SingleCellWithInterference (
     string config_fname,
     string channel)
 {
-
-  // define simulation times
+  bool half_half = false;
+  if (nbBE == nbVideo) {
+    half_half = true;   // half of ues are video and half of ues are BE.
+  }
   double duration = 12;
   double flow_duration = 12;
 
@@ -383,6 +385,9 @@ static void SingleCellWithInterference (
     // *** video application
     for (int j = 0; j < nbVideo; j++)
     {
+      if (half_half && (idUE % 2 == 0) )
+        continue;
+
       // create application
       VideoApplication[videoApplication].SetSource (gw);
       VideoApplication[videoApplication].SetDestination (ue);
@@ -503,6 +508,9 @@ static void SingleCellWithInterference (
     // *** be application
     for (int j = 0; j < nbBE; j++)
     {
+      if (half_half && (idUE % 2 == 1) )
+        continue;
+
       // create application
       BEApplication[beApplication].SetSource (gw);
       BEApplication[beApplication].SetDestination (ue);

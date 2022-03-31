@@ -304,18 +304,24 @@ PacketScheduler::GetTimeStamp()
 void
 PacketScheduler::InsertFlowToUser (RadioBearer* bearer, int dataToTransmit, std::vector<double> specEff, std::vector<int> cqiFeedbacks)
 {
-  std::cout << "insert_flow user: " << bearer->GetUserID() << "flow: " << bearer->GetApplication()->GetApplicationID() << std::endl;
   int userID = bearer->GetUserID();
-  if (m_usersToSchedule->find(userID) == m_usersToSchedule->end()) {
-    UserToSchedule *userToSchedule = new UserToSchedule(userID, bearer->GetDestination());
-    userToSchedule->SetSpectralEfficiency(specEff);
-    userToSchedule->SetCqiFeedbacks(cqiFeedbacks);
-    m_usersToSchedule->insert({userID, userToSchedule});
-  }
   int bearer_priority = bearer->GetPriority();
-  assert(m_usersToSchedule->at(userID)->m_bearers[bearer_priority] == NULL);
-  m_usersToSchedule->at(userID)->m_bearers[bearer_priority] = bearer;
-  m_usersToSchedule->at(userID)->m_dataToTransmit[bearer_priority] = dataToTransmit;
+  if (bearer_priority > m_highestPriority)
+    m_highestPriority = bearer_priority;
+  for (auto it = m_usersToSchedule->begin(); it != m_usersToSchedule->end(); ++it) {
+    if ((*it)->GetUserID() == userID) {
+      (*it)->m_bearers[bearer_priority] = bearer;
+      (*it)->m_dataToTransmit[bearer_priority] = dataToTransmit;
+      return;
+    }
+  }
+  UserToSchedule* user = new UserToSchedule(userID, bearer->GetDestination());
+  user->SetSpectralEfficiency(specEff);
+  user->SetCqiFeedbacks(cqiFeedbacks);
+  assert(user->m_bearers[bearer_priority] == NULL);
+  user->m_bearers[bearer_priority] = bearer;
+  user->m_dataToTransmit[bearer_priority] = dataToTransmit;
+  m_usersToSchedule->push_back(user);
 }
 
 void
@@ -335,7 +341,7 @@ void
 PacketScheduler::ClearUsersToSchedule()
 {
   for (auto it = m_usersToSchedule->begin(); it != m_usersToSchedule->end(); ++it) {
-    delete it->second;
+    delete *it;
   }
   m_highestPriority = 0;
   m_usersToSchedule->clear();
