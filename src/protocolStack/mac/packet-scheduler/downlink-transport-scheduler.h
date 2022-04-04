@@ -36,7 +36,7 @@ private:
 
 	const double beta_ = 0.1;
 	
-	Scheduler	intra_sched_ = MLWDF;
+	Scheduler	intra_sched_;
 	int			inter_sched_ = 0;
 
 public:

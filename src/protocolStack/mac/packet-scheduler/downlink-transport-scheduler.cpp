@@ -53,7 +53,8 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
     int begin_id = 0;
-    ifs >> schedule_scheme_ >> num_slices_;
+    int intra_schedule = 0;
+    ifs >> schedule_scheme_ >> intra_schedule >> num_slices_;
 
     for (int i = 0; i < num_slices_; ++i)
       ifs >> slice_weights_[i];
@@ -65,6 +66,19 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
         user_to_slice_[begin_id + j] = i;
       }
       begin_id += num_ue;
+    }
+
+    if (intra_schedule == 0) {
+      intra_sched_ = MT;
+    }
+    else if (intra_schedule == 1) {
+      intra_sched_ = PF;
+    }
+    else if (intra_schedule == 2) {
+      intra_sched_ = MLWDF;
+    }
+    else {
+      intra_sched_ = PF;
     }
   }
   else {
@@ -176,11 +190,11 @@ DownlinkTransportScheduler::DoStopSchedule(void)
             user->GetListOfAllocatedRBs()->size()
             );
           std::cerr << GetTimeStamp()
-              << " user: " << user->GetUserID()
               << " flow: " << user->m_bearers[i]->GetApplication()->GetApplicationID()
               << " cumu_bytes: " << user->m_bearers[i]->GetCumulateBytes()
               << " cumu_rbs: " << user->m_bearers[i]->GetCumulateRBs()
               << " hol_delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
+              << " user: " << user->GetUserID()
               << std::endl;
 
 	        RlcEntity *rlc = user->m_bearers[i]->GetRlcEntity ();
@@ -447,8 +461,8 @@ DownlinkTransportScheduler::RBsAllocationForUE()
   assert(nb_rbs % rbg_size == 0);
 
   // find out slices without data/flows at all, and assign correct rb target
-  std::vector<bool> slice_with_data(users->size(), false);
-  std::vector<int> slice_target_rbs(users->size(), 0);
+  std::vector<bool> slice_with_data(num_slices_, false);
+  std::vector<int> slice_target_rbs(num_slices_, 0);
   int num_nonempty_slices = 0;
   int extra_rbs = nb_rbs;
   for (auto it = users->begin(); it != users->end(); ++it) {
@@ -461,6 +475,15 @@ DownlinkTransportScheduler::RBsAllocationForUE()
     slice_target_rbs[slice_id] = (int)(nb_rbs * slice_weights_[slice_id] + slice_rbs_offset_[slice_id]);
     extra_rbs -= slice_target_rbs[slice_id];
   }
+  // std::cout << "slice target RBs:";
+  // for (int i = 0; i < num_slices_; ++i) {
+  //   std::cout << "(" << i << ", " 
+  //     << slice_target_rbs[i] << ", " 
+  //     << slice_rbs_offset_[i] << ","
+  //     << slice_weights_[i] << ") ";
+  // }
+  // std::cout << std::endl;
+  
   assert(num_nonempty_slices != 0);
   // we enable reallocation between slices, but not flows
   bool is_first_slice = true;
@@ -497,7 +520,7 @@ DownlinkTransportScheduler::RBsAllocationForUE()
     }
   }
 
-  std::cout << "slice target RBs:";
+  //std::cout << "slice target RBs:";
   for (int i = 0; i < num_slices_; ++i) {
     std::cout << "(" << i << ", " << slice_target_rbs[i] << ", " << slice_quota_rbgs[i] << ") ";
   }
@@ -542,6 +565,20 @@ DownlinkTransportScheduler::RBsAllocationForUE()
       }
     }
   }
+
+  // if (GetTimeStamp() < 1000) {
+  //   fprintf(stderr, "slice quota: ");
+  //   for (int i = 0; i < num_slices_; i++) {
+  //     fprintf(stderr, "%d ", slice_quota_rbgs[i]);
+  //   }
+  //   fprintf(stderr, "\n");
+  //   for (int i = 0; i < nb_rbgs; i++) {
+  //     for (int j = 0; j < num_slices_; j++) {
+  //       fprintf(stderr, "(%d, %.0f) ", user_index[i][j], flow_spectraleff[i][j] * 180 / 8 * 4);
+  //     }
+  //     fprintf(stderr, "\n");
+  //   }
+  // }
 
   // calculate the assignment of rbgs to slices
   vector<int> rbg_to_slice;
@@ -956,15 +993,14 @@ DownlinkTransportScheduler::ComputeSchedulingMetric(UserToSchedule* user, double
     }
   }
   if (schedule_scheme_ == 0) {
-    switch (intra_sched_) {
-      case MT:
-        metric = spectralEfficiency;
-        break;
-      case PF:
-        metric = (spectralEfficiency * 180000.) / averageRate;
-        break;
-      default:
-        metric = spectralEfficiency;
+    if (intra_sched_ == MT) {
+      metric = spectralEfficiency;
+    }
+    else if (intra_sched_ == PF) {
+      metric = (spectralEfficiency * 180000.) / averageRate;
+    }
+    else {
+      throw std::runtime_error("Schedule scheme 0 cannot use intra-scheduler: " + std::to_string(intra_sched_));
     }
   }
   else if (schedule_scheme_ == 1) {

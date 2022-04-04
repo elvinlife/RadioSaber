@@ -86,11 +86,13 @@ private:
 
     std::vector<double> m_spectralEfficiency;
     std::vector<int> m_listOfAllocatedRBs;
+    int m_wideBandCQI;
     std::vector<int> m_cqiFeedbacks;
 
 public:
     RadioBearer* m_bearers[MAX_BEARERS];
     int m_dataToTransmit[MAX_BEARERS];
+    int m_requiredRBs;
     UserToSchedule(int, NetworkNode*);
     virtual ~UserToSchedule();
 
@@ -102,6 +104,9 @@ public:
 
     void SetSpectralEfficiency (std::vector<double>& s);
     std::vector<double> GetSpectralEfficiency (void);
+    void SetWidebandCQI (int);
+    int GetWidebandCQI (void);
+    int GetRequiredRBs (void);
     void SetCqiFeedbacks (std::vector<int>& cqiFeedbacks);
     std::vector<int> GetCqiFeedbacks (void);
 

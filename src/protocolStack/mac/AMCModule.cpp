@@ -254,9 +254,9 @@ AMCModule::GetCQIFromSinr (double sinr)
 {
   int cqi = 1; // == CQIIndex[0]
   while (SINRForCQIIndex[cqi] <= sinr && cqi <= 14)
-    {
+  {
 	  cqi++;
-    }
+  }
   return cqi;
 }
 

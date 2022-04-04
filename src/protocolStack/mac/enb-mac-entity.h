@@ -25,7 +25,9 @@
 
 #include <list>
 #include "mac-entity.h"
-
+#include <unordered_map>
+#include <vector>
+using std::vector;
 
 /*
  * This class implements the MAC layer of the eNodeB device
@@ -53,6 +55,7 @@ public:
   void SendPdcchMapIdealControlMessage  (PdcchMapIdealControlMessage* msg);
   void ReceiveSchedulingRequestIdealControlMessage (SchedulingRequestIdealControlMessage *msg);
 private:
+  std::unordered_map<int, vector<vector<int>>> m_userCQITrace;
 
   PacketScheduler* m_uplinkScheduler;
   PacketScheduler* m_downlinkScheduler;

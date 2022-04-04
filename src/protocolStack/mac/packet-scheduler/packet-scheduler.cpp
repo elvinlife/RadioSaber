@@ -301,6 +301,7 @@ PacketScheduler::GetTimeStamp()
   return m_ts;
 }
 
+// dataToTransmit is in unit of bytes
 void
 PacketScheduler::InsertFlowToUser (RadioBearer* bearer, int dataToTransmit, std::vector<double> specEff, std::vector<int> cqiFeedbacks)
 {
@@ -318,10 +319,21 @@ PacketScheduler::InsertFlowToUser (RadioBearer* bearer, int dataToTransmit, std:
   UserToSchedule* user = new UserToSchedule(userID, bearer->GetDestination());
   user->SetSpectralEfficiency(specEff);
   user->SetCqiFeedbacks(cqiFeedbacks);
+  
+  std::vector<double> sinrs;
+  AMCModule *amc = GetMacEntity()->GetAmcModule();
+	for (int i = 0; i < cqiFeedbacks.size(); i++)
+	{
+    sinrs.push_back(amc->GetSinrFromCQI(cqiFeedbacks.at(i)));
+	}
+  int wideCQI = amc->GetCQIFromSinr(GetEesmEffectiveSinr(sinrs));
+  user->SetWidebandCQI(wideCQI);
+
   assert(user->m_bearers[bearer_priority] == NULL);
   user->m_bearers[bearer_priority] = bearer;
   user->m_dataToTransmit[bearer_priority] = dataToTransmit;
   m_usersToSchedule->push_back(user);
+  user->m_requiredRBs += (dataToTransmit * 8 / amc->GetTBSizeFromMCS(amc->GetMCSFromCQI(wideCQI))); 
 }
 
 void
@@ -355,9 +367,11 @@ PacketScheduler::GetUsersToSchedule (void) const
 
 PacketScheduler::UserToSchedule::UserToSchedule(int id, NetworkNode* node)
 {
-  m_userNode = node;
   m_userID = id;
+  m_userNode = node;
   m_allocatedBits = 0;
+  m_wideBandCQI = 0;
+  m_requiredRBs = 0;
   for (int i = 0; i < MAX_BEARERS; ++i) {
     m_bearers[i] = NULL;
     m_dataToTransmit[i] = 0;
@@ -389,6 +403,18 @@ std::vector<int>
 PacketScheduler::UserToSchedule::GetCqiFeedbacks (void)
 {
   return m_cqiFeedbacks;
+}
+
+void
+PacketScheduler::UserToSchedule::SetWidebandCQI(int cqi)
+{
+  m_wideBandCQI = cqi;
+}
+
+int
+PacketScheduler::UserToSchedule::GetWidebandCQI()
+{
+  return m_wideBandCQI;
 }
 
 std::vector<int>*

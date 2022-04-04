@@ -31,11 +31,11 @@ private:
 	double	slice_weights_[MAX_SLICES];
 	double 	slice_exp_time_[MAX_SLICES];
 
-	int				num_slices_ = 1;
-	int				schedule_scheme_ = 1;
+	int		num_slices_ = 1;
+	int		schedule_scheme_ = 1;
 
 	const double	beta_ = 0.1;
-	Scheduler		intra_sched_ = MLWDF;
+	Scheduler		intra_sched_;
 
 public:
 	DownlinkNVSScheduler(std::string config_fname="");

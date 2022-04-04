@@ -44,7 +44,9 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
 {
   std::ifstream ifs(config_fname, std::ifstream::in);
   if (ifs.is_open()) {
-    ifs >> schedule_scheme_ >> num_slices_;
+    int begin_id = 0;
+    int intra_schedule = 0;
+    ifs >> schedule_scheme_ >> intra_schedule >> num_slices_;
 
     for (int i = 0; i < num_slices_; ++i)
       ifs >> slice_weights_[i];
@@ -53,8 +55,22 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
       int num_ue;
       ifs >> num_ue;
       for (int j = 0; j < num_ue; ++j) {
-        user_to_slice_[j] = i;
+        user_to_slice_[begin_id + j] = i;
       }
+      begin_id += num_ue;
+    }
+    
+    if (intra_schedule == 0) {
+      intra_sched_ = MT;
+    }
+    else if (intra_schedule == 1) {
+      intra_sched_ = PF;
+    }
+    else if (intra_schedule == 2) {
+      intra_sched_ = MLWDF;
+    }
+    else {
+      intra_sched_ = PF;
     }
   }
   else {
@@ -221,11 +237,11 @@ DownlinkNVSScheduler::DoStopSchedule(void)
             user->GetListOfAllocatedRBs()->size()
             );
           std::cerr << GetTimeStamp()
-              << " user: " << user->GetUserID()
               << " flow: " << user->m_bearers[i]->GetApplication()->GetApplicationID()
               << " cumu_bytes: " << user->m_bearers[i]->GetCumulateBytes()
               << " cumu_rbs: " << user->m_bearers[i]->GetCumulateRBs()
               << " hol_delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
+              << " user: " << user->GetUserID()
               << std::endl;
 
 	        RlcEntity *rlc = user->m_bearers[i]->GetRlcEntity ();
@@ -251,65 +267,6 @@ DownlinkNVSScheduler::DoStopSchedule(void)
   GetMacEntity ()->GetDevice ()->SendPacketBurst (pb);
 }
 
-//void
-//DownlinkNVSScheduler::DoStopSchedule (void)
-//{
-//  PacketBurst* pb = new PacketBurst ();
-//
-//  //Create Packet Burst
-//  FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
-//  
-//  int aggregate_bits = 0;
-//
-//  for (FlowsToSchedule::iterator it = flowsToSchedule->begin (); it != flowsToSchedule->end (); it++)
-//  {
-//	  FlowToSchedule *flow = (*it);
-//
-//	  int availableBytes = flow->GetAllocatedBits ()/8;
-//
-//    aggregate_bits += flow->GetAllocatedBits();
-//
-//	  if (availableBytes > 0)
-//	    {
-//		  flow->GetBearer()->UpdateTransmittedBytes (min(availableBytes, flow->GetDataToTransmit()));
-//      
-//      flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
-//
-//      std::cerr << GetTimeStamp()
-//          << " flow: " << flow->GetBearer()->GetApplication()->GetApplicationID()
-//          << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
-//          << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
-//          << " hol_delay: " << flow->GetBearer()->GetHeadOfLinePacketDelay()
-//          << std::endl;
-//
-//	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
-//	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
-//
-//	      if (pb2->GetNPackets () > 0)
-//	      {
-//	    	  std::list<Packet*> packets = pb2->GetPackets ();
-//	    	  std::list<Packet* >::iterator it;
-//	    	  for (it = packets.begin (); it != packets.end (); it++)
-//	    	  {
-//	    		  Packet *p = (*it);
-//	    		  pb->AddPacket (p->Copy ());
-//	    	  }
-//	      }
-//	      delete pb2;
-//	    }
-//	  else
-//	    {}
-//  }
-//  UpdateTimeStamp();
-//
-//#ifdef SCHEDULER_DEBUG
-//  if (pb->GetNPackets () == 0)
-//    std::cout << "\t Send only reference symbols" << std::endl;
-//#endif
-//
-//  GetMacEntity ()->GetDevice ()->SendPacketBurst (pb);
-//}
-
 void
 DownlinkNVSScheduler::RBsAllocationForUE()
 {
@@ -332,9 +289,11 @@ DownlinkNVSScheduler::RBsAllocationForUE()
     double targetMetric = std::numeric_limits<double>::lowest();
     UserToSchedule * scheduledUE = NULL;
     for (int j = 0; j < users->size(); ++j) {
-      if (metrics[i][j] > targetMetric) {
+      UserToSchedule* user = users->at(j);
+      if (metrics[i][j] > targetMetric &&
+          user->GetListOfAllocatedRBs()->size() < user->m_requiredRBs ) {
         targetMetric = metrics[i][j];
-        scheduledUE = users->at(j);
+        scheduledUE = user;
       }
     }
     if (scheduledUE) {

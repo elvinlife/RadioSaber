@@ -31,7 +31,13 @@
 #include "../../device/UserEquipment.h"
 #include "../../device/ENodeB.h"
 #include "../../load-parameters.h"
-
+#include "../../core/eventScheduler/simulator.h"
+#include <fstream>
+#include <cassert>
+#define USER_REAL_TRACE 1
+#define CQI_INTERVAL 40
+#define MAX_UE_TRACE 158
+#define MAX_TTI_TRACE 475
 
 EnbMacEntity::EnbMacEntity ()
 {
@@ -81,6 +87,7 @@ EnbMacEntity::GetDownlinkPacketScheduler (void)
 void
 EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
 {
+  #ifndef USE_REAL_TRACE
 #ifdef TEST_CQI_FEEDBACKS
   std::cout << "ReceiveIdealControlMessage (MAC) from  " << msg->GetSourceDevice ()->GetIDNetworkNode ()
 		  << " to " << msg->GetDestinationDevice ()->GetIDNetworkNode () << std::endl;
@@ -133,7 +140,6 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
       std::cout << std::endl;
 #endif
 
-
       record->SetCQI (cqiFeedback);
 
     }
@@ -141,8 +147,40 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
     {
       std::cout << "ERROR: received cqi from unknow ue!"<< std::endl;
     }
+    #endif
 
-  //delete msg;
+    #ifdef USE_REAL_TRACE  
+    CqiIdealControlMessage::CqiFeedbacks *cqi = msg->GetMessage ();
+    int nb_rbs = cqi->size();
+    assert(nb_rbs == 500);
+    UserEquipment* ue = (UserEquipment*) msg->GetSourceDevice ();
+    int user_id = ue->GetIDNetworkNode();
+    ENodeB* enb = (ENodeB*) GetDevice ();
+    ENodeB::UserEquipmentRecord* record = enb->GetUserEquipmentRecord(user_id);
+
+    if (m_userCQITrace.find(user_id) == m_userCQITrace.end()) {
+      int trace_id = (rand() + user_id) % MAX_UE_TRACE;
+      std::cerr << "user " << user_id << " uses trace " << trace_id << std::endl;
+      std::string fname = "/home/alvin/Research/ue_traces_0/ue" + std::to_string(trace_id) + ".log";
+      std::ifstream ifs(fname, std::ifstream::in);
+      int cqi = 0;
+      for (int i = 0; i < MAX_TTI_TRACE; ++i) {
+        std::vector<int> cqi_one_tti;
+        for (int j = 0; j < nb_rbs; ++j) {
+          ifs >> cqi;
+          cqi_one_tti.push_back(cqi);
+        }
+        //std::cout << cqi_one_tti[0] << std::endl;
+        m_userCQITrace[user_id].push_back(cqi_one_tti);
+      }
+      ifs.close();
+    }
+
+    auto& cqi_traces = m_userCQITrace.at(user_id);
+    int time_stamp = Simulator::Init ()->Now ()*1000 / CQI_INTERVAL;
+    record->SetCQI( cqi_traces[time_stamp % cqi_traces.size() ] );
+
+    #endif
 }
 
 
