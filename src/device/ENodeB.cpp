@@ -35,7 +35,6 @@
 #include "../protocolStack/mac/packet-scheduler/enhanced-uplink-packet-scheduler.h"
 #include "../protocolStack/mac/packet-scheduler/roundrobin-uplink-packet-scheduler.h"
 #include "../protocolStack/mac/packet-scheduler/downlink-nvs-scheduler.h"
-#include "../protocolStack/mac/packet-scheduler/downlink-greedy-scheduler.h"
 #include "../protocolStack/mac/packet-scheduler/downlink-transport-scheduler.h"
 #include "../phy/enb-lte-phy.h"
 #include "../core/spectrum/bandwidth-manager.h"

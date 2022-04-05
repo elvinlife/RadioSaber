@@ -303,7 +303,7 @@ static void SingleCellWithInterference (
     }
 
     // CREATE DOWNLINK APPLICATION FOR THIS UE
-    double start_time = 0;
+    double start_time = 0.1;
     double duration_time = start_time + flow_duration;
 
     // *** voip application
