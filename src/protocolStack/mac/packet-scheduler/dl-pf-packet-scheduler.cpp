@@ -32,9 +32,45 @@
 #include "../../../phy/lte-phy.h"
 #include "../../../core/spectrum/bandwidth-manager.h"
 #include "../../../core/idealMessages/ideal-control-messages.h"
+#include <fstream>
 
-DL_PF_PacketScheduler::DL_PF_PacketScheduler()
+DL_PF_PacketScheduler::DL_PF_PacketScheduler(std::string config_fname="")
 {
+  std::ifstream ifs(config_fname, std::ifstream::in);
+  if (ifs.is_open()) {
+    int begin_id = 0;
+    int intra_schedule = 0;
+    ifs >> schedule_scheme_ >> intra_schedule >> num_slices_;
+
+    for (int i = 0; i < num_slices_; ++i)
+      ifs >> slice_weights_[i];
+    for (int i = 0; i < num_slices_; ++i) {
+      slice_exp_time_[i] = slice_weights_[i];
+      int num_ue;
+      ifs >> num_ue;
+      for (int j = 0; j < num_ue; ++j) {
+        user_to_slice_[begin_id + j] = i;
+      }
+      begin_id += num_ue;
+    }
+    
+    if (intra_schedule == 0) {
+      intra_sched_ = MT;
+    }
+    else if (intra_schedule == 1) {
+      intra_sched_ = PF;
+    }
+    else if (intra_schedule == 2) {
+      intra_sched_ = MLWDF;
+    }
+    else {
+      intra_sched_ = PF;
+    }
+  }
+  else {
+    throw std::runtime_error("Fail to open configuration file");
+  }
+  ifs.close();
   SetMacEntity (0);
   CreateFlowsToSchedule ();
 }
@@ -44,6 +80,68 @@ DL_PF_PacketScheduler::~DL_PF_PacketScheduler()
   Destroy ();
 }
 
+void
+DL_PF_PacketScheduler::DoStopSchedule (void)
+{
+#ifdef SCHEDULER_DEBUG
+  std::cout << "\t Creating Packet Burst" << std::endl;
+#endif
+
+  PacketBurst* pb = new PacketBurst ();
+
+  //Create Packet Burst
+  FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
+
+  for (FlowsToSchedule::iterator it = flowsToSchedule->begin (); it != flowsToSchedule->end (); it++)
+    {
+	  FlowToSchedule *flow = (*it);
+
+	  int availableBytes = flow->GetAllocatedBits ()/8;
+
+	  if (availableBytes > 0)
+	    {
+		  flow->GetBearer()->UpdateTransmittedBytes (availableBytes);
+      flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
+      int app_id = flow->GetBearer()->GetApplication()->GetApplicationID();
+
+      std::cerr << GetTimeStamp()
+          << " flow: " << app_id
+          << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
+          << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
+          << " hol_delay: " << flow->GetBearer()->GetHeadOfLinePacketDelay()
+          << " user: " << app_id
+          << " slice: " << user_to_slice_[app_id]
+          << std::endl;
+
+	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
+	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
+
+	      if (pb2->GetNPackets () > 0)
+	        {
+	    	  std::list<Packet*> packets = pb2->GetPackets ();
+	    	  std::list<Packet* >::iterator it;
+	    	  for (it = packets.begin (); it != packets.end (); it++)
+	    	    {
+	    		  Packet *p = (*it);
+	    		  pb->AddPacket (p->Copy ());
+	    	    }
+	        }
+	      delete pb2;
+	    }
+	  else
+	    {}
+    }
+  UpdateTimeStamp();
+
+  //SEND PACKET BURST
+
+#ifdef SCHEDULER_DEBUG
+  if (pb->GetNPackets () == 0)
+    std::cout << "\t Send only reference symbols" << std::endl;
+#endif
+
+  GetMacEntity ()->GetDevice ()->SendPacketBurst (pb);
+}
 
 double
 DL_PF_PacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel)
@@ -54,12 +152,25 @@ DL_PF_PacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spec
    *
    * metric = spectralEfficiency / averageRate
    */
-
-   double metric = (spectralEfficiency * 180000.)
-	 				  /
-	 				  bearer->GetAverageTransmissionRate();
-  //double metric = spectralEfficiency;
-
+  double metric = 0;
+  if (intra_sched_ == PF) {
+    metric = (spectralEfficiency * 180000.)
+	 				  / bearer->GetAverageTransmissionRate();
+  }
+  else if (intra_sched_ == MT) {
+    metric = spectralEfficiency;
+  }
+  else if (intra_sched_ == MLWDF) {
+    if (bearer->GetApplication()->GetApplicationType() == 
+      Application::APPLICATION_TYPE_INFINITE_BUFFER) {
+        metric = (spectralEfficiency * 180000.)
+	 				  / bearer->GetAverageTransmissionRate();
+      }
+    else {
+      double HOL = bearer->GetHeadOfLinePacketDelay();
+      metric = HOL * (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
+    }
+  }
   return metric;
 }
 

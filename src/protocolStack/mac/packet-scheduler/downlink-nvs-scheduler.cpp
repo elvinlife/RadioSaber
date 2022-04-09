@@ -242,6 +242,7 @@ DownlinkNVSScheduler::DoStopSchedule(void)
               << " cumu_rbs: " << user->m_bearers[i]->GetCumulateRBs()
               << " hol_delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
               << " user: " << user->GetUserID()
+              << " slice: " << user_to_slice_[user->GetUserID()]
               << std::endl;
 
 	        RlcEntity *rlc = user->m_bearers[i]->GetRlcEntity ();

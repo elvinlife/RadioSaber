@@ -34,7 +34,7 @@
 #include "../../core/eventScheduler/simulator.h"
 #include <fstream>
 #include <cassert>
-#define USER_REAL_TRACE 1
+#define USE_REAL_TRACE 1
 #define CQI_INTERVAL 40
 #define MAX_UE_TRACE 158
 #define MAX_TTI_TRACE 475

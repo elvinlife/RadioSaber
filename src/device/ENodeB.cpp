@@ -307,7 +307,7 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
   switch (type)
     {
       case ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR:
-    	  scheduler = new  DL_PF_PacketScheduler ();
+    	  scheduler = new  DL_PF_PacketScheduler (config_fname);
     	  scheduler->SetMacEntity (mac);
     	  mac->SetDownlinkPacketScheduler (scheduler);
 	      break;
@@ -381,10 +381,7 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
         break;
 
 	  default:
-	    std::cout << "ERROR: invalid scheduler type" << std::endl;
-    	scheduler = new  DL_PF_PacketScheduler ();
-    	scheduler->SetMacEntity (mac);
-    	mac->SetDownlinkPacketScheduler (scheduler);
+      throw std::runtime_error("Error: invalid scheduler type");
 	    break;
     }
 }

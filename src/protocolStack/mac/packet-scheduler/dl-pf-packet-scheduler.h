@@ -26,10 +26,23 @@
 #include "downlink-packet-scheduler.h"
 
 class DL_PF_PacketScheduler : public DownlinkPacketScheduler {
+enum Scheduler {MT, PF, TTA, MLWDF};
+private:
+	int		user_to_slice_[MAX_APPS];
+	double	slice_weights_[MAX_SLICES];
+	double 	slice_exp_time_[MAX_SLICES];
+
+	int		num_slices_ = 1;
+	int		schedule_scheme_ = 1;
+
+	const double	beta_ = 0.1;
+	Scheduler		intra_sched_;
+
 public:
-	DL_PF_PacketScheduler();
+	DL_PF_PacketScheduler(std::string);
 	virtual ~DL_PF_PacketScheduler();
 
+	virtual void DoStopSchedule (void);
 	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
 };
 

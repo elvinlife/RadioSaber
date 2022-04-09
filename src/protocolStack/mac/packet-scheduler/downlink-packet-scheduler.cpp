@@ -149,21 +149,12 @@ DownlinkPacketScheduler::DoStopSchedule (void)
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();
 	      PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
 
-// #ifdef SCHEDULER_DEBUG
-// 	      std::cout << "\t\t  nb of packets: " << pb2->GetNPackets () << std::endl;
-// #endif
-
 	      if (pb2->GetNPackets () > 0)
 	        {
 	    	  std::list<Packet*> packets = pb2->GetPackets ();
 	    	  std::list<Packet* >::iterator it;
 	    	  for (it = packets.begin (); it != packets.end (); it++)
 	    	    {
-// #ifdef SCHEDULER_DEBUG
-// 	    		  std::cout << "\t\t  added packet of bytes " << (*it)->GetSize () << std::endl;
-// 	    		  //(*it)->Print ();
-// #endif
-
 	    		  Packet *p = (*it);
 	    		  pb->AddPacket (p->Copy ());
 	    	    }
@@ -174,8 +165,6 @@ DownlinkPacketScheduler::DoStopSchedule (void)
 	    {}
     }
   UpdateTimeStamp();
-
-  //UpdateAverageTransmissionRate ();
 
   //SEND PACKET BURST
 
