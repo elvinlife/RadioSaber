@@ -163,13 +163,11 @@ public:
   void DeleteUsersToSchedule (void);
   void ClearUsersToSchedule ();
   UsersToSchedule* GetUsersToSchedule (void) const;
-  int GetHighestPriority() {return m_highestPriority;}
 
 private:
 	MacEntity *m_mac;
 	FlowsToSchedule *m_flowsToSchedule;
   UsersToSchedule *m_usersToSchedule;
-  int m_highestPriority;
 	unsigned long m_ts;
 };
 

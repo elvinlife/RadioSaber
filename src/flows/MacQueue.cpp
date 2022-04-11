@@ -182,7 +182,7 @@ MacQueue::GetPacketToTramsit (int availableBytes)
 	  rlcHeader->SetAFragment (true);
 	  rlcHeader->SetTheLatestFragment (false);
 	  rlcHeader->SetFragmentNumber (element.GetFragmentNumber ());
-      rlcHeader->SetEndByte (rlcHeader->GetStartByte () + fragmentSize - 1);
+    rlcHeader->SetEndByte (rlcHeader->GetStartByte () + fragmentSize - 1);
 
 	  UpdateQueueSize (-fragmentSize);
 	}
@@ -388,7 +388,7 @@ MacQueue::CheckForDropPackets (double maxDelay,
 					  && GetPacketQueue ()->begin ()->GetPacket()->GetPacketTags()->GetApplicationType() ==
 							  PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
 				{
-				   std::cout << " FRAME " <<  GetPacketQueue ()->begin ()->GetPacket()->GetPacketTags()->GetFrameNuber()
+				   std::cout << " FRAME " <<  GetPacketQueue ()->begin ()->GetPacket()->GetPacketTags()->GetFrameNumber()
 							<< " START " << GetPacketQueue ()->begin ()->GetPacket()->GetPacketTags()->GetStartByte()
 							<< " END " << GetPacketQueue ()->begin ()->GetPacket()->GetPacketTags()->GetEndByte();
 				}

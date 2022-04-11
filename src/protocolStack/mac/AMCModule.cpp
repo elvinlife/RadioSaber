@@ -277,10 +277,11 @@ int
 AMCModule::GetCQIFromMCS (int mcs)
 {
   for (int i=0; i<15; i++)
-    {
+  {
 	  if (mcs == MapCQIToMCS[i])
 		  return (i+1);
-    }
+  }
+  return 1;
 }
 
 int

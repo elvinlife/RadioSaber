@@ -53,13 +53,11 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
     int begin_id = 0;
-    int intra_schedule = 0;
-    ifs >> schedule_scheme_ >> intra_schedule >> num_slices_;
+    ifs >> num_slices_;
 
     for (int i = 0; i < num_slices_; ++i)
       ifs >> slice_weights_[i];
     for (int i = 0; i < num_slices_; ++i) {
-      slice_rbs_offset_[i] = 0;
       int num_ue;
       ifs >> num_ue;
       for (int j = 0; j < num_ue; ++j) {
@@ -67,18 +65,17 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
       }
       begin_id += num_ue;
     }
-
-    if (intra_schedule == 0) {
-      intra_sched_ = MT;
-    }
-    else if (intra_schedule == 1) {
-      intra_sched_ = PF;
-    }
-    else if (intra_schedule == 2) {
-      intra_sched_ = MLWDF;
-    }
-    else {
-      intra_sched_ = PF;
+    for (int i = 0; i < num_slices_; ++i) {
+      int algo;
+      ifs >> algo;
+      if (algo == 0)
+        slice_algo_[i] = MT;
+      else if (algo == 1)
+        slice_algo_[i] = PF;
+      else if (algo == 2)
+        slice_algo_[i] = MLWDF;
+      else
+        slice_algo_[i] = PF;
     }
   }
   else {
@@ -142,8 +139,6 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 
       InsertFlowToUser(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
 		}
-	  else
-	    {}
 	}
   //std::cerr << std::endl;
 }
@@ -163,8 +158,7 @@ DownlinkTransportScheduler::DoSchedule (void)
 	{}
   else
 	{
-	  //RBsAllocation ();
-    RBsAllocationForUE();
+	  RBsAllocation ();
 	}
 
   StopSchedule ();
@@ -190,10 +184,10 @@ DownlinkTransportScheduler::DoStopSchedule(void)
             user->GetListOfAllocatedRBs()->size()
             );
           std::cerr << GetTimeStamp()
-              << " flow: " << user->m_bearers[i]->GetApplication()->GetApplicationID()
-              << " cumu_bytes: " << user->m_bearers[i]->GetCumulateBytes()
-              << " cumu_rbs: " << user->m_bearers[i]->GetCumulateRBs()
-              << " hol_delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
+              << " app: " << user->m_bearers[i]->GetApplication()->GetApplicationID()
+              << " bytes: " << user->m_bearers[i]->GetCumulateBytes()
+              << " rbs: " << user->m_bearers[i]->GetCumulateRBs()
+              << " delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
               << " user: " << user->GetUserID()
               << " slice: " << user_to_slice_[user->GetUserID()]
               << std::endl;
@@ -452,7 +446,7 @@ static vector<int> VogelApproximate(double** flow_spectraleff, vector<int>& slic
 }
 
 void
-DownlinkTransportScheduler::RBsAllocationForUE()
+DownlinkTransportScheduler::RBsAllocation()
 {
   UsersToSchedule* users = GetUsersToSchedule();
   int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
@@ -673,213 +667,213 @@ DownlinkTransportScheduler::RBsAllocationForUE()
   delete pdcchMsg;
 }
 
-void
-DownlinkTransportScheduler::RBsAllocation ()
-{
-#ifdef SCHEDULER_DEBUG
-	std::cout << " ---- DownlinkTransportScheduler::RBsAllocation";
-#endif
-  FlowsToSchedule* flows = GetFlowsToSchedule ();
-  int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
-  int rbg_size = get_rbg_size(nb_rbs);
-  // currently nb_rbgs should be divisible
-  nb_rbs = nb_rbs - (nb_rbs % rbg_size);
-  assert(nb_rbs % rbg_size == 0);
+// void
+// DownlinkTransportScheduler::RBsAllocation ()
+// {
+// #ifdef SCHEDULER_DEBUG
+// 	std::cout << " ---- DownlinkTransportScheduler::RBsAllocation";
+// #endif
+//   FlowsToSchedule* flows = GetFlowsToSchedule ();
+//   int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+//   int rbg_size = get_rbg_size(nb_rbs);
+//   // currently nb_rbgs should be divisible
+//   nb_rbs = nb_rbs - (nb_rbs % rbg_size);
+//   assert(nb_rbs % rbg_size == 0);
 
-  // find out slices without data/flows at all, and assign correct rb target
-  std::vector<bool> slice_with_data(num_slices_, false);
-  std::vector<int> slice_target_rbs(num_slices_, 0);
-  int num_nonempty_slices = 0;
-  int extra_rbs = nb_rbs;
-  for (int k = 0; k < flows->size(); k++)
-  {
-    int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
-    int slice_id = user_to_slice_[app_id];
-    if (slice_with_data[slice_id])
-      continue;
-    num_nonempty_slices += 1;
-    slice_with_data[slice_id] = true;
-    slice_target_rbs[slice_id] = (int)(nb_rbs * slice_weights_[slice_id] + slice_rbs_offset_[slice_id]);
-    extra_rbs -= slice_target_rbs[slice_id];
-  }
-  assert(num_nonempty_slices != 0);
-  // we enable reallocation between slices, but not flows
-  bool is_first_slice = true;
-  int rand_begin_idx = rand();
-  for (int i = 0; i < num_slices_; ++i) {
-    int k = (i + rand_begin_idx) % num_slices_;
-    if (slice_with_data[k]) {
-      slice_target_rbs[k] += extra_rbs / num_nonempty_slices;
-      if (is_first_slice) {
-        slice_target_rbs[k] += extra_rbs % num_nonempty_slices;
-        is_first_slice = false;
-      }
-    }
-  }
-  int nb_rbgs = nb_rbs / rbg_size;
-  // calculate the rbg quota for slices
-  std::vector<int> slice_quota_rbgs(num_slices_, 0);
-  std::vector<int> slice_final_rbgs(num_slices_, 0);
-  int extra_rbgs = nb_rbgs;
-  for (int i = 0; i < num_slices_; ++i) {
-    slice_quota_rbgs[i] = (int)(slice_target_rbs[i] / rbg_size);
-    extra_rbgs -= slice_quota_rbgs[i];
-  }
-  is_first_slice = true;
-  rand_begin_idx = rand();
-  for (int i = 0; i < num_slices_; ++i) {
-    int k = (rand_begin_idx + i) % num_slices_;
-    if(slice_with_data[k]) {
-      slice_quota_rbgs[k] += extra_rbgs / num_nonempty_slices;
-      if (is_first_slice) {
-        slice_quota_rbgs[k] += extra_rbgs % num_nonempty_slices;
-        is_first_slice = false;
-      }
-    }
-  }
+//   // find out slices without data/flows at all, and assign correct rb target
+//   std::vector<bool> slice_with_data(num_slices_, false);
+//   std::vector<int> slice_target_rbs(num_slices_, 0);
+//   int num_nonempty_slices = 0;
+//   int extra_rbs = nb_rbs;
+//   for (int k = 0; k < flows->size(); k++)
+//   {
+//     int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
+//     int slice_id = user_to_slice_[app_id];
+//     if (slice_with_data[slice_id])
+//       continue;
+//     num_nonempty_slices += 1;
+//     slice_with_data[slice_id] = true;
+//     slice_target_rbs[slice_id] = (int)(nb_rbs * slice_weights_[slice_id] + slice_rbs_offset_[slice_id]);
+//     extra_rbs -= slice_target_rbs[slice_id];
+//   }
+//   assert(num_nonempty_slices != 0);
+//   // we enable reallocation between slices, but not flows
+//   bool is_first_slice = true;
+//   int rand_begin_idx = rand();
+//   for (int i = 0; i < num_slices_; ++i) {
+//     int k = (i + rand_begin_idx) % num_slices_;
+//     if (slice_with_data[k]) {
+//       slice_target_rbs[k] += extra_rbs / num_nonempty_slices;
+//       if (is_first_slice) {
+//         slice_target_rbs[k] += extra_rbs % num_nonempty_slices;
+//         is_first_slice = false;
+//       }
+//     }
+//   }
+//   int nb_rbgs = nb_rbs / rbg_size;
+//   // calculate the rbg quota for slices
+//   std::vector<int> slice_quota_rbgs(num_slices_, 0);
+//   std::vector<int> slice_final_rbgs(num_slices_, 0);
+//   int extra_rbgs = nb_rbgs;
+//   for (int i = 0; i < num_slices_; ++i) {
+//     slice_quota_rbgs[i] = (int)(slice_target_rbs[i] / rbg_size);
+//     extra_rbgs -= slice_quota_rbgs[i];
+//   }
+//   is_first_slice = true;
+//   rand_begin_idx = rand();
+//   for (int i = 0; i < num_slices_; ++i) {
+//     int k = (rand_begin_idx + i) % num_slices_;
+//     if(slice_with_data[k]) {
+//       slice_quota_rbgs[k] += extra_rbgs / num_nonempty_slices;
+//       if (is_first_slice) {
+//         slice_quota_rbgs[k] += extra_rbgs % num_nonempty_slices;
+//         is_first_slice = false;
+//       }
+//     }
+//   }
 
-  std::cout << "slice target RBs:";
-  for (int i = 0; i < num_slices_; ++i) {
-    std::cout << "(" << i << ", " << slice_target_rbs[i] << ", " << slice_quota_rbgs[i] << ") ";
-  }
-  std::cout << std::endl;
+//   std::cout << "slice target RBs:";
+//   for (int i = 0; i < num_slices_; ++i) {
+//     std::cout << "(" << i << ", " << slice_target_rbs[i] << ", " << slice_quota_rbgs[i] << ") ";
+//   }
+//   std::cout << std::endl;
 
-  // create a matrix of flow metrics (RBG, flow index)
-  double metrics[nb_rbgs][flows->size ()];
+//   // create a matrix of flow metrics (RBG, flow index)
+//   double metrics[nb_rbgs][flows->size ()];
 
-  for (int i = 0; i < nb_rbgs; i++) {
-	  for (int j = 0; j < flows->size (); j++) {
-		  metrics[i][j] = ComputeSchedulingMetric (
-        flows->at (j)->GetBearer (),
-        flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
-        i);
-	  }
-  }
+//   for (int i = 0; i < nb_rbgs; i++) {
+// 	  for (int j = 0; j < flows->size (); j++) {
+// 		  metrics[i][j] = ComputeSchedulingMetric (
+//         flows->at (j)->GetBearer (),
+//         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
+//         i);
+// 	  }
+//   }
 
-#ifdef SCHEDULER_DEBUG
-  //std::cout << ", available RBGs " << nb_rbgs << ", flows " << flows->size () << std::endl;
-  for (int ii = 0; ii < flows->size (); ii++)
-  {
-	std::cout << "\t metrics for flow "
-		  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
-	for (int jj = 0; jj < nb_rbgs; jj++) {
-      fprintf(stdout, " (%d, %.3f, %d, %.3f)",
-          jj, metrics[jj][ii], 
-          flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size),
-          flows->at(ii)->GetSpectralEfficiency().at(jj * rbg_size));
-	  }
-	std::cout << std::endl;
-  }
-#endif
+// #ifdef SCHEDULER_DEBUG
+//   //std::cout << ", available RBGs " << nb_rbgs << ", flows " << flows->size () << std::endl;
+//   for (int ii = 0; ii < flows->size (); ii++)
+//   {
+// 	std::cout << "\t metrics for flow "
+// 		  << flows->at (ii)->GetBearer ()->GetApplication ()->GetApplicationID () << ":";
+// 	for (int jj = 0; jj < nb_rbgs; jj++) {
+//       fprintf(stdout, " (%d, %.3f, %d, %.3f)",
+//           jj, metrics[jj][ii], 
+//           flows->at(ii)->GetCqiFeedbacks().at(jj * rbg_size),
+//           flows->at(ii)->GetSpectralEfficiency().at(jj * rbg_size));
+// 	  }
+// 	std::cout << std::endl;
+//   }
+// #endif
 
-  AMCModule *amc = GetMacEntity ()->GetAmcModule ();
+//   AMCModule *amc = GetMacEntity ()->GetAmcModule ();
 
-  // 1st index: rbg_id; 2nd index: slice_id
-  // the flow_id when the rbg is assigned to the slice
-  int **flow_id = new int*[nb_rbgs];
-  double **flow_spectraleff = new double*[nb_rbgs];
+//   // 1st index: rbg_id; 2nd index: slice_id
+//   // the flow_id when the rbg is assigned to the slice
+//   int **flow_id = new int*[nb_rbgs];
+//   double **flow_spectraleff = new double*[nb_rbgs];
 
-  // Assign the flow_id and cqi to every slice in every rbg
-  for (int s = 0; s < nb_rbgs; s++)
-  {
-    flow_id[s] = new int[num_slices_];
-    flow_spectraleff[s] = new double[num_slices_];
-    for (int k = 0; k < num_slices_; k++) {
-      flow_id[s][k] = -1;
-      flow_spectraleff[s][k] = 0;
-    }
+//   // Assign the flow_id and cqi to every slice in every rbg
+//   for (int s = 0; s < nb_rbgs; s++)
+//   {
+//     flow_id[s] = new int[num_slices_];
+//     flow_spectraleff[s] = new double[num_slices_];
+//     for (int k = 0; k < num_slices_; k++) {
+//       flow_id[s][k] = -1;
+//       flow_spectraleff[s][k] = 0;
+//     }
 
-    std::vector<double> max_ranks(num_slices_, -1);     // the highest flow metric in every slice
-    for (int k = 0; k < flows->size(); k++)
-    {
-      int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
-      int slice_id = user_to_slice_[app_id];
-      if (metrics[s][k] > max_ranks[slice_id]) {
-        max_ranks[slice_id] = metrics[s][k];
-        flow_id[s][slice_id] = k;
-        flow_spectraleff[s][slice_id] = flows->at(k)->GetSpectralEfficiency().at(s * rbg_size);
-      }
-    }
-  }
+//     std::vector<double> max_ranks(num_slices_, -1);     // the highest flow metric in every slice
+//     for (int k = 0; k < flows->size(); k++)
+//     {
+//       int app_id = flows->at(k)->GetBearer()->GetApplication()->GetApplicationID();
+//       int slice_id = user_to_slice_[app_id];
+//       if (metrics[s][k] > max_ranks[slice_id]) {
+//         max_ranks[slice_id] = metrics[s][k];
+//         flow_id[s][slice_id] = k;
+//         flow_spectraleff[s][slice_id] = flows->at(k)->GetSpectralEfficiency().at(s * rbg_size);
+//       }
+//     }
+//   }
 
-  // print the slice_quota and slice_cqi for debugging
-  // if (GetTimeStamp() < 1000) {
-  //   fprintf(stderr, "slice quota: ");
-  //   for (int i = 0; i < num_type2_slices_; i++) {
-  //     fprintf(stderr, "%d ", slice_quota_rbgs[i]);
-  //   }
-  //   fprintf(stderr, "\n");
-  //   for (int i = 0; i < nb_rbgs; i++) {
-  //     for (int j = 0; j < num_type2_slices_; j++) {
-  //       fprintf(stderr, "(%d, %.0f) ", flow_id[i][j], flow_spectraleff[i][j] * 180 / 8 * 4);
-  //     }
-  //     fprintf(stderr, "\n");
-  //   }
-  // }
+//   // print the slice_quota and slice_cqi for debugging
+//   // if (GetTimeStamp() < 1000) {
+//   //   fprintf(stderr, "slice quota: ");
+//   //   for (int i = 0; i < num_type2_slices_; i++) {
+//   //     fprintf(stderr, "%d ", slice_quota_rbgs[i]);
+//   //   }
+//   //   fprintf(stderr, "\n");
+//   //   for (int i = 0; i < nb_rbgs; i++) {
+//   //     for (int j = 0; j < num_type2_slices_; j++) {
+//   //       fprintf(stderr, "(%d, %.0f) ", flow_id[i][j], flow_spectraleff[i][j] * 180 / 8 * 4);
+//   //     }
+//   //     fprintf(stderr, "\n");
+//   //   }
+//   // }
 
-  // calculate the assignment of rbgs to slices
-  vector<int> rbg_to_slice;
-  unordered_map<int, vector<int>> slice_rbgs;
-  if (inter_sched_ == 0) {
-    rbg_to_slice = GreedyByRow(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
-  }
-  else if (inter_sched_ == 1) {
-    rbg_to_slice = SubOpt(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
-  }
-  else if (inter_sched_ == 2) {
-    rbg_to_slice = MaximizeCell(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
-  }
-  else if (inter_sched_ == 3 ) {
-    rbg_to_slice = VogelApproximate(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
-  }
-  else {
-    slice_rbgs = UpperBound(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
-  }
+//   // calculate the assignment of rbgs to slices
+//   vector<int> rbg_to_slice;
+//   unordered_map<int, vector<int>> slice_rbgs;
+//   if (inter_sched_ == 0) {
+//     rbg_to_slice = GreedyByRow(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+//   }
+//   else if (inter_sched_ == 1) {
+//     rbg_to_slice = SubOpt(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+//   }
+//   else if (inter_sched_ == 2) {
+//     rbg_to_slice = MaximizeCell(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+//   }
+//   else if (inter_sched_ == 3 ) {
+//     rbg_to_slice = VogelApproximate(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+//   }
+//   else {
+//     slice_rbgs = UpperBound(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+//   }
 
-  // ToDo: Generalize the framework
-  if (inter_sched_ < 4 ) {
-    for (int i = 0; i < rbg_to_slice.size(); ++i) {
-      int fid = flow_id[i][rbg_to_slice[i]];
-      assert(fid != -1);
-      int sid = user_to_slice_[flows->at(fid)->GetBearer()->GetApplication()->GetApplicationID()];
-      assert(sid == rbg_to_slice[i]);
-      slice_final_rbgs[sid] += 1;
-      int l = i * rbg_size, r = (i+1) * rbg_size;
-      for (int j = l; j < r; ++j) {
-        flows->at(fid)->GetListOfAllocatedRBs()->push_back(j);
-      }
-    }
-  }
-  else {
-    for (auto it = slice_rbgs.begin(); it != slice_rbgs.end(); ++it) {
-      int sid = it->first;
-      auto rbg_list = it->second;
-      slice_final_rbgs[sid] += rbg_list.size();
-      for (int i = 0; i < rbg_list.size(); ++i) {
-        int fid = flow_id[rbg_list[i]][sid];
-        assert(fid != -1);
-        int l = rbg_list[i] * rbg_size, r = (rbg_list[i] + 1) * rbg_size;
-        for (int j = l; j < r; ++j) {
-          flows->at(fid)->GetListOfAllocatedRBs()->push_back(j);
-        }
-      }
-    }
-  }
+//   // ToDo: Generalize the framework
+//   if (inter_sched_ < 4 ) {
+//     for (int i = 0; i < rbg_to_slice.size(); ++i) {
+//       int fid = flow_id[i][rbg_to_slice[i]];
+//       assert(fid != -1);
+//       int sid = user_to_slice_[flows->at(fid)->GetBearer()->GetApplication()->GetApplicationID()];
+//       assert(sid == rbg_to_slice[i]);
+//       slice_final_rbgs[sid] += 1;
+//       int l = i * rbg_size, r = (i+1) * rbg_size;
+//       for (int j = l; j < r; ++j) {
+//         flows->at(fid)->GetListOfAllocatedRBs()->push_back(j);
+//       }
+//     }
+//   }
+//   else {
+//     for (auto it = slice_rbgs.begin(); it != slice_rbgs.end(); ++it) {
+//       int sid = it->first;
+//       auto rbg_list = it->second;
+//       slice_final_rbgs[sid] += rbg_list.size();
+//       for (int i = 0; i < rbg_list.size(); ++i) {
+//         int fid = flow_id[rbg_list[i]][sid];
+//         assert(fid != -1);
+//         int l = rbg_list[i] * rbg_size, r = (rbg_list[i] + 1) * rbg_size;
+//         for (int j = l; j < r; ++j) {
+//           flows->at(fid)->GetListOfAllocatedRBs()->push_back(j);
+//         }
+//       }
+//     }
+//   }
 
-  for (int i = 0; i < num_slices_; ++i) {
-    slice_rbs_offset_[i] = slice_target_rbs[i] - slice_final_rbgs[i] * rbg_size;
-  }
+//   for (int i = 0; i < num_slices_; ++i) {
+//     slice_rbs_offset_[i] = slice_target_rbs[i] - slice_final_rbgs[i] * rbg_size;
+//   }
 
-  // free the flow_id and flow_spectraleff
-  for (int i = 0; i < nb_rbgs; i++) {
-    delete[] flow_id[i];
-    delete[] flow_spectraleff[i];
-  }
-  delete[] flow_id;
-  delete[] flow_spectraleff;
+//   // free the flow_id and flow_spectraleff
+//   for (int i = 0; i < nb_rbgs; i++) {
+//     delete[] flow_id[i];
+//     delete[] flow_spectraleff[i];
+//   }
+//   delete[] flow_id;
+//   delete[] flow_spectraleff;
 
-  FinalizeAllocation();  
-}
+//   FinalizeAllocation();  
+// }
 
 void
 DownlinkTransportScheduler::FinalizeAllocation()
@@ -960,66 +954,48 @@ DownlinkTransportScheduler::FinalizeAllocation()
 }
 
 double
-DownlinkTransportScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
-{
-  double metric = 0;
-  switch (intra_sched_) {
-    case MT:
-      metric = spectralEfficiency;
-      break;
-    case PF:
-      metric = (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
-      break;
-    case MLWDF:
-    {
-      double a = -log10 (0.05) / 1;
-      double HOL = bearer->GetHeadOfLinePacketDelay ();
-      metric = (a * HOL) * ((spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate ());
-      break;
-    }
-    default:
-      metric = spectralEfficiency;
-  }
-  return metric;
-}
-
-double
 DownlinkTransportScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spectralEfficiency)
 {
   double metric = 0;
   double averageRate = 1;
+  int slice_id = user_to_slice_[user->GetUserID()];
   for (int i = 0; i < MAX_BEARERS; ++i) {
     if (user->m_bearers[i]) {
       averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
     }
   }
+
   if (schedule_scheme_ == 0) {
-    if (intra_sched_ == MT) {
-      metric = spectralEfficiency;
-    }
-    else if (intra_sched_ == PF) {
-      metric = (spectralEfficiency * 180000.) / averageRate;
-    }
-    else {
-      throw std::runtime_error("Schedule scheme 0 cannot use intra-scheduler: " + std::to_string(intra_sched_));
+    switch (slice_algo_[slice_id]) {
+      case MT:
+        metric = spectralEfficiency;
+        break;
+      case PF:
+        metric = (spectralEfficiency * 180000.) / averageRate;
+        break;
+      default:
+        metric = spectralEfficiency;
     }
   }
   else if (schedule_scheme_ == 1) {
-    if (user->m_dataToTransmit[GetHighestPriority()] == 0){
+    if (user->m_dataToTransmit[slice_priority_[slice_id]] == 0){
       metric = 0;
     }
     else {
-      if (GetHighestPriority() == 1) {
-        RadioBearer* bearer = user->m_bearers[1];
+      if (slice_algo_[slice_id] == MT) {
+        metric = spectralEfficiency;
+      }
+      else if (slice_algo_[slice_id] == PF) {
+        metric = (spectralEfficiency * 180000.) / averageRate;
+      }
+      else if (slice_algo_[slice_id] == MLWDF) {
+        RadioBearer* bearer = user->m_bearers[slice_priority_[slice_id]];
+        //assert(bearer->)
         double HoL = bearer->GetHeadOfLinePacketDelay();
         metric = HoL * (spectralEfficiency * 180000.) / averageRate;
       }
-      else if (GetHighestPriority() == 0) {
-        metric = (spectralEfficiency * 180000.) / averageRate;
-      }
       else {
-        throw std::runtime_error(
-          "Invalid bearer priority: " + std::to_string(GetHighestPriority()));
+        throw std::runtime_error("Invalid Scheduling algorithm");
       }
     }
   }

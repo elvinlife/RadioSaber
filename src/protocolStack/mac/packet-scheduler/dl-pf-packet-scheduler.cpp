@@ -39,8 +39,7 @@ DL_PF_PacketScheduler::DL_PF_PacketScheduler(std::string config_fname="")
   std::ifstream ifs(config_fname, std::ifstream::in);
   if (ifs.is_open()) {
     int begin_id = 0;
-    int intra_schedule = 0;
-    ifs >> schedule_scheme_ >> intra_schedule >> num_slices_;
+    ifs >> num_slices_;
 
     for (int i = 0; i < num_slices_; ++i)
       ifs >> slice_weights_[i];
@@ -53,18 +52,17 @@ DL_PF_PacketScheduler::DL_PF_PacketScheduler(std::string config_fname="")
       }
       begin_id += num_ue;
     }
-    
-    if (intra_schedule == 0) {
-      intra_sched_ = MT;
-    }
-    else if (intra_schedule == 1) {
-      intra_sched_ = PF;
-    }
-    else if (intra_schedule == 2) {
-      intra_sched_ = MLWDF;
-    }
-    else {
-      intra_sched_ = PF;
+    for (int i = 0; i < num_slices_; ++i) {
+      int algo;
+      ifs >> algo;
+      if (algo == 0)
+        slice_algo_[i] = MT;
+      else if (algo == 1)
+        slice_algo_[i] = PF;
+      else if (algo == 2)
+        slice_algo_[i] = MLWDF;
+      else
+        slice_algo_[i] = PF;
     }
   }
   else {
@@ -153,24 +151,25 @@ DL_PF_PacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spec
    * metric = spectralEfficiency / averageRate
    */
   double metric = 0;
-  if (intra_sched_ == PF) {
-    metric = (spectralEfficiency * 180000.)
-	 				  / bearer->GetAverageTransmissionRate();
-  }
-  else if (intra_sched_ == MT) {
-    metric = spectralEfficiency;
-  }
-  else if (intra_sched_ == MLWDF) {
-    if (bearer->GetApplication()->GetApplicationType() == 
-      Application::APPLICATION_TYPE_INFINITE_BUFFER) {
-        metric = (spectralEfficiency * 180000.)
-	 				  / bearer->GetAverageTransmissionRate();
-      }
-    else {
-      double HOL = bearer->GetHeadOfLinePacketDelay();
-      metric = HOL * (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
-    }
-  }
+  // if (intra_sched_ == PF) {
+  //   metric = (spectralEfficiency * 180000.)
+	//  				  / bearer->GetAverageTransmissionRate();
+  // }
+  // else if (intra_sched_ == MT) {
+  //   metric = spectralEfficiency;
+  // }
+  // else if (intra_sched_ == MLWDF) {
+  //   if (bearer->GetApplication()->GetApplicationType() == 
+  //     Application::APPLICATION_TYPE_INFINITE_BUFFER) {
+  //       metric = (spectralEfficiency * 180000.)
+	//  				  / bearer->GetAverageTransmissionRate();
+  //     }
+  //   else {
+  //     double HOL = bearer->GetHeadOfLinePacketDelay();
+  //     metric = HOL * (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
+  //   }
+  // }
+  metric = (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
   return metric;
 }
 

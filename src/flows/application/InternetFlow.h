@@ -20,30 +20,36 @@
  */
 
 
-#ifndef DLPFPACKETSCHEDULER_H_
-#define DLPFPACKETSCHEDULER_H_
 
-#include "downlink-packet-scheduler.h"
+#ifndef INTERNETFLOW_H_
+#define INTERNETFLOW_H_
 
-class DL_PF_PacketScheduler : public DownlinkPacketScheduler {
-enum Scheduler {MT, PF, TTA, MLWDF};
-private:
-	int       user_to_slice_[MAX_APPS];
-	double    slice_weights_[MAX_SLICES];
-	double    slice_exp_time_[MAX_SLICES];
-  Scheduler slice_algo_[MAX_SLICES];
+#include "Application.h"
 
-	int	      num_slices_ = 1;
-	int	      schedule_scheme_ = 1;
-
-	const double	beta_ = 0.1;
-
+class InternetFlow : public Application {
 public:
-	DL_PF_PacketScheduler(std::string);
-	virtual ~DL_PF_PacketScheduler();
+  static int m_avg_flowsize;
+  static int m_typeflow;
+  static int m_flowsize[];
+  static double m_flowcdf[];
 
-	virtual void DoStopSchedule (void);
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+	InternetFlow();
+	virtual ~InternetFlow();
+
+	virtual void DoStart (void);
+	virtual void DoStop (void);
+
+  void    ScheduleTransmit (double time);
+  void    Send (void);
+  // set average sending rate(in Mbps)
+  void    SetAvgRate(double rate);
+
+private:
+
+  double  GetInterval(void) const;
+  int     GetSize(void) const;
+	double  m_interval;
+  int     m_flowCounter;
 };
 
-#endif /* DLPFPACKETSCHEDULER_H_ */
+#endif /* CBR_H_ */

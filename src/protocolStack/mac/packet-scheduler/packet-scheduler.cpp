@@ -307,8 +307,7 @@ PacketScheduler::InsertFlowToUser (RadioBearer* bearer, int dataToTransmit, std:
 {
   int userID = bearer->GetUserID();
   int bearer_priority = bearer->GetPriority();
-  if (bearer_priority > m_highestPriority)
-    m_highestPriority = bearer_priority;
+
   for (auto it = m_usersToSchedule->begin(); it != m_usersToSchedule->end(); ++it) {
     if ((*it)->GetUserID() == userID) {
       (*it)->m_bearers[bearer_priority] = bearer;
@@ -355,7 +354,6 @@ PacketScheduler::ClearUsersToSchedule()
   for (auto it = m_usersToSchedule->begin(); it != m_usersToSchedule->end(); ++it) {
     delete *it;
   }
-  m_highestPriority = 0;
   m_usersToSchedule->clear();
 }
 

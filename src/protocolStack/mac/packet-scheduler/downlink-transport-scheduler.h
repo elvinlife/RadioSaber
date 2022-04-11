@@ -27,16 +27,16 @@
 class DownlinkTransportScheduler: public PacketScheduler {
 	enum Scheduler {MT, PF, TTA, MLWDF};
 private:
-	int		user_to_slice_[MAX_APPS];
-	double	slice_weights_[MAX_SLICES];
-	double	slice_rbs_offset_[MAX_SLICES];
+	int       user_to_slice_[MAX_APPS];
+	double    slice_weights_[MAX_SLICES];
+	Scheduler slice_algo_[MAX_SLICES];
+	int       slice_priority_[MAX_SLICES];
+	double    slice_rbs_offset_[MAX_SLICES];
 
-	int		num_slices_ = 1;
-	int		schedule_scheme_ = 1;
+	int       num_slices_ = 1;
+	int       schedule_scheme_ = 1;
 
 	const double beta_ = 0.1;
-	
-	Scheduler	intra_sched_;
 	int			inter_sched_ = 0;
 
 public:
@@ -48,12 +48,9 @@ public:
 	virtual void DoSchedule (void);
 	virtual void DoStopSchedule (void);
 
-	virtual void RBsAllocationForUE();
 	virtual void RBsAllocation ();
 	void FinalizeAllocation();
-	virtual double ComputeSchedulingMetric (RadioBearer* bearer,
-			double spectralEfficiency,
-			int subChannel);
+
 	virtual double ComputeSchedulingMetric (
 		UserToSchedule* user,
 		double spectralEfficiency

@@ -89,8 +89,8 @@ RadioBearer::GetUserID(void)
 int
 RadioBearer::GetPriority(void)
 {
-  if (m_application->GetApplicationType() == Application::APPLICATION_TYPE_TRACE_BASED) {
-    return 1;
+  if (m_application->GetApplicationType() == Application::APPLICATION_TYPE_IPFLOW) {
+    return m_application->GetPriority();
   }
   else {
     return 0;
@@ -327,10 +327,16 @@ RadioBearer::Enqueue (Packet *packet)
 #ifdef TEST_ENQUEUE_PACKETS
       std::cout << "Enqueue packet on " << GetSource ()->GetIDNetworkNode () << std::endl;
 #endif
-
   GetMacQueue ()->Enqueue(packet);
+  PacketTAGs* tags = packet->GetPacketTags();
+  if ( tags->GetStartByte() == 1 &&
+      tags->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_IPFLOW ) {
+        // std::cout << "App: " << m_application->GetApplicationID()
+        //   << " flow: " << tags->GetFrameNumber()
+        //   << " enqueues" << std::endl;
+        m_flow_enqueueInfo[tags->GetFrameNumber()] =  packet->GetTimeStamp();
+  }
 }
-
 
 bool
 RadioBearer::HasPackets (void)
@@ -407,4 +413,10 @@ RadioBearer::GetByte (int byte)
 
 	return maxData;
 
+}
+
+std::unordered_map<int, double>&
+RadioBearer::GetFlowEnqueueInfo()
+{
+  return m_flow_enqueueInfo;
 }

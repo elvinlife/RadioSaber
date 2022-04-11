@@ -267,7 +267,7 @@ Packet::Copy (void)
     {
 	  PacketTAGs *tags = new PacketTAGs ();
 	  tags->SetApplicationType(GetPacketTags()->GetApplicationType());
-	  tags->SetFrameNumber (GetPacketTags ()->GetFrameNuber ());
+	  tags->SetFrameNumber (GetPacketTags ()->GetFrameNumber ());
 	  tags->SetStartByte (GetPacketTags ()->GetStartByte ());
 	  tags->SetEndByte (GetPacketTags ()->GetEndByte ());
 	  tags->SetApplicationSize (GetPacketTags ()->GetApplicationSize ());

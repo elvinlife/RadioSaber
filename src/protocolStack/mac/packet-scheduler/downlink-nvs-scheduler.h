@@ -27,15 +27,16 @@
 class DownlinkNVSScheduler: public PacketScheduler {
 	enum Scheduler {MT, PF, TTA, MLWDF};
 private:
-	int		user_to_slice_[MAX_APPS];
-	double	slice_weights_[MAX_SLICES];
-	double 	slice_exp_time_[MAX_SLICES];
+	int       user_to_slice_[MAX_APPS];
+	double    slice_weights_[MAX_SLICES];
+	double    slice_exp_time_[MAX_SLICES];
+	Scheduler slice_algo_[MAX_SLICES];
+  
+	int       slice_priority_[MAX_SLICES];
+	int       num_slices_ = 1;
+	int       schedule_scheme_ = 1;
 
-	int		num_slices_ = 1;
-	int		schedule_scheme_ = 1;
-
-	const double	beta_ = 0.1;
-	Scheduler		intra_sched_;
+	const double beta_ = 0.1;
 
 public:
 	DownlinkNVSScheduler(std::string config_fname="");
@@ -48,10 +49,10 @@ public:
 	virtual void DoStopSchedule (void);
 
 	virtual void RBsAllocation ();
-	void RBsAllocationForUE();
-	virtual double ComputeSchedulingMetric (
-		RadioBearer* bearer, double spectralEfficiency,
-		int subChannel );
+	//void RBsAllocationForUE();
+	// virtual double ComputeSchedulingMetric (
+	// 	RadioBearer* bearer, double spectralEfficiency,
+	// 	int subChannel );
 	virtual double ComputeSchedulingMetric (
 		UserToSchedule* user, double spectralEfficiency );
 

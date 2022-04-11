@@ -31,6 +31,7 @@
 #include "../flows/application/VoIP.h"
 #include "../flows/application/CBR.h"
 #include "../flows/application/TraceBased.h"
+#include "../flows/application/InternetFlow.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
 #include "../flows/QoS/QoSParameters.h"
 #include "../flows/QoS/QoSForEXP.h"
@@ -67,10 +68,6 @@ static void SingleCellWithInterference (
     string config_fname,
     string channel)
 {
-  bool half_half = false;
-  if (nbBE == nbVideo) {
-    half_half = true;   // half of ues are video and half of ues are BE.
-  }
   double duration = 12;
   double flow_duration = 12;
 
@@ -233,11 +230,11 @@ static void SingleCellWithInterference (
   VoIP VoIPApplication[nbVoIP*nbCell*nbUE];
   TraceBased VideoApplication[nbVideo*nbCell*nbUE];
   InfiniteBuffer BEApplication[nbBE*nbCell*nbUE];
-  CBR CBRApplication[nbCBR*nbCell*nbUE];
+  InternetFlow IPApplication[nbCBR*nbCell*nbUE];
   int voipApplication = 0;
   int videoApplication = 0;
-  int cbrApplication = 0;
   int beApplication = 0;
+  int ipApplication = 0;
   int destinationPort = 101;
   int applicationID = 0;
 
@@ -385,9 +382,6 @@ static void SingleCellWithInterference (
     // *** video application
     for (int j = 0; j < nbVideo; j++)
     {
-      if (half_half && (idUE % 2 == 0) )
-        continue;
-
       // create application
       VideoApplication[videoApplication].SetSource (gw);
       VideoApplication[videoApplication].SetDestination (ue);
@@ -508,9 +502,6 @@ static void SingleCellWithInterference (
     // *** be application
     for (int j = 0; j < nbBE; j++)
     {
-      if (half_half && (idUE % 2 == 1) )
-        continue;
-
       // create application
       BEApplication[beApplication].SetSource (gw);
       BEApplication[beApplication].SetDestination (ue);
@@ -538,38 +529,50 @@ static void SingleCellWithInterference (
       beApplication++;
     }
 
-    // *** cbr application
-    for (int j = 0; j < nbCBR; j++)
-    {
-      // create application
-      CBRApplication[cbrApplication].SetSource (gw);
-      CBRApplication[cbrApplication].SetDestination (ue);
-      CBRApplication[cbrApplication].SetApplicationID (applicationID);
-      CBRApplication[cbrApplication].SetStartTime(start_time);
-      CBRApplication[cbrApplication].SetStopTime(duration_time);
-      CBRApplication[cbrApplication].SetInterval (0.04);
-      CBRApplication[cbrApplication].SetSize (5);
-
-      // create qos parameters
-      QoSParameters *qosParameters = new QoSParameters ();
-      qosParameters->SetMaxDelay (maxDelay);
-
-      CBRApplication[cbrApplication].SetQoSParameters (qosParameters);
-      //create classifier parameters
-      ClassifierParameters *cp = new ClassifierParameters (gw->GetIDNetworkNode(),
-          ue->GetIDNetworkNode(),
-          0,
-          destinationPort,
-          TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
-      CBRApplication[cbrApplication].SetClassifierParameters (cp);
-
-      std::cout << "CREATED CBR APPLICATION, ID " << applicationID << std::endl;
-
-      //update counter
-      destinationPort++;
-      applicationID++;
-      cbrApplication++;
+    for (int j = 0; j < nbCBR; j++) {
+      IPApplication[ipApplication].SetSource(gw);
+      IPApplication[ipApplication].SetDestination(ue);
+      IPApplication[ipApplication].SetApplicationID(applicationID);
+      IPApplication[ipApplication].SetStartTime(start_time);
+      IPApplication[ipApplication].SetStopTime(duration_time);
+      IPApplication[ipApplication].SetAvgRate(1);
+      destinationPort ++;
+      applicationID ++;
+      ipApplication ++;
     }
+
+    // *** cbr application
+    // for (int j = 0; j < nbCBR; j++)
+    // {
+    //   // create application
+    //   CBRApplication[cbrApplication].SetSource (gw);
+    //   CBRApplication[cbrApplication].SetDestination (ue);
+    //   CBRApplication[cbrApplication].SetApplicationID (applicationID);
+    //   CBRApplication[cbrApplication].SetStartTime(start_time);
+    //   CBRApplication[cbrApplication].SetStopTime(duration_time);
+    //   CBRApplication[cbrApplication].SetInterval (0.04);
+    //   CBRApplication[cbrApplication].SetSize (5);
+
+    //   // create qos parameters
+    //   QoSParameters *qosParameters = new QoSParameters ();
+    //   qosParameters->SetMaxDelay (maxDelay);
+
+    //   CBRApplication[cbrApplication].SetQoSParameters (qosParameters);
+    //   //create classifier parameters
+    //   ClassifierParameters *cp = new ClassifierParameters (gw->GetIDNetworkNode(),
+    //       ue->GetIDNetworkNode(),
+    //       0,
+    //       destinationPort,
+    //       TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
+    //   CBRApplication[cbrApplication].SetClassifierParameters (cp);
+
+    //   std::cout << "CREATED CBR APPLICATION, ID " << applicationID << std::endl;
+
+    //   //update counter
+    //   destinationPort++;
+    //   applicationID++;
+    //   cbrApplication++;
+    // }
     idUE++;
   }
 

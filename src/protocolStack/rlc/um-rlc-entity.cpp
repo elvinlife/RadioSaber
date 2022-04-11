@@ -28,7 +28,8 @@
 #include "../../flows/application/Application.h"
 #include "../../device/NetworkNode.h"
 #include "../../load-parameters.h"
-
+#include <unordered_map>
+#include <cstdio>
 
 UmRlcEntity::UmRlcEntity()
 {
@@ -133,6 +134,30 @@ UmRlcEntity::TransmissionProcedure (int availableBytes)
 
       if (packet != NULL)
       {
+        // log the flow completion time info
+        if ( (packet->GetRLCHeader()->IsAFragment() && packet->GetRLCHeader()->IsTheLatestFragment())
+            || (!packet->GetRLCHeader()->IsAFragment()) ) {
+          PacketTAGs* tags = packet->GetPacketTags();
+          if ( tags->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_IPFLOW &&
+              tags->GetEndByte() == 1) {
+            std::unordered_map<int, double>& flow_enqueueInfo = bearer->GetFlowEnqueueInfo();
+            if (flow_enqueueInfo.find(tags->GetFrameNumber()) == flow_enqueueInfo.end()) {
+              char buffer[100];
+              snprintf(buffer, 100, "App %d: flow %d enqueue info not recorded",
+                  bearer->GetApplication()->GetApplicationID(),
+                  tags->GetFrameNumber()
+                  );
+              throw std::runtime_error(std::string(buffer));
+            }
+            double flow_complete_time = Simulator::Init()->Now() - flow_enqueueInfo.at(tags->GetFrameNumber());
+            std::cerr << "fct app: " << bearer->GetApplication()->GetApplicationID()
+              << " flow: " << tags->GetFrameNumber()
+              << " flowsize: " << tags->GetApplicationSize()
+              << " fcttime: " << flow_complete_time << std::endl;
+            flow_enqueueInfo.erase(tags->GetFrameNumber());
+          }
+        }
+
         //Set the id of the receiver RLC entity
         packet->GetRLCHeader ()->SetRlcEntityIndex (GetRlcEntityIndex ());
         packet->GetRLCHeader ()->SetRlcPduSequenceNumber (GetRlcPduSequenceNumber ());
@@ -210,7 +235,7 @@ UmRlcEntity::ReceptionProcedure (Packet* p)
           && pp->GetPacketTags()->GetApplicationType() ==
           PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
       {
-        std::cout << " FRAME " <<  pp->GetPacketTags()->GetFrameNuber()
+        std::cout << " FRAME " <<  pp->GetPacketTags()->GetFrameNumber()
           << " START " << pp->GetPacketTags()->GetStartByte()
           << " END " << pp->GetPacketTags()->GetEndByte();
       }
@@ -291,7 +316,7 @@ UmRlcEntity::ReceptionProcedure (Packet* p)
             && p->GetPacketTags()->GetApplicationType() ==
             PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
         {
-          std::cout << " FRAME " <<  p->GetPacketTags()->GetFrameNuber()
+          std::cout << " FRAME " <<  p->GetPacketTags()->GetFrameNumber()
             << " START " << p->GetPacketTags()->GetStartByte()
             << " END " << p->GetPacketTags()->GetEndByte();
         }

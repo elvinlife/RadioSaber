@@ -6,6 +6,7 @@
 CPP_SRCS += \
 ../src/flows/application/Application.cpp \
 ../src/flows/application/CBR.cpp \
+../src/flows/application/InternetFlow.cpp \
 ../src/flows/application/InfiniteBuffer.cpp \
 ../src/flows/application/TraceBased.cpp \
 ../src/flows/application/VoIP.cpp \
@@ -15,6 +16,7 @@ CPP_SRCS += \
 OBJS += \
 ./src/flows/application/Application.o \
 ./src/flows/application/CBR.o \
+./src/flows/application/InternetFlow.o \
 ./src/flows/application/InfiniteBuffer.o \
 ./src/flows/application/TraceBased.o \
 ./src/flows/application/VoIP.o \
@@ -24,6 +26,7 @@ OBJS += \
 CPP_DEPS += \
 ./src/flows/application/Application.d \
 ./src/flows/application/CBR.d \
+./src/flows/application/InternetFlow.d \
 ./src/flows/application/InfiniteBuffer.d \
 ./src/flows/application/TraceBased.d \
 ./src/flows/application/VoIP.d \

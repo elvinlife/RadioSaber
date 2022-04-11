@@ -142,17 +142,14 @@ main (int argc, char *argv[])
       int frame_struct = atoi(argv[10]);
       int speed = atoi(argv[11]);
       double maxDelay = atof(argv[12]);
-      string video_trace = argv[13];
-      //int video_bit_rate = atoi(argv[13]);
-      int seed;
-      string config_fname = "";
-      if (argc >= 15) {
-        seed = atoi(argv[14]);
-        if (argc==16)
-          config_fname = string(argv[15]);
+      int video_bit_rate = atoi(argv[13]);
+      int seed = atoi(argv[14]);
+      string config_fname = string(argv[15]);
+      string channel = "";
+      if (argc > 16) {
+        channel = string(argv[16]);
       }
-      else seed = -1;
-      SingleCellCustomize (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_trace, seed, config_fname);
+      SingleCellCustomize (nbCells, radius, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname);
     }
     if (strcmp(argv[1], "MultiCell")==0)
     {

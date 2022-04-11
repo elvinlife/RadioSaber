@@ -50,6 +50,7 @@ public:
 	    APPLICATION_TYPE_TRACE_BASED,
 	    APPLICATION_TYPE_INFINITE_BUFFER,
 	    APPLICATION_TYPE_CBR,
+		  APPLICATION_TYPE_IPFLOW,
 	    APPLICATION_TYPE_WEB
 	  };
 
@@ -75,10 +76,9 @@ public:
 	int GetSourcePort (void) const;
 	void SetSourcePort (int port);
 	int GetDestinationPort (void) const;
-    void SetDestinationPort (int port);
-    TransportProtocol::TransportProtocolType GetTransportProtocol (void) const;
-    void SetTransportProtocol (TransportProtocol::TransportProtocolType protocol);
-
+  void SetDestinationPort (int port);
+  TransportProtocol::TransportProtocolType GetTransportProtocol (void) const;
+  void SetTransportProtocol (TransportProtocol::TransportProtocolType protocol);
 
 	void SetStartTime (double time);
 	double GetStartTime (void) const;
@@ -90,15 +90,17 @@ public:
 	virtual void DoStart (void) = 0;
 	virtual void DoStop (void) = 0;
 
-    void SetApplicationID (int id);
-    int GetApplicationID (void);
+  void SetApplicationID (int id);
+  int GetApplicationID (void);
 
-    RadioBearer* GetRadioBearer (void);
-
+  RadioBearer* GetRadioBearer (void);
 	void Trace (Packet* packet);
 
 	//Debug
 	void Print (void);
+
+  int GetPriority() const;
+  void SetPriority(int);
 
 private:
 	ApplicationType m_applicationType;
@@ -120,6 +122,7 @@ private:
 	double m_stopTime;
 
 	int m_applicationID;
+  int m_priority;
 };
 
 #endif /* APPLICATION_H_ */

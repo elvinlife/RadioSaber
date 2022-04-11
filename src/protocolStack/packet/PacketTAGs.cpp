@@ -52,7 +52,7 @@ PacketTAGs::SetFrameNumber (int frameNumber)
 }
 
 int
-PacketTAGs::GetFrameNuber (void) const
+PacketTAGs::GetFrameNumber (void) const
 {
   return m_frameNumber;
 }

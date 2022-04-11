@@ -29,11 +29,12 @@ class PacketTAGs {
 public:
 	enum ApplicationType
 	  {
-	    APPLICATION_TYPE_VOIP,
-	    APPLICATION_TYPE_TRACE_BASED,
-	    APPLICATION_TYPE_INFINITE_BUFFER,
-	    APPLICATION_TYPE_CBR,
-	    APPLICATION_TYPE_WEB
+      APPLICATION_TYPE_VOIP,
+      APPLICATION_TYPE_TRACE_BASED,
+      APPLICATION_TYPE_INFINITE_BUFFER,
+      APPLICATION_TYPE_CBR,
+      APPLICATION_TYPE_WEB,
+      APPLICATION_TYPE_IPFLOW,
 	  };
 
 	PacketTAGs ();
@@ -55,7 +56,7 @@ public:
 	void
 	SetFrameNumber (int frameNumber);
 	int
-	GetFrameNuber (void) const;
+	GetFrameNumber (void) const;
 
 	void
 	SetStartByte (int startByte);

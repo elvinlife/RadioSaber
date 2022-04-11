@@ -628,7 +628,7 @@ AmRlcEntity::ReceptionProcedureEnd ()
               && pp->GetPacketTags()->GetApplicationType() ==
               PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
           {
-            std::cout << " FRAME " <<  pp->GetPacketTags()->GetFrameNuber()
+            std::cout << " FRAME " <<  pp->GetPacketTags()->GetFrameNumber()
               << " START " << pp->GetPacketTags()->GetStartByte()
               << " END " << pp->GetPacketTags()->GetEndByte();
           }
@@ -747,7 +747,7 @@ AmRlcEntity::CheckForDropPackets (double maxDelay, int bearerID)
               && amdRecord->m_packet->GetPacketTags()->GetApplicationType() ==
               PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
           {
-            std::cout << " FRAME " <<  amdRecord->m_packet->GetPacketTags()->GetFrameNuber()
+            std::cout << " FRAME " <<  amdRecord->m_packet->GetPacketTags()->GetFrameNumber()
               << " START " << amdRecord->m_packet->GetPacketTags()->GetStartByte()
               << " END " << amdRecord->m_packet->GetPacketTags()->GetEndByte();
           }

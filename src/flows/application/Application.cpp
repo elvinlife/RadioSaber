@@ -43,6 +43,7 @@ Application::Application()
   m_radioBearer = NULL;
   m_bearerSink = NULL;
   m_applicationSink = NULL;
+  m_priority = 0;
 }
 
 void
@@ -417,3 +418,14 @@ Application::Print (void)
       endl;
 }
 
+int
+Application::GetPriority() const
+{
+  return m_priority;
+}
+
+void
+Application::SetPriority(int priority)
+{
+  m_priority = priority;
+}

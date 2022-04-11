@@ -25,6 +25,7 @@
 
 #include "rlc-entity.h"
 #include <vector>
+#include <unordered_map>
 
 class PacketBurst;
 

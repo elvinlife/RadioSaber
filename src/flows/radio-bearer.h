@@ -24,6 +24,7 @@
 #define RADIOBEARER_H_
 
 #include "radio-bearer-instance.h"
+#include <unordered_map>
 
 class NetworkNode;
 class ClassifierParameters;
@@ -56,7 +57,6 @@ public:
 	void UpdateCumulateRBs (int rbs);
 	unsigned long GetCumulateRBs (void) const;
 	unsigned long GetCumulateBytes (void) const;
-	
 
 	void Enqueue (Packet *packet);
 	bool HasPackets (void);
@@ -70,6 +70,8 @@ public:
 	int GetHeadOfLinePacketSize (void);
 	int GetByte (int byte); //for FLS scheduler
 
+	std::unordered_map<int, double>& GetFlowEnqueueInfo();
+
 private:
 	Application* m_application;
 
@@ -81,6 +83,8 @@ private:
 	unsigned long m_cumulativeRBs;
 	unsigned long m_cumulativeBytes;
 	double m_lastUpdate;
+
+	std::unordered_map<int, double> m_flow_enqueueInfo;
 };
 
 #endif /* RADIOBEARER_H_ */
