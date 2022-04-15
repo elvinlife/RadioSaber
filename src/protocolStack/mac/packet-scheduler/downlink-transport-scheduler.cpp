@@ -42,6 +42,8 @@
 #include <algorithm>
 #include <unordered_map>
 #include <limits>
+#include <cstring>
+
 using std::vector;
 using std::unordered_map;
 
@@ -105,7 +107,7 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule ()
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
-  //std::cerr << GetTimeStamp();
+  memset(slice_priority_, 0, sizeof(int) * MAX_SLICES);
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
 	  //SELECT FLOWS TO SCHEDULE
@@ -135,8 +137,12 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 			{
         spectralEfficiency.push_back(amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
 			}
+      
 		  //create flow to scheduler record
-
+      int slice_id = user_to_slice_[bearer->GetUserID()];
+      if (bearer->GetPriority() > slice_priority_[slice_id]) {
+        slice_priority_[slice_id] = bearer->GetPriority();
+      }
       InsertFlowToUser(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
 		}
 	}
@@ -172,41 +178,43 @@ DownlinkTransportScheduler::DoStopSchedule(void)
   for (auto it = uesToSchedule->begin(); it != uesToSchedule->end(); it++) {
     UserToSchedule* user = *it;
     int availableBytes = user->GetAllocatedBits() / 8;
-    if (availableBytes > 0) {
-      // let's not reallocate RBs between flows firstly
-      for (int i = MAX_BEARERS-1; i >= 0; i--) {
-        if (user->m_dataToTransmit[i] > 0) {
-          assert(user->m_bearers[i] != NULL);
-          user->m_bearers[i]->UpdateTransmittedBytes(
-            min(availableBytes, user->m_dataToTransmit[i])
+    // let's not reallocate RBs between flows firstly
+    for (int i = MAX_BEARERS-1; i >= 0; i--) {
+      if (availableBytes <= 0)
+        break;
+      if (user->m_dataToTransmit[i] > 0) {
+        assert(user->m_bearers[i] != NULL);
+        int dataTransmitted = min(availableBytes, user->m_dataToTransmit[i]);
+        availableBytes -= dataTransmitted;
+        user->m_bearers[i]->UpdateTransmittedBytes(
+            dataTransmitted
             );
-          user->m_bearers[i]->UpdateCumulateRBs(
+        user->m_bearers[i]->UpdateCumulateRBs(
             user->GetListOfAllocatedRBs()->size()
             );
-          std::cerr << GetTimeStamp()
-              << " app: " << user->m_bearers[i]->GetApplication()->GetApplicationID()
-              << " bytes: " << user->m_bearers[i]->GetCumulateBytes()
-              << " rbs: " << user->m_bearers[i]->GetCumulateRBs()
-              << " delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
-              << " user: " << user->GetUserID()
-              << " slice: " << user_to_slice_[user->GetUserID()]
-              << std::endl;
+        std::cerr << GetTimeStamp()
+          << " app: " << user->m_bearers[i]->GetApplication()->GetApplicationID()
+          << " bytes: " << user->m_bearers[i]->GetCumulateBytes()
+          << " rbs: " << user->m_bearers[i]->GetCumulateRBs()
+          << " delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
+          << " user: " << user->GetUserID()
+          << " slice: " << user_to_slice_[user->GetUserID()]
+          << std::endl;
 
-	        RlcEntity *rlc = user->m_bearers[i]->GetRlcEntity ();
-	        PacketBurst* pb2 = rlc->TransmissionProcedure (availableBytes);
+        RlcEntity *rlc = user->m_bearers[i]->GetRlcEntity ();
+        PacketBurst* pb2 = rlc->TransmissionProcedure (dataTransmitted);
 
-	        if (pb2->GetNPackets () > 0)
-	        {
-	    	    std::list<Packet*> packets = pb2->GetPackets ();
-	    	    std::list<Packet* >::iterator it;
-	    	    for (it = packets.begin (); it != packets.end (); it++)
-	    	    {
-	    	  	  Packet *p = (*it);
-	    	  	  pb->AddPacket (p->Copy ());
-	    	    }
-	        }
-	        delete pb2;  
+        if (pb2->GetNPackets () > 0)
+        {
+          std::list<Packet*> packets = pb2->GetPackets ();
+          std::list<Packet* >::iterator it;
+          for (it = packets.begin (); it != packets.end (); it++)
+          {
+            Packet *p = (*it);
+            pb->AddPacket (p->Copy ());
+          }
         }
+        delete pb2;  
       }
     }
   }

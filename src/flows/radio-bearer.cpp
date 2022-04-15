@@ -331,9 +331,11 @@ RadioBearer::Enqueue (Packet *packet)
   PacketTAGs* tags = packet->GetPacketTags();
   if ( tags->GetStartByte() == 1 &&
       tags->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_IPFLOW ) {
-        // std::cout << "App: " << m_application->GetApplicationID()
-        //   << " flow: " << tags->GetFrameNumber()
-        //   << " enqueues" << std::endl;
+
+        std::cerr << "ipflow start app: " << m_application->GetApplicationID()
+            << " flow: " << tags->GetFrameNumber()
+            << " flowsize: " << tags->GetApplicationSize()
+            << std::endl;
         m_flow_enqueueInfo[tags->GetFrameNumber()] =  packet->GetTimeStamp();
   }
 }

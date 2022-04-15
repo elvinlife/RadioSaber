@@ -65,8 +65,8 @@ static void SingleCellCustomize (
     int seed,
     string config_fname)
 {
-  double duration = 12;
-  double flow_duration = 12;
+  double duration = 40;
+  double flow_duration = 40;
 
   int cluster = 3;
   double bandwidth = 100;
@@ -231,7 +231,8 @@ static void SingleCellCustomize (
   int applicationID = 0;
 
   int num_slices;
-  int user_to_slice[MAX_APPS];
+  int user_to_slice[MAX_UES];
+  int slice_users[MAX_SLICES];
   int num_ues = 0;
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
@@ -242,13 +243,14 @@ static void SingleCellCustomize (
     for (int i = 0; i < num_slices; ++i) {
       ifs >> temp_float;
     }
-      
+
     for (int i = 0; i < num_slices; ++i) {
       int num_ue;
       ifs >> num_ue;
       for (int j = 0; j < num_ue; ++j) {
         user_to_slice[begin_id + j] = i;
       }
+      slice_users[i] = num_ue;
       begin_id += num_ue;
       num_ues += num_ue;
     }
@@ -261,13 +263,16 @@ static void SingleCellCustomize (
   for (int idUE = 0; idUE < num_ues; idUE++)
   {
     int nbVideo = 0, nbBE = 0, nbCBR = 0;
-    if (user_to_slice[idUE] < 12) {
+    if (user_to_slice[idUE] < 7) {
       nbBE = 1;
     }
-    else if (user_to_slice[idUE] < 24) {
+    if (user_to_slice[idUE] < 14) {
       nbCBR = 1;
     }
-    else {
+    else if (user_to_slice[idUE] < 21) {
+      nbCBR = 2;
+    }
+    else if (user_to_slice[idUE] < 28) {
       nbVideo = 1;
     }
 
@@ -309,7 +314,7 @@ static void SingleCellCustomize (
     MacroCellUrbanAreaChannelRealization* c_dl = new MacroCellUrbanAreaChannelRealization (eNBs->at (0), ue);
     eNBs->at (0)->GetPhy ()->GetDlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_dl);
     MacroCellUrbanAreaChannelRealization* c_ul = new MacroCellUrbanAreaChannelRealization (ue, eNBs->at (0));
-    eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);\
+    eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
 
     // CREATE DOWNLINK APPLICATION FOR THIS UE
     double start_time = 0.1;
@@ -325,6 +330,16 @@ static void SingleCellCustomize (
       video_app->SetApplicationID(applicationID);
       video_app->SetStartTime(start_time);
       video_app->SetStopTime(duration_time);
+
+      int avg_bitrate = 8000 / (slice_users[user_to_slice[idUE]] * nbVideo);
+      if (avg_bitrate >= 1280)
+        videoBitRate = 1280;
+      else if (avg_bitrate >= 880)
+        videoBitRate = 880;
+      else if (avg_bitrate >= 440)
+        videoBitRate = 440;
+      else if (avg_bitrate >= 242)
+        videoBitRate = 242;
 
       string video_trace ("foreman_H264_");
       //string video_trace ("highway_H264_");
@@ -470,7 +485,7 @@ static void SingleCellCustomize (
     }
 
     for (int j = 0; j < nbCBR; j++) {
-      double flow_rate = 0.5;
+      double user_rate = 8.0 / (slice_users[user_to_slice[idUE]]);
       InternetFlow* ip_app = new InternetFlow();
       IPApplication.push_back(ip_app);
       ip_app->SetSource(gw);
@@ -478,8 +493,21 @@ static void SingleCellCustomize (
       ip_app->SetApplicationID(applicationID);
       ip_app->SetStartTime(start_time);
       ip_app->SetStopTime(duration_time);
-      ip_app->SetAvgRate(flow_rate);
-      ip_app->SetPriority(0);
+      //ip_app->SetAvgRate(flow_rate);
+      //ip_app->SetPriority(0);
+      if (nbCBR == 2) {
+        ip_app->SetPriority(j);
+        if (j == 0) {
+          ip_app->SetAvgRate(user_rate * 0.75);
+        }
+        else if (j == 1) {
+          ip_app->SetAvgRate(user_rate * 0.25);
+        }
+      }
+      else {
+        ip_app->SetPriority(0);
+        ip_app->SetAvgRate( user_rate );
+      }
 
       QoSParameters* qosParameters = new QoSParameters();
       ip_app->SetQoSParameters(qosParameters);
@@ -493,10 +521,6 @@ static void SingleCellCustomize (
       );
       ip_app->SetClassifierParameters(cp);
 
-      if (user_to_slice[idUE] < 18 && user_to_slice[idUE] >= 12) {
-        if (idUE % 2 == 0)
-          ip_app->SetPriority(1);
-      }
 
       destinationPort ++;
       applicationID ++;

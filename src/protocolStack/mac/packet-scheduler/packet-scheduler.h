@@ -29,7 +29,7 @@
 #include "../../../core/idealMessages/ideal-control-messages.h"
 
 const int MAX_SLICES = 100;
-const int MAX_APPS = 1000;
+const int MAX_UES = 1000;
 const int MAX_BEARERS = 2;
 
 class MacEntity;

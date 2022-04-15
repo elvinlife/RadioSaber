@@ -45,6 +45,14 @@ EnbMacEntity::EnbMacEntity ()
   SetDevice (NULL);
   m_downlinkScheduler = NULL;
   m_uplinkScheduler = NULL;
+  #ifdef USE_REAL_TRACE
+  std::string fname = "/home/alvin/Research/ue_traces_0/mapping.config";
+  std::ifstream ifs(fname, std::ifstream::in);
+  int uid, tid;
+  while (ifs >> uid >> tid) {
+    m_userMapping.push_back(tid);
+  }
+  #endif
 }
 
 
@@ -159,7 +167,10 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
     ENodeB::UserEquipmentRecord* record = enb->GetUserEquipmentRecord(user_id);
 
     if (m_userCQITrace.find(user_id) == m_userCQITrace.end()) {
-      int trace_id = (rand() + user_id) % MAX_UE_TRACE;
+      if (user_id >= m_userMapping.size()) {
+        throw std::runtime_error("User ID larger than upperbound");
+      }
+      int trace_id = m_userMapping[user_id];
       std::cerr << "user " << user_id << " uses trace " << trace_id << std::endl;
       std::string fname = "/home/alvin/Research/ue_traces_0/ue" + std::to_string(trace_id) + ".log";
       std::ifstream ifs(fname, std::ifstream::in);

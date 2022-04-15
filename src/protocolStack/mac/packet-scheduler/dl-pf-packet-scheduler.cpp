@@ -101,14 +101,15 @@ DL_PF_PacketScheduler::DoStopSchedule (void)
 		  flow->GetBearer()->UpdateTransmittedBytes (availableBytes);
       flow->GetBearer()->UpdateCumulateRBs (flow->GetListOfAllocatedRBs()->size());
       int app_id = flow->GetBearer()->GetApplication()->GetApplicationID();
+      int user_id = flow->GetBearer()->GetUserID();
 
       std::cerr << GetTimeStamp()
           << " flow: " << app_id
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
           << " hol_delay: " << flow->GetBearer()->GetHeadOfLinePacketDelay()
-          << " user: " << app_id
-          << " slice: " << user_to_slice_[app_id]
+          << " user: " << user_id
+          << " slice: " << user_to_slice_[user_id]
           << std::endl;
 
 	      RlcEntity *rlc = flow->GetBearer ()->GetRlcEntity ();

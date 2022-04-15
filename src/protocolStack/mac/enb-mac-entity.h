@@ -56,6 +56,7 @@ public:
   void ReceiveSchedulingRequestIdealControlMessage (SchedulingRequestIdealControlMessage *msg);
 private:
   std::unordered_map<int, vector<vector<int>>> m_userCQITrace;
+  std::vector<int> m_userMapping;
 
   PacketScheduler* m_uplinkScheduler;
   PacketScheduler* m_downlinkScheduler;

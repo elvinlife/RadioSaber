@@ -150,10 +150,13 @@ UmRlcEntity::TransmissionProcedure (int availableBytes)
               throw std::runtime_error(std::string(buffer));
             }
             double flow_complete_time = Simulator::Init()->Now() - flow_enqueueInfo.at(tags->GetFrameNumber());
-            std::cerr << "fct app: " << bearer->GetApplication()->GetApplicationID()
-              << " flow: " << tags->GetFrameNumber()
-              << " flowsize: " << tags->GetApplicationSize()
-              << " fcttime: " << flow_complete_time << std::endl;
+
+            std::cerr << "ipflow end app: " << bearer->GetApplication()->GetApplicationID()
+                << " flow: " << tags->GetFrameNumber()
+                << " fct: " << flow_complete_time
+                << " flowsize: " << tags->GetApplicationSize()
+                << " priority: " << bearer->GetPriority()
+                << std::endl;
             flow_enqueueInfo.erase(tags->GetFrameNumber());
           }
         }

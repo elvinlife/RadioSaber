@@ -51,6 +51,7 @@ int get_avg_flowsize() {
 
 int InternetFlow::m_typeflow = 11;
 int InternetFlow::m_flowsize[] = {1460, 2920, 4380, 7300, 10220, 58400, 105120, 200020, 389820, 1733020, 3076220};
+//int InternetFlow::m_flowsize[] = {292, 584, 876, 1460, 2044, 11680, 21024, 40004, 77964, 346604, 615244};
 double InternetFlow::m_flowcdf[] = {0.5, 0.6, 0.7, 0.75, 0.8, 0.8125, 0.825, 0.85, 0.9, 0.95, 1};
 int InternetFlow::m_avg_flowsize = get_avg_flowsize();
 
@@ -125,6 +126,7 @@ InternetFlow::Send (void)
     packets.back()->SetSize(last_pkt_size);
   }
   packets.front()->GetPacketTags()->SetStartByte(1);
+  packets.front()->GetPacketTags()->SetApplicationSize(flow_size);
   packets.back()->GetPacketTags()->SetEndByte(1);
   packets.back()->GetPacketTags()->SetApplicationSize(flow_size);
   for (auto it = packets.begin(); it != packets.end(); ++it) {

@@ -28,7 +28,7 @@
 class DL_PF_PacketScheduler : public DownlinkPacketScheduler {
 enum Scheduler {MT, PF, TTA, MLWDF};
 private:
-	int       user_to_slice_[MAX_APPS];
+	int       user_to_slice_[MAX_UES];
 	double    slice_weights_[MAX_SLICES];
 	double    slice_exp_time_[MAX_SLICES];
   Scheduler slice_algo_[MAX_SLICES];
