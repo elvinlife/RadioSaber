@@ -331,15 +331,15 @@ static void SingleCellCustomize (
       video_app->SetStartTime(start_time);
       video_app->SetStopTime(duration_time);
 
-      int avg_bitrate = 8000 / (slice_users[user_to_slice[idUE]] * nbVideo);
-      if (avg_bitrate >= 1280)
-        videoBitRate = 1280;
-      else if (avg_bitrate >= 880)
-        videoBitRate = 880;
-      else if (avg_bitrate >= 440)
-        videoBitRate = 440;
-      else if (avg_bitrate >= 242)
-        videoBitRate = 242;
+      // int avg_bitrate = 8000 / (slice_users[user_to_slice[idUE]] * nbVideo);
+      // if (avg_bitrate >= 1280)
+      //   videoBitRate = 1280;
+      // else if (avg_bitrate >= 880)
+      //   videoBitRate = 880;
+      // else if (avg_bitrate >= 440)
+      //   videoBitRate = 440;
+      // else if (avg_bitrate >= 242)
+      //   videoBitRate = 242;
 
       string video_trace ("foreman_H264_");
       //string video_trace ("highway_H264_");
