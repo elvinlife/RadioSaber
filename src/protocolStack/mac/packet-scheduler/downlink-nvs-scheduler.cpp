@@ -322,6 +322,12 @@ DownlinkNVSScheduler::RBsAllocation()
       double effectiveSinr = GetEesmEffectiveSinr(estimatedSinrValues);
       int mcs = amc->GetMCSFromCQI(amc->GetCQIFromSinr(effectiveSinr));
       int transportBlockSize = amc->GetTBSizeFromMCS(mcs, ue->GetListOfAllocatedRBs()->size());
+
+      //int mcs = 1;
+      //int transportBlockSize = 0;
+      //for (int i = 0; i < estimatedSinrValues.size(); i++) {
+      //    transportBlockSize += amc->GetTBSizeFromMCS(amc->GetMCSFromCQI(amc->GetCQIFromSinr(estimatedSinrValues[i])), 1);
+      //}
       ue->UpdateAllocatedBits(transportBlockSize);
       for (size_t rb = 0; rb < ue->GetListOfAllocatedRBs()->size(); rb++) {
         pdcchMsg->AddNewRecord(

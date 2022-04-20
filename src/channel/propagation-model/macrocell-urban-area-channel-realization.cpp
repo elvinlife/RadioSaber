@@ -214,9 +214,9 @@ MacroCellUrbanAreaChannelRealization::GetLoss ()
 	  double l = GetFastFading ()->at (i).at (index) - GetPathLoss () - GetPenetrationLoss () - GetShadowing ();
     //double l = - GetPathLoss () - GetPenetrationLoss () - GetShadowing ();
     //if (i < nbOfSubChannels / 2)
-    //  l -= 5;
+    //  l -= 10;
     //else
-    //  l += 5;
+    //  l += 10;
       
     loss.push_back (l);
 
