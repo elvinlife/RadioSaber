@@ -38,6 +38,7 @@
 #include <cstdio>
 #include <limits>
 #include <fstream>
+#include <sstream>
 #include <cassert>
 #include <cstring>
 
@@ -45,35 +46,50 @@ DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
 {
   std::ifstream ifs(config_fname, std::ifstream::in);
   if (ifs.is_open()) {
-    int begin_id = 0;
-    ifs >> num_slices_;
-
-    for (int i = 0; i < num_slices_; ++i)
-      ifs >> slice_weights_[i];
-    for (int i = 0; i < num_slices_; ++i) {
-      slice_exp_time_[i] = slice_weights_[i];
-      int num_ue;
-      ifs >> num_ue;
-      for (int j = 0; j < num_ue; ++j) {
-        user_to_slice_[begin_id + j] = i;
+    std::string line;
+    while (std::getline(ifs, line)) {
+      if (line[0] == '#') {
+        continue;
       }
-      begin_id += num_ue;
-    }
-    for (int i = 0; i < num_slices_; ++i) {
-      int algo;
-      ifs >> algo;
-      if (algo == 0)
-        slice_algo_[i] = MT;
-      else if (algo == 1)
-        slice_algo_[i] = PF;
-      else if (algo == 2)
-        slice_algo_[i] = MLWDF;
-      else
-        slice_algo_[i] = PF;
+      std::string args;
+      std::istringstream iss(line);
+      iss >> args;
+      if (args == "num_slices:") {
+        iss >> num_slices_;
+      }
+      else if (args == "slice_weights:") {
+        for (int i = 0; i < num_slices_; ++i) {
+          iss >> slice_weights_[i];
+        }
+      }
+      else if (args == "slice_ues:") {
+        int begin_id = 0, num_ue;
+        for (int i = 0; i < num_slices_; ++i) {
+          iss >> num_ue;
+          for (int j = 0; j < num_ue; ++j) {
+            user_to_slice_[begin_id + j] = i;
+          }
+          begin_id += num_ue;
+        }
+      }
+      else if (args == "slice_algos:") {
+        int algo;
+        for (int i = 0; i < num_slices_; ++i) {
+          iss >> algo;
+          if (algo == 0)
+            slice_algo_[i] = MT;
+          else if (algo == 1)
+            slice_algo_[i] = PF;
+          else if (algo == 2)
+            slice_algo_[i] = MLWDF;
+          else
+            slice_algo_[i] = PF;
+        }
+      }
     }
   }
   else {
-    throw std::runtime_error("Fail to open configuration file");
+    throw std::runtime_error("Fail to open configuration file.");
   }
   ifs.close();
 

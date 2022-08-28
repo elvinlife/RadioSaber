@@ -26,15 +26,9 @@
 #include "downlink-packet-scheduler.h"
 
 class DL_PF_PacketScheduler : public DownlinkPacketScheduler {
-enum Scheduler {MT, PF, TTA, MLWDF};
 private:
 	int       user_to_slice_[MAX_UES];
-	double    slice_weights_[MAX_SLICES];
-	double    slice_exp_time_[MAX_SLICES];
-  Scheduler slice_algo_[MAX_SLICES];
-
 	int	      num_slices_ = 1;
-	int	      schedule_scheme_ = 1;
 
 	const double	beta_ = 0.1;
 

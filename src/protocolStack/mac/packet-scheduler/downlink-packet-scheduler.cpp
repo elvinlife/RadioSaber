@@ -192,7 +192,7 @@ DownlinkPacketScheduler::RBsAllocation ()
   // create a matrix of flow metrics
   double metrics[nbOfGroups][flows->size ()];
   for (int i = 0; i < nbOfGroups; i++) {
-	  for (int j = 0; j < flows->size (); j++) {
+	  for (size_t j = 0; j < flows->size (); j++) {
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
         flows->at (j)->GetSpectralEfficiency ().at (i * rbg_size),
@@ -220,13 +220,13 @@ DownlinkPacketScheduler::RBsAllocation ()
   bool * l_bFlowScheduled = new bool[flows->size ()];
   int l_iScheduledFlows = 0;
   std::vector<double> * l_bFlowScheduledSINR = new std::vector<double>[flows->size ()];
-  for (int k = 0; k < flows->size (); k++)
+  for (size_t k = 0; k < flows->size (); k++)
       l_bFlowScheduled[k] = false;
 
   //RBs allocation
   for (int s = 0; s < nbOfGroups; s++)
     {
-      if (l_iScheduledFlows == flows->size ())
+      if ((size_t)l_iScheduledFlows == flows->size ())
           break;
 
       double targetMetric = 0;
@@ -234,7 +234,7 @@ DownlinkPacketScheduler::RBsAllocation ()
       FlowToSchedule* scheduledFlow;
       int l_iScheduledFlowIndex = 0;
 
-      for (int k = 0; k < flows->size (); k++)
+      for (size_t k = 0; k < flows->size (); k++)
         {
           if (metrics[s][k] > targetMetric && !l_bFlowScheduled[k])
             {
@@ -281,7 +281,7 @@ DownlinkPacketScheduler::RBsAllocation ()
       FlowToSchedule *flow = (*it);
 
 	  std::cout << "Flow: " << flow->GetBearer()->GetApplication()->GetApplicationID();
-	  for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
+	  for (size_t rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
       int rbid = flow->GetListOfAllocatedRBs()->at(rb);
       if (rbid % rbg_size == 0)
         std::cout << " " << rbid / rbg_size;
@@ -292,7 +292,7 @@ DownlinkPacketScheduler::RBsAllocation ()
         {
           //this flow has been scheduled
           std::vector<double> estimatedSinrValues;
-          for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ ) {
+          for (size_t rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ ) {
               double sinr = amc->GetSinrFromCQI (
                       flow->GetCqiFeedbacks ().at (flow->GetListOfAllocatedRBs ()->at (rb)));
               estimatedSinrValues.push_back (sinr);
@@ -321,7 +321,7 @@ DownlinkPacketScheduler::RBsAllocation ()
 #endif
 
 		  //create PDCCH messages
-		  for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
+		  for (size_t rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
 		    {
 			  pdcchMsg->AddNewRecord (PdcchMapIdealControlMessage::DOWNLINK,
 					  flow->GetListOfAllocatedRBs ()->at (rb),

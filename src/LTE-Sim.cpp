@@ -111,44 +111,32 @@ main (int argc, char *argv[])
     {
       int nbCells = atoi(argv[2]);
       double radius = atof(argv[3]);
-      int nbUE = atoi(argv[4]);
-      int nbVoIP = atoi(argv[5]);
-      int nbVideo = atoi(argv[6]);
-      int nbBE = atoi(argv[7]);
-      int nbCBR = atoi(argv[8]);
-      int sched_type = atoi(argv[9]);
-      int frame_struct = atoi(argv[10]);
-      int speed = atoi(argv[11]);
-      double maxDelay = atof(argv[12]);
-      int video_bit_rate = atoi(argv[13]);
-      int seed = atoi(argv[14]);
-      string config_fname = string(argv[15]);
-      string channel = "";
-      if (argc > 16) {
-        channel = string(argv[16]);
-      }
-      SingleCellWithInterference (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname, channel);
+      int nbVideo = atoi(argv[4]);
+      int nbBE = atoi(argv[5]);
+      int nbCBR = atoi(argv[6]);
+      int sched_type = atoi(argv[7]);
+      int frame_struct = atoi(argv[8]);
+      int speed = atoi(argv[9]);
+      double maxDelay = atof(argv[10]);
+      int video_bit_rate = atoi(argv[11]);
+      int seed = atoi(argv[12]);
+      string config_fname = string(argv[13]);
+      SingleCellWithInterference (nbCells, radius, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname);
     }
     if (strcmp(argv[1], "SingleCellCustomize") == 0)
     {
       int nbCells = atoi(argv[2]);
       double radius = atof(argv[3]);
-      int nbUE = atoi(argv[4]);
-      int nbVoIP = atoi(argv[5]);
-      int nbVideo = atoi(argv[6]);
-      int nbBE = atoi(argv[7]);
-      int nbCBR = atoi(argv[8]);
-      int sched_type = atoi(argv[9]);
-      int frame_struct = atoi(argv[10]);
-      int speed = atoi(argv[11]);
-      double maxDelay = atof(argv[12]);
-      int video_bit_rate = atoi(argv[13]);
-      int seed = atoi(argv[14]);
-      string config_fname = string(argv[15]);
-      string channel = "";
-      if (argc > 16) {
-        channel = string(argv[16]);
-      }
+      int nbVideo = atoi(argv[4]);
+      int nbBE = atoi(argv[5]);
+      int nbCBR = atoi(argv[6]);
+      int sched_type = atoi(argv[7]);
+      int frame_struct = atoi(argv[8]);
+      int speed = atoi(argv[9]);
+      double maxDelay = atof(argv[10]);
+      int video_bit_rate = atoi(argv[11]);
+      int seed = atoi(argv[12]);
+      string config_fname = string(argv[13]);
       SingleCellCustomize (nbCells, radius, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed, config_fname);
     }
     if (strcmp(argv[1], "MultiCell")==0)

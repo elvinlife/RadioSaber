@@ -48,6 +48,7 @@
 #include <stdlib.h>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <utility>
 using std::pair;
@@ -233,35 +234,47 @@ static void SingleCellCustomize (
   int num_slices;
   int user_to_slice[MAX_UES];
   int slice_users[MAX_SLICES];
-  int num_ues = 0;
+  int total_ues = 0;
   std::ifstream ifs(config_fname);
+  std::string line;
+  // read the configuration file
   if (ifs.is_open()) {
-    int begin_id = 0;
-    double temp_float;
-    ifs >> num_slices;
-
-    for (int i = 0; i < num_slices; ++i) {
-      ifs >> temp_float;
-    }
-
-    for (int i = 0; i < num_slices; ++i) {
-      int num_ue;
-      ifs >> num_ue;
-      for (int j = 0; j < num_ue; ++j) {
-        user_to_slice[begin_id + j] = i;
+    while (std::getline(ifs, line)) {
+      if (line[0] == '#') {
+        continue;
       }
-      slice_users[i] = num_ue;
-      begin_id += num_ue;
-      num_ues += num_ue;
+      std::string args;
+      std::istringstream iss(line);
+      iss >> args;
+      if (args == "num_slices:") {
+        iss >> num_slices;
+      }
+      else if (args == "slice_ues:") {
+        int begin_id = 0;
+        for (int i = 0; i < num_slices; ++i) {
+          int num_ue;
+          iss >> num_ue;
+          for (int j = 0; j < num_ue; ++j) {
+            user_to_slice[begin_id + j] = i;
+          }
+          slice_users[i] = num_ue;
+          begin_id += num_ue;
+          total_ues += num_ue;
+        }
+      }
     }
+  }
+  else {
+    throw std::runtime_error("Error, cannot open configuration file.");
   }
 
   //Create GW
   Gateway *gw = new Gateway ();
   nm->GetGatewayContainer ()->push_back (gw);
 
-  for (int idUE = 0; idUE < num_ues; idUE++)
+  for (int idUE = 0; idUE < total_ues; idUE++)
   {
+    // we hardcoded the configuration for the customization experiment
     int nbVideo = 0, nbBE = 0, nbCBR = 0;
     if (user_to_slice[idUE] < 7) {
       nbBE = 1;
@@ -330,16 +343,6 @@ static void SingleCellCustomize (
       video_app->SetApplicationID(applicationID);
       video_app->SetStartTime(start_time);
       video_app->SetStopTime(duration_time);
-
-      // int avg_bitrate = 8000 / (slice_users[user_to_slice[idUE]] * nbVideo);
-      // if (avg_bitrate >= 1280)
-      //   videoBitRate = 1280;
-      // else if (avg_bitrate >= 880)
-      //   videoBitRate = 880;
-      // else if (avg_bitrate >= 440)
-      //   videoBitRate = 440;
-      // else if (avg_bitrate >= 242)
-      //   videoBitRate = 242;
 
       string video_trace ("foreman_H264_");
       //string video_trace ("highway_H264_");
@@ -451,7 +454,7 @@ static void SingleCellCustomize (
       videoApplication++;
     }
 
-    // *** be application
+    // *** backlogged application
     for (int j = 0; j < nbBE; j++) {
       // create application
       InfiniteBuffer* be_app = new InfiniteBuffer();
@@ -484,6 +487,7 @@ static void SingleCellCustomize (
       beApplication++;
     }
 
+    // *** constant bitrate flows following heavy-tail distributions
     for (int j = 0; j < nbCBR; j++) {
       double user_rate = 8.0 / (slice_users[user_to_slice[idUE]]);
       InternetFlow* ip_app = new InternetFlow();
@@ -493,8 +497,6 @@ static void SingleCellCustomize (
       ip_app->SetApplicationID(applicationID);
       ip_app->SetStartTime(start_time);
       ip_app->SetStopTime(duration_time);
-      //ip_app->SetAvgRate(flow_rate);
-      //ip_app->SetPriority(0);
       if (nbCBR == 2) {
         ip_app->SetPriority(j);
         if (j == 0) {
@@ -520,7 +522,6 @@ static void SingleCellCustomize (
         TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP
       );
       ip_app->SetClassifierParameters(cp);
-
 
       destinationPort ++;
       applicationID ++;

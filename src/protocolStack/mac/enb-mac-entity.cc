@@ -34,7 +34,6 @@
 #include "../../core/eventScheduler/simulator.h"
 #include <fstream>
 #include <cassert>
-//#define USE_REAL_TRACE 1
 #define CQI_INTERVAL 40
 #define MAX_UE_TRACE 158
 #define MAX_TTI_TRACE 475
@@ -46,7 +45,8 @@ EnbMacEntity::EnbMacEntity ()
   m_downlinkScheduler = NULL;
   m_uplinkScheduler = NULL;
   #ifdef USE_REAL_TRACE
-  std::string fname = "/home/alvin/Research/ue_traces_0/mapping.config";
+  std::string fname = path + "pbecc-traces-noise0/mapping.config";
+  // std::string fname = "/home/alvin/Research/ue_traces_0/mapping.config";
   std::ifstream ifs(fname, std::ifstream::in);
   int uid, tid;
   while (ifs >> uid >> tid) {
@@ -172,7 +172,8 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
       }
       int trace_id = m_userMapping[user_id];
       std::cerr << "user " << user_id << " uses trace " << trace_id << std::endl;
-      std::string fname = "/home/alvin/Research/ue_traces_0/ue" + std::to_string(trace_id) + ".log";
+      // std::string fname = "/home/alvin/Research/pbecc-traces-noise0/ue" + std::to_string(trace_id) + ".log";
+      std::string fname = path + "pbecc-traces-noise0/ue" + std::to_string(trace_id) + ".log";
       std::ifstream ifs(fname, std::ifstream::in);
       int cqi = 0;
       for (int i = 0; i < MAX_TTI_TRACE; ++i) {

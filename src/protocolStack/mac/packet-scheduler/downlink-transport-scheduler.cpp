@@ -38,6 +38,7 @@
 #include <cstdio>
 #include <utility>
 #include <fstream>
+#include <sstream>
 #include <cassert>
 #include <algorithm>
 #include <unordered_map>
@@ -54,34 +55,50 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
 {
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
-    int begin_id = 0;
-    ifs >> num_slices_;
-
-    for (int i = 0; i < num_slices_; ++i)
-      ifs >> slice_weights_[i];
-    for (int i = 0; i < num_slices_; ++i) {
-      int num_ue;
-      ifs >> num_ue;
-      for (int j = 0; j < num_ue; ++j) {
-        user_to_slice_[begin_id + j] = i;
+    std::string line;
+    while (std::getline(ifs, line)) {
+      if (line[0] == '#') {
+        continue;
       }
-      begin_id += num_ue;
-    }
-    for (int i = 0; i < num_slices_; ++i) {
-      int algo;
-      ifs >> algo;
-      if (algo == 0)
-        slice_algo_[i] = MT;
-      else if (algo == 1)
-        slice_algo_[i] = PF;
-      else if (algo == 2)
-        slice_algo_[i] = MLWDF;
-      else
-        slice_algo_[i] = PF;
+      std::string args;
+      std::istringstream iss(line);
+      iss >> args;
+      if (args == "num_slices:") {
+        iss >> num_slices_;
+      }
+      else if (args == "slice_weights:") {
+        for (int i = 0; i < num_slices_; ++i) {
+          iss >> slice_weights_[i];
+        }
+      }
+      else if (args == "slice_ues:") {
+        int begin_id = 0, num_ue;
+        for (int i = 0; i < num_slices_; ++i) {
+          iss >> num_ue;
+          for (int j = 0; j < num_ue; ++j) {
+            user_to_slice_[begin_id + j] = i;
+          }
+          begin_id += num_ue;
+        }
+      }
+      else if (args == "slice_algos:") {
+        int algo;
+        for (int i = 0; i < num_slices_; ++i) {
+          iss >> algo;
+          if (algo == 0)
+            slice_algo_[i] = MT;
+          else if (algo == 1)
+            slice_algo_[i] = PF;
+          else if (algo == 2)
+            slice_algo_[i] = MLWDF;
+          else
+            slice_algo_[i] = PF;
+        }
+      }
     }
   }
   else {
-    throw std::runtime_error("Fail to open configuration file");
+    throw std::runtime_error("Fail to open configuration file.");
   }
   ifs.close();
   inter_sched_ = algo;
@@ -279,7 +296,7 @@ static vector<int> SubOpt(double** flow_spectraleff, vector<int>& slice_quota_rb
   vector<int> slice_rbgs(nb_slices, 0);
   vector<int> rbg_to_slice(nb_rbgs, -1);
   // set negative to 0 first
-  for (int i = 0; i < slice_quota_rbgs.size(); ++i) {
+  for (size_t i = 0; i < slice_quota_rbgs.size(); ++i) {
     if (slice_quota_rbgs[i] < 0)
       slice_quota_rbgs[i] = 0;
   }
@@ -533,7 +550,7 @@ DownlinkTransportScheduler::RBsAllocation()
   double metrics[nb_rbgs][users->size ()];
 
   for (int i = 0; i < nb_rbgs; i++) {
-    for (int j = 0; j < users->size(); j++) {
+    for (size_t j = 0; j < users->size(); j++) {
       metrics[i][j] = ComputeSchedulingMetric(
         users->at(j),
         users->at(j)->GetSpectralEfficiency().at(i * rbg_size)
@@ -558,7 +575,7 @@ DownlinkTransportScheduler::RBsAllocation()
       flow_spectraleff[i][k] = 0;
     }
     std::vector<double> max_ranks(num_slices_, -1);     // the highest flow metric in every slice
-    for (int j = 0; j < users->size(); ++j) {
+    for (size_t j = 0; j < users->size(); ++j) {
       int user_id = users->at(j)->GetUserID();
       int slice_id = user_to_slice_[user_id];
       if (metrics[i][j] > max_ranks[slice_id]) {
@@ -604,7 +621,7 @@ DownlinkTransportScheduler::RBsAllocation()
 
   // ToDo: Generalize the framework
   if (inter_sched_ < 4 ) {
-    for (int i = 0; i < rbg_to_slice.size(); ++i) {
+    for (size_t i = 0; i < rbg_to_slice.size(); ++i) {
       int uindex = user_index[i][rbg_to_slice[i]];
       assert(uindex != -1);
       int sid = user_to_slice_[users->at(uindex)->GetUserID()];
@@ -621,7 +638,7 @@ DownlinkTransportScheduler::RBsAllocation()
       int sid = it->first;
       auto rbg_list = it->second;
       slice_final_rbgs[sid] += rbg_list.size();
-      for (int i = 0; i < rbg_list.size(); ++i) {
+      for (size_t i = 0; i < rbg_list.size(); ++i) {
         int uindex = user_index[rbg_list[i]][sid];
         assert(uindex != -1);
         int l = rbg_list[i] * rbg_size, r = (rbg_list[i] + 1) * rbg_size;
@@ -649,7 +666,7 @@ DownlinkTransportScheduler::RBsAllocation()
     UserToSchedule *ue = *it;
     if (ue->GetListOfAllocatedRBs()->size() > 0) {
       std::vector<double> estimatedSinrValues;
-      for (int rb = 0; rb < ue->GetListOfAllocatedRBs()->size (); rb++ ) {
+      for (size_t rb = 0; rb < ue->GetListOfAllocatedRBs()->size (); rb++ ) {
         double sinr = amc->GetSinrFromCQI (
         ue->GetCqiFeedbacks ().at (
           ue->GetListOfAllocatedRBs ()->at (rb)));
@@ -666,7 +683,7 @@ DownlinkTransportScheduler::RBsAllocation()
       //}
 
       ue->UpdateAllocatedBits(transportBlockSize);
-      for (int rb = 0; rb < ue->GetListOfAllocatedRBs()->size(); rb++) {
+      for (size_t rb = 0; rb < ue->GetListOfAllocatedRBs()->size(); rb++) {
         pdcchMsg->AddNewRecord(
             PdcchMapIdealControlMessage::DOWNLINK,
             ue->GetListOfAllocatedRBs()->at(rb),
@@ -908,7 +925,7 @@ DownlinkTransportScheduler::FinalizeAllocation()
     if (flow->GetListOfAllocatedRBs ()->size () > 0)
     {
 	    std::cout << "Flow(" << flow->GetBearer()->GetApplication()->GetApplicationID() << ")";
-	    for (int rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
+	    for (size_t rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
         int rbid = flow->GetListOfAllocatedRBs()->at(rb);
         if (rbid % rbg_size == 0)
           std::cout << " " << rbid / rbg_size;
@@ -917,7 +934,7 @@ DownlinkTransportScheduler::FinalizeAllocation()
 
       //this flow has been scheduled
       std::vector<double> estimatedSinrValues;
-      for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ ) {
+      for (size_t rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ ) {
           double sinr = amc->GetSinrFromCQI (
                   flow->GetCqiFeedbacks ().at (flow->GetListOfAllocatedRBs ()->at (rb)));
           estimatedSinrValues.push_back (sinr);
@@ -951,7 +968,7 @@ DownlinkTransportScheduler::FinalizeAllocation()
 				  << std::endl;
 #endif
 		//create PDCCH messages
-		for (int rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
+		for (size_t rb = 0; rb < flow->GetListOfAllocatedRBs ()->size (); rb++ )
 		{
 		  pdcchMsg->AddNewRecord (PdcchMapIdealControlMessage::DOWNLINK,
 				  flow->GetListOfAllocatedRBs ()->at (rb),

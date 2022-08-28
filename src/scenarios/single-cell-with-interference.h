@@ -29,9 +29,8 @@
 #include "../core/eventScheduler/simulator.h"
 #include "../flows/application/InfiniteBuffer.h"
 #include "../flows/application/VoIP.h"
-#include "../flows/application/CBR.h"
-#include "../flows/application/TraceBased.h"
 #include "../flows/application/InternetFlow.h"
+#include "../flows/application/TraceBased.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
 #include "../flows/QoS/QoSParameters.h"
 #include "../flows/QoS/QoSForEXP.h"
@@ -43,13 +42,13 @@
 #include "../phy/wideband-cqi-eesm-error-model.h"
 #include "../phy/simple-error-model.h"
 #include "../channel/propagation-model/macrocell-urban-area-channel-realization.h"
-#include "../channel/propagation-model/macrocell-rural-area-channel-realization.h"
 #include "../load-parameters.h"
 #include <queue>
 #include <fstream>
 #include <stdlib.h>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <utility>
 using std::pair;
@@ -57,16 +56,14 @@ using std::pair;
 static void SingleCellWithInterference (
     int nbCells,
     double radius,
-    int nbUE,
-    int nbVoIP, int nbVideo, int nbBE, int nbCBR,
+    int nbVideo, int nbBE, int nbCBR,
     int sched_type,
     int frame_struct,
     int speed,
     double maxDelay,
     int videoBitRate,
     int seed,
-    string config_fname,
-    string channel)
+    string config_fname)
 {
   double duration = 12;
   double flow_duration = 12;
@@ -236,34 +233,45 @@ static void SingleCellWithInterference (
   int num_slices;
   int user_to_slice[MAX_UES];
   int slice_users[MAX_SLICES];
-  int num_ues = 0;
+  int total_ues = 0;
   std::ifstream ifs(config_fname);
+  std::string line;
+  // read the configuration file
   if (ifs.is_open()) {
-    int begin_id = 0;
-    double temp_float;
-    ifs >> num_slices;
-
-    for (int i = 0; i < num_slices; ++i) {
-      ifs >> temp_float;
-    }
-
-    for (int i = 0; i < num_slices; ++i) {
-      int num_ue;
-      ifs >> num_ue;
-      for (int j = 0; j < num_ue; ++j) {
-        user_to_slice[begin_id + j] = i;
+    while (std::getline(ifs, line)) {
+      if (line[0] == '#') {
+        continue;
       }
-      slice_users[i] = num_ue;
-      begin_id += num_ue;
-      num_ues += num_ue;
+      std::string args;
+      std::istringstream iss(line);
+      iss >> args;
+      if (args == "num_slices:") {
+        iss >> num_slices;
+      }
+      else if (args == "slice_ues:") {
+        int begin_id = 0;
+        for (int i = 0; i < num_slices; ++i) {
+          int num_ue;
+          iss >> num_ue;
+          for (int j = 0; j < num_ue; ++j) {
+            user_to_slice[begin_id + j] = i;
+          }
+          slice_users[i] = num_ue;
+          begin_id += num_ue;
+          total_ues += num_ue;
+        }
+      }
     }
+  }
+  else {
+    throw std::runtime_error("Error, cannot open configuration file.");
   }
 
   //Create GW
   Gateway *gw = new Gateway ();
   nm->GetGatewayContainer ()->push_back (gw);
 
-  for (int idUE = 0; idUE < num_ues; idUE++)
+  for (int idUE = 0; idUE < total_ues; idUE++)
   {
     double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 100;
     double posY = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 100;
@@ -430,7 +438,7 @@ static void SingleCellWithInterference (
       videoApplication++;
     }
 
-    // *** be application
+    // *** backlogged application
     for (int j = 0; j < nbBE; j++) {
       // create application
       InfiniteBuffer* be_app = new InfiniteBuffer();
@@ -463,8 +471,8 @@ static void SingleCellWithInterference (
       beApplication++;
     }
 
+    // *** constant bitrate flows following heavy-tail distributions
     for (int j = 0; j < nbCBR; j++) {
-      // for 12mbps, 
       double flow_rate = 24.0 / (slice_users[user_to_slice[idUE]] * nbCBR);
       InternetFlow* ip_app = new InternetFlow();
       IPApplication.push_back(ip_app);

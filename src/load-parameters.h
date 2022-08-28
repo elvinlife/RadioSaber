@@ -28,7 +28,7 @@
 
 
 /* path */
-static std::string path ("/home/alvin/Research/lte-sim-dev/");
+static std::string path ("/home/alvin/Research/RadioSaber/");
 
 
 /* tracing */
@@ -84,6 +84,7 @@ static bool _channel_AWGN_ = false;
 //#define TEST_UL_SINR
 //#define TEST_DL_SINR
 
+#define USE_REAL_TRACE
 
 #endif /* PARAMETERS_H_ */
                            
