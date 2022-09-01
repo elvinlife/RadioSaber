@@ -125,16 +125,16 @@ static void SingleCellWithInterference (
       downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
       std::cout << "Scheduler Greedy " << std::endl;
       break;
+    case 9:
+      downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
+      std::cout << "Scheduler MaxCell " << std::endl;
+      break;
     case 10:
       downlink_scheduler_type = ENodeB::DLScheduler_UpperBound;
       std::cout << "Scheduler UpperBound " << std::endl;
       break;
     case 11:
-      downlink_scheduler_type = ENodeB::DLScheduler_MAXCELL;
-      std::cout << "Scheduler MaxCell " << std::endl;
-      break;
-    case 12:
-      downlink_scheduler_type = ENodeB::DLScheduler_VOGEL;
+      downlink_scheduler_type = ENodeB::DLScheduler_NVS_OPTIMAL;
       std::cout << "Scheduler Vogel " << std::endl;
       break;
     default:

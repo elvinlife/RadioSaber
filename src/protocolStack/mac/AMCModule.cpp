@@ -253,7 +253,7 @@ int
 AMCModule::GetCQIFromSinr (double sinr)
 {
   int cqi = 1; // == CQIIndex[0]
-  while (SINRForCQIIndex[cqi] <= sinr && cqi <= 14)
+  while (cqi <= 14 && SINRForCQIIndex[cqi] <= sinr)
   {
 	  cqi++;
   }

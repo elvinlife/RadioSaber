@@ -67,28 +67,27 @@ public:
 
 	typedef std::vector<UserEquipmentRecord*> UserEquipmentRecords;
 
-	enum DLSchedulerType
-	  {
-	    DLScheduler_TYPE_MAXIMUM_THROUGHPUT,
-	    DLScheduler_TYPE_PROPORTIONAL_FAIR,
-	    DLScheduler_TYPE_FLS,
-	    DLScheduler_TYPE_MLWDF,
-	    DLScheduler_TYPE_EXP,
-	    DLScheduler_LOG_RULE,
-	    DLScheduler_EXP_RULE,
-		DLScheduler_NVS,
-		DLScheduler_GREEDY,
-		DLScheduler_SUBOPT,
-		DLScheduler_UpperBound,
-		DLScheduler_MAXCELL,
-		DLScheduler_VOGEL
-	  };
-	enum ULSchedulerType
-	  {
-		ULScheduler_TYPE_MAXIMUM_THROUGHPUT,
-		ULScheduler_TYPE_FME,
-		ULScheduler_TYPE_ROUNDROBIN,
-	  };
+  enum DLSchedulerType {
+    DLScheduler_TYPE_MAXIMUM_THROUGHPUT,
+    DLScheduler_TYPE_PROPORTIONAL_FAIR,
+    DLScheduler_TYPE_FLS,
+    DLScheduler_TYPE_MLWDF,
+    DLScheduler_TYPE_EXP,
+    DLScheduler_LOG_RULE,
+    DLScheduler_EXP_RULE,
+    DLScheduler_NVS,
+    DLScheduler_NVS_OPTIMAL,
+    DLScheduler_GREEDY,
+    DLScheduler_SUBOPT,
+    DLScheduler_UpperBound,
+    DLScheduler_MAXCELL,
+    DLScheduler_VOGEL
+  };
+  enum ULSchedulerType {
+    ULScheduler_TYPE_MAXIMUM_THROUGHPUT,
+    ULScheduler_TYPE_FME,
+    ULScheduler_TYPE_ROUNDROBIN,
+  };
 
 	ENodeB ();
 	ENodeB (int idElement, Cell *cell);

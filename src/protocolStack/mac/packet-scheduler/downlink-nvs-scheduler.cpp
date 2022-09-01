@@ -41,9 +41,10 @@
 #include <sstream>
 #include <cassert>
 #include <cstring>
+#include <cstdlib>
 
-DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname)
-{
+DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname, bool is_optimal)
+  : is_optimal_(is_optimal) {
   std::ifstream ifs(config_fname, std::ifstream::in);
   if (ifs.is_open()) {
     std::string line;
@@ -173,16 +174,13 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
     if (user_to_slice_[user_id] != slice_serve)
       continue;
 
-	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
-		{
+	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE) {
 		  //compute data to transmit
 		  int dataToTransmit;
-		  if (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-			{
+		  if (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER) {
 			  dataToTransmit = 100000000;
 			}
-		  else
-			{
+		  else {
 			  dataToTransmit = bearer->GetQueueSize ();
 			}
 
@@ -192,8 +190,7 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
 		  std::vector<double> spectralEfficiency;
 		  std::vector<int> cqiFeedbacks = ueRecord->GetCQI ();
 		  int numberOfCqi = cqiFeedbacks.size ();
-		  for (int i = 0; i < numberOfCqi; i++)
-			{
+		  for (int i = 0; i < numberOfCqi; i++) {
 			  double sEff = GetMacEntity ()->GetAmcModule ()->GetEfficiencyFromCQI (cqiFeedbacks.at (i));
 			  spectralEfficiency.push_back (sEff);
 			}
@@ -220,14 +217,14 @@ DownlinkNVSScheduler::DoSchedule (void)
   // some logic to determine the slice to serve
   int slice_serve = 0;
   SelectSliceToServe(slice_serve);
-  UpdateAverageTransmissionRate (slice_serve);
+  UpdateAverageTransmissionRate ();
   SelectFlowsToSchedule (slice_serve);
 
-  if (GetUsersToSchedule()->size() == 0) {
-  }
-  else {
-	  RBsAllocation ();
-    //RBsAllocationForUE();
+  if (GetUsersToSchedule()->size() != 0) {
+    if (is_optimal_)
+      RBsAllocationOptimalPF();
+    else
+      RBsAllocation();
   }
 
   StopSchedule ();
@@ -241,7 +238,9 @@ DownlinkNVSScheduler::DoStopSchedule(void)
   for (auto it = uesToSchedule->begin(); it != uesToSchedule->end(); it++) {
     UserToSchedule* user = *it;
     int availableBytes = user->GetAllocatedBits() / 8;
-    // let's not reallocate RBs between flows firstly
+    // let's not reallocate RBs between users firstly
+    // when the flow of highest priority has no data, the left availabe bytes
+    // are reallocated to lower prioritized flows
     for (int i = MAX_BEARERS-1; i >= 0; i--) {
       if (availableBytes <= 0)
         break;
@@ -293,7 +292,7 @@ DownlinkNVSScheduler::RBsAllocation()
   size_t rbg_size = get_rbg_size(nb_rbs);
   // currently nb_rbgs should be divisible
   nb_rbs = nb_rbs - (nb_rbs % rbg_size);
-  int nb_rbgs = (nb_rbs + rbg_size - 1) / rbg_size;
+  int nb_rbgs = nb_rbs / rbg_size;
   UsersToSchedule* users = GetUsersToSchedule();
   double metrics[nb_rbgs][users->size()];
   for (size_t i = 0; i < nb_rbgs; i++) {
@@ -309,6 +308,7 @@ DownlinkNVSScheduler::RBsAllocation()
     UserToSchedule * scheduledUE = NULL;
     for (size_t j = 0; j < users->size(); ++j) {
       UserToSchedule* user = users->at(j);
+      // allocate the rbg if the user has highest metric and data to transmit
       if (metrics[i][j] > targetMetric &&
           user->GetListOfAllocatedRBs()->size() < user->m_requiredRBs ) {
         targetMetric = metrics[i][j];
@@ -324,21 +324,31 @@ DownlinkNVSScheduler::RBsAllocation()
   }
   AMCModule *amc = GetMacEntity()->GetAmcModule();
   PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage();
+  std::cout << GetTimeStamp() << std::endl;
   for (size_t j = 0; j < users->size(); j++) {
     UserToSchedule* ue = users->at(j);
 
     if (ue->GetListOfAllocatedRBs()->size() > 0) {
       std::vector<double> estimatedSinrValues;
-      for (size_t rb = 0; rb < ue->GetListOfAllocatedRBs()->size (); rb++ ) {
-        double sinr = amc->GetSinrFromCQI (
-        ue->GetCqiFeedbacks ().at (
-          ue->GetListOfAllocatedRBs ()->at (rb)));
+
+      std::cout << "User(" << ue->GetUserID() << ") allocated RBGS:";
+      for (size_t i = 0; i < ue->GetListOfAllocatedRBs()->size (); i++ ) {
+        int rbid = ue->GetListOfAllocatedRBs()->at(i);
+        if (rbid % rbg_size == 0)
+          std::cout << " " << rbid / rbg_size <<
+            "(" << ue->GetCqiFeedbacks().at(rbid) << ")";
+        
+        double sinr = amc->GetSinrFromCQI(
+          ue->GetCqiFeedbacks().at(
+          ue->GetListOfAllocatedRBs()->at(i)));
         estimatedSinrValues.push_back (sinr);
       }
       double effectiveSinr = GetEesmEffectiveSinr(estimatedSinrValues);
+      std::cout << " final_cqi: " << amc->GetCQIFromSinr(effectiveSinr) << std::endl;
       int mcs = amc->GetMCSFromCQI(amc->GetCQIFromSinr(effectiveSinr));
       int transportBlockSize = amc->GetTBSizeFromMCS(mcs, ue->GetListOfAllocatedRBs()->size());
 
+      // // calculate the transport block size as if the user can have multiple mcs
       //int mcs = 1;
       //int transportBlockSize = 0;
       //for (int i = 0; i < estimatedSinrValues.size(); i++) {
@@ -361,49 +371,13 @@ DownlinkNVSScheduler::RBsAllocation()
   delete pdcchMsg;
 }
 
-// double
-// DownlinkNVSScheduler::ComputeSchedulingMetric(RadioBearer *bearer, double spectralEfficiency, int subChannel)
-// {
-//   double metric = 0;
-//   switch (intra_sched_) {
-//     case MT:
-//       metric = spectralEfficiency;
-//       break;
-//     case PF:
-//       metric = (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
-//       break;
-//     case MLWDF:
-//     {
-//       double a = -log10 (0.01) / 1;
-//       double HOL = bearer->GetHeadOfLinePacketDelay ();
-//       metric = (a * HOL) * ((spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate ());
-//       break;
-//     }
-
-//     default:
-//       metric = spectralEfficiency;
-//   }
-//   return metric;
-// }
-
 double
 DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spectralEfficiency)
 {
   double metric = 0;
-  double averageRate = 1;
   int slice_id = user_to_slice_[user->GetUserID()];
-  for (int i = 0; i < MAX_BEARERS; ++i) {
-    if (user->m_bearers[i]) {
-      averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
-    }
-  }
-  // recomputation of averageRate
-  // double beta = 0.1;
-  // AMCModule *amc = GetMacEntity()->GetAmcModule();
-  // int bitsSent = amc->GetTBSizeFromMCS(
-  //   amc->GetMCSFromCQI(user->GetWidebandCQI()),
-  //   user->GetListOfAllocatedRBs()->size()); 
-  // averageRate += (beta * bitsSent / 0.001);
+  // get the aggregate transmission rate of all flows
+  double average_rate = user->GetAverageTransmissionRate();
 
   if (schedule_scheme_ == 0) {
     switch (slice_algo_[slice_id]) {
@@ -411,13 +385,15 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spect
         metric = spectralEfficiency;
         break;
       case PF:
-        metric = (spectralEfficiency * 180000.) / averageRate;
+        metric = (spectralEfficiency * 180000.) / average_rate;
         break;
       default:
         metric = spectralEfficiency;
     }
   }
   else if (schedule_scheme_ == 1) {
+    // select the highest priority first
+    // if the user doesn't have data with slice_priority_, it's not scheduled at all
     if (user->m_dataToTransmit[slice_priority_[slice_id]] == 0){
       metric = 0;
     }
@@ -426,13 +402,12 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spect
         metric = spectralEfficiency;
       }
       else if (slice_algo_[slice_id] == PF) {
-        metric = (spectralEfficiency * 180000.) / averageRate;
+        metric = (spectralEfficiency * 180000.) / average_rate;
       }
       else if (slice_algo_[slice_id] == MLWDF) {
         RadioBearer* bearer = user->m_bearers[slice_priority_[slice_id]];
-        //assert(bearer->)
         double HoL = bearer->GetHeadOfLinePacketDelay();
-        metric = HoL * (spectralEfficiency * 180000.) / averageRate;
+        metric = HoL * (spectralEfficiency * 180000.) / average_rate;
       }
       else {
         throw std::runtime_error("Invalid Scheduling algorithm");
@@ -443,7 +418,7 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spect
 }
 
 void
-DownlinkNVSScheduler::UpdateAverageTransmissionRate (int slice_serve)
+DownlinkNVSScheduler::UpdateAverageTransmissionRate ()
 {
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
@@ -453,4 +428,129 @@ DownlinkNVSScheduler::UpdateAverageTransmissionRate (int slice_serve)
 	  RadioBearer *bearer = (*it);
     bearer->UpdateAverageTransmissionRate ();
   }
+}
+
+void
+DownlinkNVSScheduler::RBsAllocationOptimalPF() {
+  int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  size_t rbg_size = get_rbg_size(nb_rbs);
+  // currently nb_rbgs should be divisible
+  nb_rbs = nb_rbs - (nb_rbs % rbg_size);
+  int nb_rbgs = nb_rbs / rbg_size;
+
+  UsersToSchedule* users = GetUsersToSchedule();
+  std::vector<int> user_highest_cqi;
+  for (auto it = users->begin(); it != users->end(); it++) {
+    int highest_cqi = 0;
+    for (int i = 0; i < nb_rbgs; i++) {
+      int cqi = (*it)->GetCqiFeedbacks().at(i * rbg_size);
+      if (highest_cqi < cqi)
+        highest_cqi = cqi;
+    }
+    user_highest_cqi.push_back(highest_cqi);
+  }
+  std::vector<int> best_assigned_mcs;
+  std::vector<UserToSchedule*> best_rbgs_assignment;
+  double highest_pf_metric = 0;
+  int cqi_search_range = 3;
+  int num_sample = 300;
+  for (int i = 0; i < num_sample; i++) {
+    std::vector<int> assigned_mcs;
+    std::vector<UserToSchedule*> rbgs_assignment(nb_rbgs, NULL);
+    double pf_metric = 0;
+    // std::cout << "MCS(highest_cqi): ";
+    for (size_t i = 0; i < user_highest_cqi.size(); i++) {
+      assigned_mcs.push_back(
+        max( user_highest_cqi[i] - rand() % cqi_search_range, 1 )
+      );
+      // std::cout << assigned_mcs.back() << "(" << user_highest_cqi[i] << ") ";
+    }
+    // std::cout << std::endl;
+    pf_metric = AssignRBsGivenMCS(assigned_mcs, rbgs_assignment);
+    if (highest_pf_metric < pf_metric) {
+      highest_pf_metric = pf_metric;
+      best_assigned_mcs = assigned_mcs;
+      best_rbgs_assignment = rbgs_assignment;
+    }
+  }
+  for (size_t rbg_id = 0; rbg_id < best_rbgs_assignment.size(); rbg_id++) {
+    UserToSchedule* user = best_rbgs_assignment[rbg_id];
+    assert(user != NULL);
+    int l = rbg_id * rbg_size, r = (rbg_id+1) * rbg_size;
+    for (int j = l; j < r; ++j) {
+      user->GetListOfAllocatedRBs()->push_back(j);
+    }
+  }
+  AMCModule *amc = GetMacEntity()->GetAmcModule();
+  PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage();
+
+  std::cout << GetTimeStamp() << std::endl;
+  for (auto it = users->begin(); it != users->end(); it++) {
+    UserToSchedule* ue = *it;
+    if (ue->GetListOfAllocatedRBs()->size() > 0) {
+      std::vector<double> estimatedSinrValues;
+      std::cout << "User(" << ue->GetUserID() << ") allocated RBGS:";
+
+      for (size_t i = 0; i < ue->GetListOfAllocatedRBs()->size (); i++ ) {
+        int rbid = ue->GetListOfAllocatedRBs()->at(i);
+        if (rbid % rbg_size == 0)
+          std::cout << " " << rbid / rbg_size <<
+            "(" << ue->GetCqiFeedbacks().at(rbid) << ")";
+        double sinr = amc->GetSinrFromCQI ( ue->GetCqiFeedbacks().at (rbid) );
+        estimatedSinrValues.push_back (sinr);
+      }
+      double effectiveSinr = GetEesmEffectiveSinr(estimatedSinrValues);
+
+      std::cout << " final_cqi: " << amc->GetCQIFromSinr(effectiveSinr) << std::endl;
+
+      int mcs = amc->GetMCSFromCQI(amc->GetCQIFromSinr(effectiveSinr));
+      int transportBlockSize = amc->GetTBSizeFromMCS(mcs, ue->GetListOfAllocatedRBs()->size());
+
+      ue->UpdateAllocatedBits(transportBlockSize);
+      for (size_t rb = 0; rb < ue->GetListOfAllocatedRBs()->size(); rb++) {
+        pdcchMsg->AddNewRecord(
+            PdcchMapIdealControlMessage::DOWNLINK,
+            ue->GetListOfAllocatedRBs()->at(rb),
+            ue->GetUserNode(),
+            mcs
+          );
+      }
+    }
+  }
+  if (pdcchMsg->GetMessage()->size() > 0) {
+    GetMacEntity()->GetDevice()->GetPhy()->SendIdealControlMessage(pdcchMsg);
+  }
+  delete pdcchMsg;
+}
+
+double
+DownlinkNVSScheduler::AssignRBsGivenMCS(std::vector<int>& assigned_mcs,
+    std::vector<UserToSchedule*>& rbgs_assignment) {
+  int nb_rbs = GetMacEntity()->GetDevice()->GetPhy() \
+      ->GetBandwidthManager()->GetDlSubChannels().size();
+  size_t rbg_size = get_rbg_size(nb_rbs);
+  int nb_rbgs = rbgs_assignment.size();
+
+  UsersToSchedule* users = GetUsersToSchedule();
+  double pf_metric = 0;
+
+  for (int i = 0; i < nb_rbgs; i++) {
+    double highest_metric = -1;
+    for (auto it = users->begin(); it != users->end(); it++) {
+      int index = std::distance(users->begin(), it);
+      int cqi = (*it)->GetCqiFeedbacks().at(i * rbg_size);
+      double metric = 0;
+      // the metric is not zero if cqi is gte the mcs
+      if (assigned_mcs[index] <= cqi) {
+        double sEff = GetMacEntity()->GetAmcModule()->GetEfficiencyFromCQI (assigned_mcs[index]);
+        metric = sEff * 180000 / (*it)->GetAverageTransmissionRate();
+      }
+      if (highest_metric < metric) {
+        highest_metric = metric;
+        rbgs_assignment[i] = *it;
+      }
+    }
+    pf_metric += highest_metric;
+  }
+  return pf_metric;
 }

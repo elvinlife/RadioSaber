@@ -51,7 +51,7 @@ using std::unordered_map;
 using coord_t = std::pair<int, int>;
 using coord_cqi_t = std::pair<coord_t, double>;
 
-DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname, int algo)
+DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname, int interslice_algo)
 {
   std::ifstream ifs(config_fname);
   if (ifs.is_open()) {
@@ -82,14 +82,14 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
         }
       }
       else if (args == "slice_algos:") {
-        int algo;
+        int enterprise_algo;
         for (int i = 0; i < num_slices_; ++i) {
-          iss >> algo;
-          if (algo == 0)
+          iss >> enterprise_algo;
+          if (enterprise_algo == 0)
             slice_algo_[i] = MT;
-          else if (algo == 1)
+          else if (enterprise_algo == 1)
             slice_algo_[i] = PF;
-          else if (algo == 2)
+          else if (enterprise_algo == 2)
             slice_algo_[i] = MLWDF;
           else
             slice_algo_[i] = PF;
@@ -101,7 +101,7 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
     throw std::runtime_error("Fail to open configuration file.");
   }
   ifs.close();
-  inter_sched_ = algo;
+  inter_sched_ = interslice_algo;
   SetMacEntity (0);
   CreateUsersToSchedule();
 }
@@ -348,11 +348,11 @@ static vector<int> SubOpt(double** flow_spectraleff, vector<int>& slice_quota_rb
     rbg_to_slice[rbg_id] = to_slice;
     slice_more.at(from_slice) -= 1;
     slice_fewer.at(to_slice) -= 1;
-        // std::cout << "reallocate: " 
-        // << from_slice << " -> " << to_slice << " "
-        // << slice_rbgs[from_slice] << " & " << slice_rbgs[to_slice] << " "
-        // << slice_more[from_slice] << " & " << slice_fewer[to_slice] << " "
-        // << std::endl;
+    // std::cout << "reallocate: " 
+    // << from_slice << " -> " << to_slice << " "
+    // << slice_rbgs[from_slice] << " & " << slice_rbgs[to_slice] << " "
+    // << slice_more[from_slice] << " & " << slice_fewer[to_slice] << " "
+    // << std::endl;
     if (slice_more.at(from_slice) <= 0 || slice_rbgs[from_slice] <= 0) {
       slice_more.erase(from_slice);
     }
@@ -585,20 +585,6 @@ DownlinkTransportScheduler::RBsAllocation()
       }
     }
   }
-
-  // if (GetTimeStamp() < 1000) {
-  //   fprintf(stderr, "slice quota: ");
-  //   for (int i = 0; i < num_slices_; i++) {
-  //     fprintf(stderr, "%d ", slice_quota_rbgs[i]);
-  //   }
-  //   fprintf(stderr, "\n");
-  //   for (int i = 0; i < nb_rbgs; i++) {
-  //     for (int j = 0; j < num_slices_; j++) {
-  //       fprintf(stderr, "(%d, %.0f) ", user_index[i][j], flow_spectraleff[i][j] * 180 / 8 * 4);
-  //     }
-  //     fprintf(stderr, "\n");
-  //   }
-  // }
 
   // calculate the assignment of rbgs to slices
   vector<int> rbg_to_slice;

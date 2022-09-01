@@ -236,7 +236,6 @@ PacketScheduler::InsertFlowToSchedule (RadioBearer* bearer, int dataToTransmit, 
 {
   FlowToSchedule *flowToSchedule = new FlowToSchedule(bearer, dataToTransmit);
   flowToSchedule->SetSpectralEfficiency (specEff);
-  //flowToSchedule
   flowToSchedule->SetCqiFeedbacks (cqiFeedbacks);
 
   std::vector<double> sinrs;
@@ -385,7 +384,7 @@ PacketScheduler::UserToSchedule::SetSpectralEfficiency (std::vector<double>& s)
   m_spectralEfficiency = s;
 }
 
-std::vector<double>
+std::vector<double>&
 PacketScheduler::UserToSchedule::GetSpectralEfficiency (void)
 {
   return m_spectralEfficiency;
@@ -397,7 +396,7 @@ PacketScheduler::UserToSchedule::SetCqiFeedbacks (std::vector<int>& cqiFeedbacks
   m_cqiFeedbacks = cqiFeedbacks;
 }
 
-std::vector<int>
+std::vector<int>&
 PacketScheduler::UserToSchedule::GetCqiFeedbacks (void)
 {
   return m_cqiFeedbacks;
@@ -422,14 +421,15 @@ PacketScheduler::UserToSchedule::GetListOfAllocatedRBs ()
 }
 
 double
-PacketScheduler::UserToSchedule::GetAverageRate()
+PacketScheduler::UserToSchedule::GetAverageTransmissionRate()
 {
-  double sum_rate = 0;
+  double sum_rate = 1;
   for (int i = 0; i < MAX_BEARERS; i++) {
     if (m_bearers[i]) {
-      m_bearers[i]->GetAverageTransmissionRate();
+      sum_rate += m_bearers[i]->GetAverageTransmissionRate();
     }
   }
+  return sum_rate;
 }
 
 void

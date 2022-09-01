@@ -23,6 +23,7 @@
 #define DOWNLINKNVSSCHEDULER_H_
 
 #include "packet-scheduler.h"
+#include <vector>
 
 class DownlinkNVSScheduler: public PacketScheduler {
 	enum Scheduler {MT, PF, TTA, MLWDF};
@@ -34,12 +35,14 @@ private:
   
 	int       slice_priority_[MAX_SLICES];
 	int       num_slices_ = 1;
-	int       schedule_scheme_ = 1;
+	int       schedule_scheme_ = 0;
+  bool      is_optimal_;
 
-	const double beta_ = 0.1;
+  // the beta_ for inter-slice scheduling
+  const double beta_ = 0.1;
 
 public:
-	DownlinkNVSScheduler(std::string config_fname="");
+	DownlinkNVSScheduler(std::string config_fname="", bool is_optimal = false);
 	virtual ~DownlinkNVSScheduler();
 
 	void SelectSliceToServe( int& );
@@ -49,15 +52,13 @@ public:
 	virtual void DoStopSchedule (void);
 
 	virtual void RBsAllocation ();
-	//void RBsAllocationForUE();
-	// virtual double ComputeSchedulingMetric (
-	// 	RadioBearer* bearer, double spectralEfficiency,
-	// 	int subChannel );
 	virtual double ComputeSchedulingMetric (
 		UserToSchedule* user, double spectralEfficiency );
+	void UpdateAverageTransmissionRate ();
 
-	void UpdateAverageTransmissionRate (int);
-
+  void RBsAllocationOptimalPF();
+  double AssignRBsGivenMCS(std::vector<int>& assigned_mcs,
+      std::vector<UserToSchedule*>& rbgs_assignment);
 };
 
 #endif /* DOWNLINKPACKETSCHEDULER_H_ */

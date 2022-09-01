@@ -84,6 +84,7 @@ private:
     NetworkNode* m_userNode;
     int m_allocatedBits;
 
+    // spectralEfficiency is transmission rate per HZ(bps/HZ)
     std::vector<double> m_spectralEfficiency;
     std::vector<int> m_listOfAllocatedRBs;
     int m_wideBandCQI;
@@ -103,15 +104,15 @@ public:
     std::vector<RadioBearer*> GetBearers (void);
 
     void SetSpectralEfficiency (std::vector<double>& s);
-    std::vector<double> GetSpectralEfficiency (void);
+    std::vector<double>& GetSpectralEfficiency (void);
     void SetWidebandCQI (int);
     int GetWidebandCQI (void);
     int GetRequiredRBs (void);
     void SetCqiFeedbacks (std::vector<int>& cqiFeedbacks);
-    std::vector<int> GetCqiFeedbacks (void);
+    std::vector<int>& GetCqiFeedbacks (void);
 
     std::vector<int>* GetListOfAllocatedRBs ();
-    double GetAverageRate();
+    double GetAverageTransmissionRate();
   };
 
 	PacketScheduler();
