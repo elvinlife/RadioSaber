@@ -452,7 +452,7 @@ DownlinkNVSScheduler::RBsAllocationOptimalPF() {
   std::vector<int> best_assigned_mcs;
   std::vector<UserToSchedule*> best_rbgs_assignment;
   double highest_pf_metric = 0;
-  int cqi_search_range = 3;
+  int cqi_search_range = 4;
   int num_sample = 300;
   for (int i = 0; i < num_sample; i++) {
     std::vector<int> assigned_mcs;

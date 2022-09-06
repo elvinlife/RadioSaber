@@ -46,7 +46,6 @@ EnbMacEntity::EnbMacEntity ()
   m_uplinkScheduler = NULL;
   #ifdef USE_REAL_TRACE
   std::string fname = path + "pbecc-traces-noise0/mapping.config";
-  // std::string fname = "/home/alvin/Research/ue_traces_0/mapping.config";
   std::ifstream ifs(fname, std::ifstream::in);
   int uid, tid;
   while (ifs >> uid >> tid) {
@@ -167,12 +166,8 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
     ENodeB::UserEquipmentRecord* record = enb->GetUserEquipmentRecord(user_id);
 
     if (m_userCQITrace.find(user_id) == m_userCQITrace.end()) {
-      if (user_id >= m_userMapping.size()) {
-        throw std::runtime_error("User ID larger than upperbound");
-      }
-      int trace_id = m_userMapping[user_id];
+      int trace_id = m_userMapping[user_id % m_userMapping.size()];
       std::cerr << "user " << user_id << " uses trace " << trace_id << std::endl;
-      // std::string fname = "/home/alvin/Research/pbecc-traces-noise0/ue" + std::to_string(trace_id) + ".log";
       std::string fname = path + "pbecc-traces-noise0/ue" + std::to_string(trace_id) + ".log";
       std::ifstream ifs(fname, std::ifstream::in);
       int cqi = 0;
@@ -182,7 +177,6 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
           ifs >> cqi;
           cqi_one_tti.push_back(cqi);
         }
-        //std::cout << cqi_one_tti[0] << std::endl;
         m_userCQITrace[user_id].push_back(cqi_one_tti);
       }
       ifs.close();
