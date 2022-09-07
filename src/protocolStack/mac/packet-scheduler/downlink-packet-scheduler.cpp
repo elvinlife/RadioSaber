@@ -185,13 +185,13 @@ DownlinkPacketScheduler::RBsAllocation ()
 #endif
 
   FlowsToSchedule* flows = GetFlowsToSchedule ();
-  int nbOfRBs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
-  int rbg_size = get_rbg_size(nbOfRBs);
-  int nbOfGroups = (nbOfRBs + rbg_size - 1) / rbg_size;
+  int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int rbg_size = get_rbg_size(nb_rbs);
+  int nb_rbgs = (nb_rbs + rbg_size - 1) / rbg_size;
 
   // create a matrix of flow metrics
-  double metrics[nbOfGroups][flows->size ()];
-  for (int i = 0; i < nbOfGroups; i++) {
+  double metrics[nb_rbgs][flows->size ()];
+  for (int i = 0; i < nb_rbgs; i++) {
 	  for (size_t j = 0; j < flows->size (); j++) {
 		  metrics[i][j] = ComputeSchedulingMetric (
         flows->at (j)->GetBearer (),
@@ -224,7 +224,7 @@ DownlinkPacketScheduler::RBsAllocation ()
       l_bFlowScheduled[k] = false;
 
   //RBs allocation
-  for (int s = 0; s < nbOfGroups; s++)
+  for (int s = 0; s < nb_rbgs; s++)
     {
       if ((size_t)l_iScheduledFlows == flows->size ())
           break;
@@ -249,7 +249,7 @@ DownlinkPacketScheduler::RBsAllocation ()
         {
           // allocate the sth rbg
           int l = s*rbg_size, r = (s+1)*rbg_size;
-          if (r > nbOfRBs) r = nbOfRBs;
+          if (r > nb_rbs) r = nb_rbs;
           for (int i = l; i < r; ++i) {
             scheduledFlow->GetListOfAllocatedRBs()->push_back(i);
             double sinr = amc->GetSinrFromCQI(scheduledFlow->GetCqiFeedbacks().at(i));
@@ -279,14 +279,6 @@ DownlinkPacketScheduler::RBsAllocation ()
   for (FlowsToSchedule::iterator it = flows->begin (); it != flows->end (); it++)
     {
       FlowToSchedule *flow = (*it);
-
-	  std::cout << "Flow: " << flow->GetBearer()->GetApplication()->GetApplicationID();
-	  for (size_t rb = 0; rb < flow->GetListOfAllocatedRBs()->size(); rb++) {
-      int rbid = flow->GetListOfAllocatedRBs()->at(rb);
-      if (rbid % rbg_size == 0)
-        std::cout << " " << rbid / rbg_size;
-	  }
-	  std::cout << std::endl;
 
       if (flow->GetListOfAllocatedRBs ()->size () > 0)
         {

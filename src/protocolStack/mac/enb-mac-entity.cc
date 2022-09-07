@@ -34,6 +34,7 @@
 #include "../../core/eventScheduler/simulator.h"
 #include <fstream>
 #include <cassert>
+#include <sstream>
 #define CQI_INTERVAL 40
 #define MAX_UE_TRACE 158
 #define MAX_TTI_TRACE 475
@@ -159,7 +160,7 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
     #ifdef USE_REAL_TRACE  
     CqiIdealControlMessage::CqiFeedbacks *cqi = msg->GetMessage ();
     int nb_rbs = cqi->size();
-    assert(nb_rbs == 500);
+    // assert(nb_rbs == 500);
     UserEquipment* ue = (UserEquipment*) msg->GetSourceDevice ();
     int user_id = ue->GetIDNetworkNode();
     ENodeB* enb = (ENodeB*) GetDevice ();
@@ -172,9 +173,12 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
       std::ifstream ifs(fname, std::ifstream::in);
       int cqi = 0;
       for (int i = 0; i < MAX_TTI_TRACE; ++i) {
+        std::string line;
+        std::getline(ifs, line);
+        std::istringstream iss(line);
         std::vector<int> cqi_one_tti;
         for (int j = 0; j < nb_rbs; ++j) {
-          ifs >> cqi;
+          iss >> cqi;
           cqi_one_tti.push_back(cqi);
         }
         m_userCQITrace[user_id].push_back(cqi_one_tti);
