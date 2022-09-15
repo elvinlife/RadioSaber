@@ -1008,7 +1008,6 @@ DownlinkTransportScheduler::ComputeSchedulingMetric(UserToSchedule* user, double
       }
       else if (slice_algo_[slice_id] == MLWDF) {
         RadioBearer* bearer = user->m_bearers[slice_priority_[slice_id]];
-        //assert(bearer->)
         double HoL = bearer->GetHeadOfLinePacketDelay();
         metric = HoL * (spectralEfficiency * 180000.) / averageRate;
       }

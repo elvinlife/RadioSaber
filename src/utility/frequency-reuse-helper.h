@@ -149,7 +149,6 @@ RunFrequencyReuseTechniques(int nodes, int cluster, double bandwidth)
           std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER" << std::endl;
           cluster = 3;
         }
-        //int operateSubBands = 500;
         int dlSubBands = 500;
         int ulSubBands = 100;
         int counter = 0;

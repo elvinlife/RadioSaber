@@ -22,5 +22,5 @@ def get_cumu(fname):
     print(cumu_bytes)
 
 
-get_bw("foreman_H264_1280k")
-get_cumu("foreman_H264_1280k")
+get_bw("foreman_H264_880k")
+#get_cumu("foreman_H264_1280k")

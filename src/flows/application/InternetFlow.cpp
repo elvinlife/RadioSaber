@@ -51,7 +51,6 @@ int get_avg_flowsize() {
 
 int InternetFlow::m_typeflow = 11;
 int InternetFlow::m_flowsize[] = {1460, 2920, 4380, 7300, 10220, 58400, 105120, 200020, 389820, 1733020, 3076220};
-//int InternetFlow::m_flowsize[] = {292, 584, 876, 1460, 2044, 11680, 21024, 40004, 77964, 346604, 615244};
 double InternetFlow::m_flowcdf[] = {0.5, 0.6, 0.7, 0.75, 0.8, 0.8125, 0.825, 0.85, 0.9, 0.95, 1};
 int InternetFlow::m_avg_flowsize = get_avg_flowsize();
 
@@ -142,14 +141,19 @@ InternetFlow::SetAvgRate(double rate)
 {
   // Bytes / Mbps => *8 (us) => /1000000 (s)
   m_interval = InternetFlow::m_avg_flowsize / rate * 8 / 1000000;
-  m_interval = std::ceil( m_interval * 1000) / 1000.0;
-  //std::cerr << "IPFlow rate: " << rate << " mbps interval: " << m_interval << " s" << std::endl;
+  m_lambda = 1 / m_interval;
+  m_distribute = std::exponential_distribution<double>(m_lambda);
+  // std::cerr << "IPFlow rate: " << rate
+  //     << " mbps; lambda: " << m_lambda
+  //     << " ; flow size: " << InternetFlow::m_avg_flowsize << std::endl;
 }
 
 double
-InternetFlow::GetInterval(void) const
+InternetFlow::GetInterval(void)
 {
-  return m_interval;
+  // return m_interval;
+  double interval = m_distribute(m_generator);
+  return std::ceil(interval * 1000) / 1000.0;
 }
 
 int

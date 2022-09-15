@@ -35,7 +35,7 @@
 #define RBs_FOR_10_MHz 50
 #define RBs_FOR_15_MHz 75
 #define RBs_FOR_20_MHz 100
-#define RBs_FOR_100_MHz 500
+#define RBs_FOR_100_MHz 512
 
 BandwidthManager::BandwidthManager()
 {

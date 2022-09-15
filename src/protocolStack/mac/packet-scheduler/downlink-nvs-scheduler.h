@@ -34,8 +34,8 @@ private:
 	Scheduler slice_algo_[MAX_SLICES];
   
 	int       slice_priority_[MAX_SLICES];
-	int       num_slices_ = 1;
-	int       schedule_scheme_ = 0;
+	int       num_slices_ = 0;
+	int       schedule_scheme_ = 1;
   bool      is_optimal_;
 
   // the beta_ for inter-slice scheduling

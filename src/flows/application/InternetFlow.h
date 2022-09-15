@@ -25,6 +25,7 @@
 #define INTERNETFLOW_H_
 
 #include "Application.h"
+#include <random>
 
 class InternetFlow : public Application {
 public:
@@ -46,10 +47,14 @@ public:
 
 private:
 
-  double  GetInterval(void) const;
+  double  GetInterval(void);
   int     GetSize(void) const;
 	double  m_interval;
   int     m_flowCounter;
+
+  double  m_lambda;
+  std::default_random_engine m_generator;
+  std::exponential_distribution<double> m_distribute;
 };
 
 #endif /* CBR_H_ */

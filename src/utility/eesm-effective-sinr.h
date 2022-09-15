@@ -98,11 +98,11 @@ get_subband_size(int nof_prb)
   // 64-110 RBs => Subband Size(8 RBs)
   // If the subcarrier is 60khz, a RB is 800khz(125 RBs), and a subband is 6.4Mhz
   // If the subcarrier is 30khz, a RB is 400khz(250 RBs), and a subband is 3.2Mhz
-  else if (nof_prb <= 500) {
+  else if (nof_prb <= 512) {
     return 32;
   }
   else {
-    throw std::runtime_error("Num of physical RBs above 110");
+    throw std::runtime_error("Num of physical RBs above 512");
   }
 }
 
@@ -120,10 +120,10 @@ get_rbg_size(int nof_prb)
   // 5G: https://www.etsi.org/deliver/etsi_ts/138200_138299/138214/15.02.00_60/ts_138214v150200p.pdf : Table 5.1.2.2.1-1
   // 5G: https://www.sharetechnote.com/html/5G/5G_ResourceAllocationType.html (73-144 bandwidth part size => 8 RBs as a RBG)
   // LTE: https://www.sharetechnote.com/html/Handbook_LTE_RAType.html (100 RBs => 4 RBs as a RBG)
-  else if (nof_prb <= 500)
+  else if (nof_prb <= 512)
     return 8;
   else {
-    throw std::runtime_error("Num of physical RBs above 110");
+    throw std::runtime_error("Num of physical RBs above 512");
   }
 }
 

@@ -276,16 +276,19 @@ static void SingleCellCustomize (
   {
     // we hardcoded the configuration for the customization experiment
     int nbVideo = 0, nbBE = 0, nbCBR = 0;
-    if (user_to_slice[idUE] < 7) {
+    bool multi_priority = false;
+    int slices_per_qos = 5;
+    if (user_to_slice[idUE] < slices_per_qos) {
       nbBE = 1;
     }
-    if (user_to_slice[idUE] < 14) {
+    else if (user_to_slice[idUE] < 2 * slices_per_qos) {
       nbCBR = 1;
     }
-    else if (user_to_slice[idUE] < 21) {
+    else if (user_to_slice[idUE] < 3 * slices_per_qos) {
       nbCBR = 2;
+      multi_priority = true;
     }
-    else if (user_to_slice[idUE] < 28) {
+    else if (user_to_slice[idUE] < 4 * slices_per_qos) {
       nbVideo = 1;
     }
 
@@ -304,7 +307,7 @@ static void SingleCellCustomize (
 
     std::cout << "Created UE - id " << idUE << " position " << posX << " " << posY << " direction " << speedDirection << std::endl;
 
-    ue->GetMobilityModel()->GetAbsolutePosition()->Print();
+    // ue->GetMobilityModel()->GetAbsolutePosition()->Print();
     ue->GetPhy ()->SetDlChannel (eNBs->at (0)->GetPhy ()->GetDlChannel ());
     ue->GetPhy ()->SetUlChannel (eNBs->at (0)->GetPhy ()->GetUlChannel ());
 
@@ -489,7 +492,7 @@ static void SingleCellCustomize (
 
     // *** constant bitrate flows following heavy-tail distributions
     for (int j = 0; j < nbCBR; j++) {
-      double user_rate = 8.0 / (slice_users[user_to_slice[idUE]]);
+      double user_rate = 10.0 / (slice_users[user_to_slice[idUE]]);
       InternetFlow* ip_app = new InternetFlow();
       IPApplication.push_back(ip_app);
       ip_app->SetSource(gw);
@@ -497,7 +500,7 @@ static void SingleCellCustomize (
       ip_app->SetApplicationID(applicationID);
       ip_app->SetStartTime(start_time);
       ip_app->SetStopTime(duration_time);
-      if (nbCBR == 2) {
+      if (multi_priority) {
         ip_app->SetPriority(j);
         if (j == 0) {
           ip_app->SetAvgRate(user_rate * 0.75);
@@ -506,9 +509,10 @@ static void SingleCellCustomize (
           ip_app->SetAvgRate(user_rate * 0.25);
         }
       }
+      // evenly divide average flow rate
       else {
         ip_app->SetPriority(0);
-        ip_app->SetAvgRate( user_rate );
+        ip_app->SetAvgRate( user_rate / nbCBR );
       }
 
       QoSParameters* qosParameters = new QoSParameters();
@@ -522,6 +526,8 @@ static void SingleCellCustomize (
         TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP
       );
       ip_app->SetClassifierParameters(cp);
+
+      std::cout << "CREATED InternetFlow APPLICATION, ID " << applicationID << std::endl;
 
       destinationPort ++;
       applicationID ++;
