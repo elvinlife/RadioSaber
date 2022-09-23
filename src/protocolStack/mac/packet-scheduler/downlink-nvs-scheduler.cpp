@@ -1,25 +1,23 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2010,2011,2012,2013 TELEMATICS LAB, Politecnico di Bari
+/* project: RadioSaber; Mode: C++
+ * Copyright (c) 2021, 2022, 2023, 2024 University of Illinois Urbana Champaign
  *
- * This file is part of LTE-Sim
+ * This file is part of RadioSaber, which is a project built upon LTE-Sim in 2022
  *
- * LTE-Sim is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation;
- *
- * LTE-Sim is distributed in the hope that it will be useful,
+ * RadioSaber is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * RadioSaber is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with LTE-Sim; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Giuseppe Piro <g.piro@poliba.it>
- *         Lukasz Rajewski <lukasz.rajewski@gmail.com> (optimized PRB allocation)
+ * Author: Yongzhou Chen <yongzhouc@outlook.com>
  */
-
 
 #include "downlink-nvs-scheduler.h"
 #include "../mac-entity.h"
@@ -43,8 +41,8 @@
 #include <cstring>
 #include <cstdlib>
 
-DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname, bool is_optimal)
-  : is_optimal_(is_optimal) {
+DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname, bool is_nongreedy)
+  : is_nongreedy_(is_nongreedy) {
   std::ifstream ifs(config_fname, std::ifstream::in);
   if (ifs.is_open()) {
     std::string line;
@@ -222,7 +220,7 @@ DownlinkNVSScheduler::DoSchedule (void)
   SelectFlowsToSchedule (slice_serve);
 
   if (GetUsersToSchedule()->size() != 0) {
-    if (is_optimal_)
+    if (is_nongreedy_)
       RBsAllocationOptimalPF();
     else
       RBsAllocation();

@@ -343,7 +343,7 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
 		    break;
 
       case ENodeB::DLScheduler_NVS:
-        scheduler = new DownlinkNVSScheduler(config_fname);
+        scheduler = new DownlinkNVSScheduler(config_fname, false);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
         break;

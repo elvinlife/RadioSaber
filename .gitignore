@@ -45,3 +45,4 @@ TOOLS/make_sum
 *.backup
 
 NSDI23-radiosaber-experiments
+pbecc-traces-noise0/mapping.config

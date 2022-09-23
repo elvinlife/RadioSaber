@@ -16,3 +16,9 @@
 
 * Lukasz Rajewski <lukasz.rajewski@gmail.com>
   Optimized PRB allocation
+
+  RadioSaber contributors:
+==========================
+
+* Yongzhou Chen <yongzhouc@outlook.com, yc28@illinois.edu>
+  Implemented RadioSaber, a channel-aware RAN slicing system upon LTE-Sim

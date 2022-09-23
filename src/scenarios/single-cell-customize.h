@@ -56,22 +56,27 @@ using std::vector;
 
 
 static void SingleCellCustomize (
-    int nbCells,
     double radius,
     int sched_type,
     int frame_struct,
     int speed,
     double maxDelay,
     int videoBitRate,
+    double internetFlowRate,
     int seed,
     string config_fname)
 {
   double duration = 40;
   double flow_duration = 40;
 
+  int nbCells = 1;
   int cluster = 3;
   double bandwidth = 100;
-  nbCells = 1;
+
+  int nb_be_sliceA = 1;
+  int nb_internetflow_sliceB = 1;
+  int nb_internetflow_sliceC = 2;
+  int nb_videoflow_sliceD = 1;
 
   // CREATE COMPONENT MANAGER
   Simulator *simulator = Simulator::Init();
@@ -275,21 +280,21 @@ static void SingleCellCustomize (
   for (int idUE = 0; idUE < total_ues; idUE++)
   {
     // we hardcoded the configuration for the customization experiment
-    int nbVideo = 0, nbBE = 0, nbCBR = 0;
+    int nbVideo = 0, nbBE = 0, nbInternetFlow = 0;
     bool multi_priority = false;
-    int slices_per_qos = 5;
-    if (user_to_slice[idUE] < slices_per_qos) {
-      nbBE = 1;
+    int slices_per_group = 5;
+    if (user_to_slice[idUE] < slices_per_group) {
+      nbBE = nb_be_sliceA;
     }
-    else if (user_to_slice[idUE] < 2 * slices_per_qos) {
-      nbCBR = 1;
+    else if (user_to_slice[idUE] < 2 * slices_per_group) {
+      nbInternetFlow = nb_internetflow_sliceB;
     }
-    else if (user_to_slice[idUE] < 3 * slices_per_qos) {
-      nbCBR = 2;
+    else if (user_to_slice[idUE] < 3 * slices_per_group) {
+      nbInternetFlow = nb_internetflow_sliceC;
       multi_priority = true;
     }
-    else if (user_to_slice[idUE] < 4 * slices_per_qos) {
-      nbVideo = 1;
+    else if (user_to_slice[idUE] < 4 * slices_per_group) {
+      nbVideo = nb_videoflow_sliceD;
     }
 
     double posX = (double)rand() / RAND_MAX * radius * 1000 * 0.4 + 100;
@@ -491,8 +496,8 @@ static void SingleCellCustomize (
     }
 
     // *** constant bitrate flows following heavy-tail distributions
-    for (int j = 0; j < nbCBR; j++) {
-      double user_rate = 12.0 / (slice_users[user_to_slice[idUE]]);
+    for (int j = 0; j < nbInternetFlow; j++) {
+      double user_rate = internetFlowRate / (slice_users[user_to_slice[idUE]]);
       InternetFlow* ip_app = new InternetFlow();
       IPApplication.push_back(ip_app);
       ip_app->SetSource(gw);
@@ -512,7 +517,7 @@ static void SingleCellCustomize (
       // evenly divide average flow rate
       else {
         ip_app->SetPriority(0);
-        ip_app->SetAvgRate( user_rate / nbCBR );
+        ip_app->SetAvgRate( user_rate / nbInternetFlow );
       }
 
       QoSParameters* qosParameters = new QoSParameters();
@@ -544,7 +549,7 @@ static void SingleCellCustomize (
   eNBs->clear ();
   delete eNBs;
   delete frameManager;
-  //delete nm;
+  // delete nm;
   delete simulator;
   delete dlChannels;
   delete ulChannels;

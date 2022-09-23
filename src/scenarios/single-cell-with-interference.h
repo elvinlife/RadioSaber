@@ -54,23 +54,23 @@
 using std::pair;
 
 static void SingleCellWithInterference (
-    int nbCells,
     double radius,
-    int nbVideo, int nbBE, int nbCBR,
+    int nbVideo, int nbBE, int nbInternetFlow,
     int sched_type,
     int frame_struct,
     int speed,
     double maxDelay,
     int videoBitRate,
+    double internetFlowRate,
     int seed,
     string config_fname)
 {
   double duration = 12;
   double flow_duration = 12;
 
+  int nbCells = 1;
   int cluster = 3;
   double bandwidth = 100;
-  nbCells = 1;
 
   // CREATE COMPONENT MANAGER
   Simulator *simulator = Simulator::Init();
@@ -471,9 +471,9 @@ static void SingleCellWithInterference (
       beApplication++;
     }
 
-    // *** constant bitrate flows following heavy-tail distributions
-    for (int j = 0; j < nbCBR; j++) {
-      double flow_rate = 24.0 / (slice_users[user_to_slice[idUE]] * nbCBR);
+    // heavy tail distributed internet flows with const bitrate
+    for (int j = 0; j < nbInternetFlow; j++) {
+      double flow_rate = internetFlowRate / (slice_users[user_to_slice[idUE]] * nbInternetFlow);
       InternetFlow* ip_app = new InternetFlow();
       IPApplication.push_back(ip_app);
       ip_app->SetSource(gw);
@@ -495,6 +495,8 @@ static void SingleCellWithInterference (
         TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP
       );
       ip_app->SetClassifierParameters(cp);
+
+      std::cout << "CREATED InternetFlow APPLICATION, ID " << applicationID << std::endl;
 
       destinationPort ++;
       applicationID ++;
