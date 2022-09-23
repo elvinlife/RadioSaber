@@ -103,8 +103,9 @@ DownlinkNVSScheduler::~DownlinkNVSScheduler()
   Destroy ();
 }
 
-void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id)
+int DownlinkNVSScheduler::SelectSliceToServe()
 {
+  int slice_id = 0;
   double max_score = 0;
 
 #ifdef SCHEDULER_DEBUG
@@ -155,6 +156,7 @@ void DownlinkNVSScheduler::SelectSliceToServe(int& slice_id)
       slice_exp_time_[i] += beta_ * 1;
     }
   }
+  return slice_id;
 }
 
 void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
@@ -215,9 +217,8 @@ DownlinkNVSScheduler::DoSchedule (void)
 #endif
 
   // some logic to determine the slice to serve
-  int slice_serve = 0;
-  SelectSliceToServe(slice_serve);
-  UpdateAverageTransmissionRate ();
+  int slice_serve = SelectSliceToServe();
+  UpdateAverageTransmissionRate (slice_serve);
   SelectFlowsToSchedule (slice_serve);
 
   if (GetUsersToSchedule()->size() != 0) {
@@ -418,13 +419,18 @@ DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spect
 }
 
 void
-DownlinkNVSScheduler::UpdateAverageTransmissionRate ()
+DownlinkNVSScheduler::UpdateAverageTransmissionRate (int slice_serve)
 {
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
   {
+    // RadioBearer *bearer = (*it);
+    // int user_id = bearer->GetUserID();
+    // if (user_to_slice_[user_id] != slice_serve)
+    //   continue;
+
 	  RadioBearer *bearer = (*it);
     bearer->UpdateAverageTransmissionRate ();
   }

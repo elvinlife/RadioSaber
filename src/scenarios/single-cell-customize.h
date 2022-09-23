@@ -492,7 +492,7 @@ static void SingleCellCustomize (
 
     // *** constant bitrate flows following heavy-tail distributions
     for (int j = 0; j < nbCBR; j++) {
-      double user_rate = 10.0 / (slice_users[user_to_slice[idUE]]);
+      double user_rate = 12.0 / (slice_users[user_to_slice[idUE]]);
       InternetFlow* ip_app = new InternetFlow();
       IPApplication.push_back(ip_app);
       ip_app->SetSource(gw);

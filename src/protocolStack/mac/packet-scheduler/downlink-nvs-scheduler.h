@@ -39,13 +39,13 @@ private:
   bool      is_optimal_;
 
   // the beta_ for inter-slice scheduling
-  const double beta_ = 0.1;
+  const double beta_ = 0.01;
 
 public:
 	DownlinkNVSScheduler(std::string config_fname="", bool is_optimal = false);
 	virtual ~DownlinkNVSScheduler();
 
-	void SelectSliceToServe( int& );
+	int  SelectSliceToServe();
 	void SelectFlowsToSchedule ( int );
 
 	virtual void DoSchedule (void);
@@ -54,7 +54,7 @@ public:
 	virtual void RBsAllocation ();
 	virtual double ComputeSchedulingMetric (
 		UserToSchedule* user, double spectralEfficiency );
-	void UpdateAverageTransmissionRate ();
+	void UpdateAverageTransmissionRate (int);
 
   void RBsAllocationOptimalPF();
   double AssignRBsGivenMCS(std::vector<int>& assigned_mcs,
