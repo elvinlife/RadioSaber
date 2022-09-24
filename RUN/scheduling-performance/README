@@ -1,8 +1,0 @@
-
-- run simulations:
-	sh run.sh
-
-- elaborate simulations' output
-	sh postsim.sh
-
-- generate graphs using the makegraphs.m file (using Matlab)

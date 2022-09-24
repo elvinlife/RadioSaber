@@ -1,2 +1,0 @@
-rm -r output
-rm *~
