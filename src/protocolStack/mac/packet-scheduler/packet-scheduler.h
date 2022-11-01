@@ -37,6 +37,19 @@ class PacketBurst;
 class Packet;
 class RadioBearer;
 
+struct SchedulerAlgoParam {
+  int alpha;
+  int beta;
+  int epsilon;
+  int psi;
+  SchedulerAlgoParam(int _alpha, int _beta, int _epsilon, int _psi) {
+    alpha = _alpha;
+    beta = _beta;
+    epsilon = _epsilon;
+    psi = _psi;
+  }
+};
+
 class PacketScheduler {
 public:
 

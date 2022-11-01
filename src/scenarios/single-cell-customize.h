@@ -229,7 +229,6 @@ static void SingleCellCustomize (
   vector<InfiniteBuffer*> BEApplication;
   vector<InternetFlow*> IPApplication;
 
-  int voipApplication = 0;
   int videoApplication = 0;
   int beApplication = 0;
   int ipApplication = 0;

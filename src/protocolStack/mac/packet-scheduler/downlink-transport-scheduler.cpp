@@ -33,6 +33,7 @@
 #include "../../../core/spectrum/bandwidth-manager.h"
 #include "../../../flows/MacQueue.h"
 #include "../../../utility/eesm-effective-sinr.h"
+#include <jsoncpp/json/json.h>
 #include <cstdio>
 #include <utility>
 #include <fstream>
@@ -52,53 +53,35 @@ using coord_cqi_t = std::pair<coord_t, double>;
 DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname, int interslice_algo)
 {
   std::ifstream ifs(config_fname);
-  if (ifs.is_open()) {
-    std::string line;
-    while (std::getline(ifs, line)) {
-      if (line[0] == '#') {
-        continue;
-      }
-      std::string args;
-      std::istringstream iss(line);
-      iss >> args;
-      if (args == "num_slices:") {
-        iss >> num_slices_;
-      }
-      else if (args == "slice_weights:") {
-        for (int i = 0; i < num_slices_; ++i) {
-          iss >> slice_weights_[i];
-        }
-      }
-      else if (args == "slice_ues:") {
-        int begin_id = 0, num_ue;
-        for (int i = 0; i < num_slices_; ++i) {
-          iss >> num_ue;
-          for (int j = 0; j < num_ue; ++j) {
-            user_to_slice_[begin_id + j] = i;
-          }
-          begin_id += num_ue;
-        }
-      }
-      else if (args == "slice_algos:") {
-        int enterprise_algo;
-        for (int i = 0; i < num_slices_; ++i) {
-          iss >> enterprise_algo;
-          if (enterprise_algo == 0)
-            slice_algo_[i] = MT;
-          else if (enterprise_algo == 1)
-            slice_algo_[i] = PF;
-          else if (enterprise_algo == 2)
-            slice_algo_[i] = MLWDF;
-          else
-            slice_algo_[i] = PF;
-        }
-      }
+  Json::Reader reader;
+  Json::Value obj;
+  reader.parse(ifs, obj);
+  const Json::Value& ues_per_slice = obj["ues_per_slice"];
+  num_slices_ = ues_per_slice.size();
+  int begin_id = 0, num_ue;
+  for (int i = 0; i < num_slices_; i++) {
+    num_ue = ues_per_slice[i].asInt();
+    for (int j = 0; j < num_ue; j++) {
+      user_to_slice_[begin_id + j] = i;
+    }
+    begin_id += num_ue;
+  }
+  const Json::Value& slice_schemes = obj["slices"];
+  begin_id = 0;
+  for (int i = 0; i < slice_schemes.size(); i++) {
+    int n_slices = slice_schemes[i]["n_slices"].asInt();
+    for (int j = 0; j < n_slices; j++) {
+      slice_weights_.push_back(
+        slice_schemes[i]["weight"].asDouble()
+      );
+      slice_algo_params_.emplace_back(
+        slice_schemes[i]["algo_alpha"].asInt(),
+        slice_schemes[i]["algo_beta"].asInt(),
+        slice_schemes[i]["algo_epsilon"].asInt(),
+        slice_schemes[i]["algo_psi"].asInt()
+      );
     }
   }
-  else {
-    throw std::runtime_error("Fail to open configuration file.");
-  }
-  ifs.close();
   inter_sched_ = interslice_algo;
   SetMacEntity (0);
   CreateUsersToSchedule();

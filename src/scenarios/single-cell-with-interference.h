@@ -43,6 +43,7 @@
 #include "../phy/simple-error-model.h"
 #include "../channel/propagation-model/macrocell-urban-area-channel-realization.h"
 #include "../load-parameters.h"
+#include <jsoncpp/json/json.h>
 #include <queue>
 #include <fstream>
 #include <stdlib.h>
@@ -223,48 +224,33 @@ static void SingleCellWithInterference (
   vector<InfiniteBuffer*> BEApplication;
   vector<InternetFlow*> IPApplication;
 
-  int voipApplication = 0;
   int videoApplication = 0;
   int beApplication = 0;
   int ipApplication = 0;
   int destinationPort = 101;
   int applicationID = 0;
 
-  int num_slices;
+  int num_slices = 0, num_ue = 0;
   int user_to_slice[MAX_UES];
   int slice_users[MAX_SLICES];
   int total_ues = 0;
+
   std::ifstream ifs(config_fname);
-  std::string line;
-  // read the configuration file
-  if (ifs.is_open()) {
-    while (std::getline(ifs, line)) {
-      if (line[0] == '#') {
-        continue;
-      }
-      std::string args;
-      std::istringstream iss(line);
-      iss >> args;
-      if (args == "num_slices:") {
-        iss >> num_slices;
-      }
-      else if (args == "slice_ues:") {
-        int begin_id = 0;
-        for (int i = 0; i < num_slices; ++i) {
-          int num_ue;
-          iss >> num_ue;
-          for (int j = 0; j < num_ue; ++j) {
-            user_to_slice[begin_id + j] = i;
-          }
-          slice_users[i] = num_ue;
-          begin_id += num_ue;
-          total_ues += num_ue;
-        }
-      }
-    }
+  Json::Reader reader;
+  Json::Value obj;
+  if (!reader.parse(ifs, obj)) {
+    throw std::runtime_error("Error, failed to parse the json config file.");
   }
-  else {
-    throw std::runtime_error("Error, cannot open configuration file.");
+  const Json::Value& ues_per_slice = obj["ues_per_slice"];
+  num_slices = ues_per_slice.size();
+  std::cout << "num_slices:" << num_slices << std::endl;
+  for (int i = 0; i < num_slices; i++) {
+    num_ue = ues_per_slice[i].asInt();
+    for (int j = 0; j < num_ue; j++) {
+      user_to_slice[total_ues + j] = i;
+    }
+    slice_users[i] = num_ue;
+    total_ues += num_ue;
   }
 
   //Create GW
