@@ -24,11 +24,12 @@
 #define DLPFPACKETSCHEDULER_H_
 
 #include "downlink-packet-scheduler.h"
+#include <vector>
 
 class DL_PF_PacketScheduler : public DownlinkPacketScheduler {
 private:
-	int       user_to_slice_[MAX_UES];
-	int	      num_slices_ = 1;
+  std::vector<int>      user_to_slice_;
+	int                   num_slices_ = 1;
 
 	const double	beta_ = 0.1;
 

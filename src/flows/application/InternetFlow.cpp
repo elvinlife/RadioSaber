@@ -139,7 +139,7 @@ InternetFlow::Send (void)
 void
 InternetFlow::SetAvgRate(double rate)
 {
-  // Bytes / Mbps => *8 (us) => /1000000 (s)
+  // Bytes / Mbps => *8 (us) /1000000 (s)
   m_interval = InternetFlow::m_avg_flowsize / rate * 8 / 1000000;
   m_lambda = 1 / m_interval;
   m_distribute = std::exponential_distribution<double>(m_lambda);

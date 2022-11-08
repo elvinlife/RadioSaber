@@ -43,6 +43,7 @@
 #include <unordered_map>
 #include <limits>
 #include <cstring>
+#include <cmath>
 
 using std::vector;
 using std::unordered_map;
@@ -56,18 +57,17 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
   Json::Reader reader;
   Json::Value obj;
   reader.parse(ifs, obj);
+  ifs.close();
   const Json::Value& ues_per_slice = obj["ues_per_slice"];
   num_slices_ = ues_per_slice.size();
-  int begin_id = 0, num_ue;
+  int num_ue;
   for (int i = 0; i < num_slices_; i++) {
     num_ue = ues_per_slice[i].asInt();
     for (int j = 0; j < num_ue; j++) {
-      user_to_slice_[begin_id + j] = i;
+      user_to_slice_.push_back(i);
     }
-    begin_id += num_ue;
   }
   const Json::Value& slice_schemes = obj["slices"];
-  begin_id = 0;
   for (int i = 0; i < slice_schemes.size(); i++) {
     int n_slices = slice_schemes[i]["n_slices"].asInt();
     for (int j = 0; j < n_slices; j++) {
@@ -82,6 +82,11 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
       );
     }
   }
+  slice_priority_.resize(num_slices_);
+  std::fill(slice_priority_.begin(), slice_priority_.end(), 0);
+  slice_rbs_offset_.resize(num_slices_);
+  std::fill(slice_rbs_offset_.begin(), slice_rbs_offset_.end(), 0);
+
   inter_sched_ = interslice_algo;
   SetMacEntity (0);
   CreateUsersToSchedule();
@@ -99,13 +104,12 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 	std::cout << "\t Select Flows to schedule" << std::endl;
 #endif
 
-  //ClearFlowsToSchedule ();
   ClearUsersToSchedule();
 
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
-  memset(slice_priority_, 0, sizeof(int) * MAX_SLICES);
+  std::fill(slice_priority_.begin(), slice_priority_.end(), 0);
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
 	  //SELECT FLOWS TO SCHEDULE
@@ -521,6 +525,7 @@ DownlinkTransportScheduler::RBsAllocation()
     }
   }
 
+  std::cout << "slice_id, target_rbs, quota_rbgs: ";
   for (int i = 0; i < num_slices_; ++i) {
     std::cout << "(" << i << ", " << slice_target_rbs[i] << ", " << slice_quota_rbgs[i] << ") ";
   }
@@ -738,38 +743,22 @@ DownlinkTransportScheduler::ComputeSchedulingMetric(UserToSchedule* user, double
       averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
     }
   }
-
-  if (schedule_scheme_ == 0) {
-    switch (slice_algo_[slice_id]) {
-      case MT:
-        metric = spectralEfficiency;
-        break;
-      case PF:
-        metric = (spectralEfficiency * 180000.) / averageRate;
-        break;
-      default:
-        metric = spectralEfficiency;
-    }
+  spectralEfficiency = spectralEfficiency * 180000 / 1000; // set the unit to kbps
+  averageRate /= 1000.0; // set the unit of both params to kbps
+  SchedulerAlgoParam param = slice_algo_params_[slice_id];
+  if (param.alpha == 0) {
+    metric = pow(spectralEfficiency, param.epsilon) / pow(averageRate, param.psi);
   }
-  else if (schedule_scheme_ == 1) {
-    if (user->m_dataToTransmit[slice_priority_[slice_id]] == 0){
+  else {
+    // the prioritized flow has no packet, set metric to 0
+    if (user->m_dataToTransmit[slice_priority_[slice_id]] == 0) {
       metric = 0;
     }
     else {
-      if (slice_algo_[slice_id] == MT) {
-        metric = spectralEfficiency;
-      }
-      else if (slice_algo_[slice_id] == PF) {
-        metric = (spectralEfficiency * 180000.) / averageRate;
-      }
-      else if (slice_algo_[slice_id] == MLWDF) {
-        RadioBearer* bearer = user->m_bearers[slice_priority_[slice_id]];
-        double HoL = bearer->GetHeadOfLinePacketDelay();
-        metric = HoL * (spectralEfficiency * 180000.) / averageRate;
-      }
-      else {
-        throw std::runtime_error("Invalid Scheduling algorithm");
-      }
+      RadioBearer* bearer = user->m_bearers[slice_priority_[slice_id]];
+      double HoL = bearer->GetHeadOfLinePacketDelay();
+      metric = HoL * pow(spectralEfficiency, param.epsilon)
+          / pow(averageRate, param.psi);
     }
   }
   return metric;

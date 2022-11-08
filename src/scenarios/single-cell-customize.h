@@ -236,8 +236,8 @@ static void SingleCellCustomize (
   int applicationID = 0;
 
   int num_slices;
-  int user_to_slice[MAX_UES];
-  int slice_users[MAX_SLICES];
+  int user_to_slice[1000];
+  int slice_users[100];
   int total_ues = 0;
   std::ifstream ifs(config_fname);
   std::string line;

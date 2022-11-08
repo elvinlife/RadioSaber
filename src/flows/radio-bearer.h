@@ -78,7 +78,7 @@ private:
 	MacQueue *m_macQueue;
 
 	// Scheduler Information
-	double m_averageTransmissionRate;
+	double m_averageTransmissionRate;     // unit: bps
 	int m_transmittedBytes;
 	unsigned long m_cumulativeRBs;
 	unsigned long m_cumulativeBytes;

@@ -26,21 +26,14 @@
 #include <vector>
 
 class DownlinkTransportScheduler: public PacketScheduler {
-	enum Scheduler {MT, PF, TTA, MLWDF};
-
 private:
-	int       user_to_slice_[MAX_UES];
-	// double    slice_weights_[MAX_SLICES];
-	Scheduler slice_algo_[MAX_SLICES];
-	int       slice_priority_[MAX_SLICES];
-	double    slice_rbs_offset_[MAX_SLICES];
-
   // below use customizable scheduler params
+  int                             num_slices_ = 1;
+  std::vector<int>                user_to_slice_;
   std::vector<double>             slice_weights_;
   std::vector<SchedulerAlgoParam> slice_algo_params_;
-
-	int           num_slices_ = 1;
-	int           schedule_scheme_ = 1;
+  std::vector<int>                slice_priority_;
+  std::vector<double>             slice_rbs_offset_;
 
 	const double  beta_ = 0.1;
 	int           inter_sched_ = 0;

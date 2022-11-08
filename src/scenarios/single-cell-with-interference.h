@@ -52,17 +52,29 @@
 #include <sstream>
 #include <vector>
 #include <utility>
-using std::pair;
+
+struct SliceConfig {
+  int nb_video;
+  int nb_internetflow;
+  int nb_backlogflow;
+  int video_bitrate;
+  double if_bitrate;
+
+  SliceConfig(int _nb_video, int _nb_internetflow,
+              int _nb_backlogflow, int _video_bitrate,
+              double _if_bitrate)
+  : nb_video(_nb_video),
+    nb_internetflow(_nb_internetflow),
+    nb_backlogflow(_nb_backlogflow),
+    video_bitrate(_video_bitrate),
+    if_bitrate(_if_bitrate) {}
+};
 
 static void SingleCellWithInterference (
     double radius,
-    int nbVideo, int nbBE, int nbInternetFlow,
     int sched_type,
     int frame_struct,
     int speed,
-    double maxDelay,
-    int videoBitRate,
-    double internetFlowRate,
     int seed,
     string config_fname)
 {
@@ -97,26 +109,6 @@ static void SingleCellWithInterference (
     case 1:
       downlink_scheduler_type = ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR;
       std::cout << "Scheduler PF "<< std::endl;
-      break;
-    case 2:
-      downlink_scheduler_type = ENodeB::DLScheduler_TYPE_MLWDF;
-      std::cout << "Scheduler MLWDF "<< std::endl;
-      break;
-    case 3:
-      downlink_scheduler_type = ENodeB::DLScheduler_TYPE_EXP;
-      std::cout << "Scheduler EXP "<< std::endl;
-      break;
-    case 4:
-      downlink_scheduler_type = ENodeB::DLScheduler_TYPE_FLS;
-      std::cout << "Scheduler FLS "<< std::endl;
-      break;
-    case 5:
-      downlink_scheduler_type = ENodeB::DLScheduler_EXP_RULE;
-      std::cout << "Scheduler EXP_RULE "<< std::endl;
-      break;
-    case 6:
-      downlink_scheduler_type = ENodeB::DLScheduler_LOG_RULE;
-      std::cout << "Scheduler LOG RULE "<< std::endl;
       break;
     case 7:
       downlink_scheduler_type = ENodeB::DLScheduler_NVS;
@@ -224,15 +216,13 @@ static void SingleCellWithInterference (
   vector<InfiniteBuffer*> BEApplication;
   vector<InternetFlow*> IPApplication;
 
-  int videoApplication = 0;
-  int beApplication = 0;
-  int ipApplication = 0;
   int destinationPort = 101;
   int applicationID = 0;
-
   int num_slices = 0, num_ue = 0;
-  int user_to_slice[MAX_UES];
-  int slice_users[MAX_SLICES];
+
+  vector<int> user_to_slice;
+  vector<int> slice_users;
+  vector<SliceConfig> slice_configs;
   int total_ues = 0;
 
   std::ifstream ifs(config_fname);
@@ -247,10 +237,23 @@ static void SingleCellWithInterference (
   for (int i = 0; i < num_slices; i++) {
     num_ue = ues_per_slice[i].asInt();
     for (int j = 0; j < num_ue; j++) {
-      user_to_slice[total_ues + j] = i;
+      user_to_slice.push_back(i);
     }
-    slice_users[i] = num_ue;
+    slice_users.push_back(num_ue);
     total_ues += num_ue;
+  }
+  const Json::Value& slice_schemes = obj["slices"];
+  for (int i = 0; i < slice_schemes.size(); i++) {
+    int n_slices = slice_schemes[i]["n_slices"].asInt();
+    for (int j = 0; j < n_slices; j++) {
+      slice_configs.emplace_back(
+        slice_schemes[i]["video_app"].asInt(),
+        slice_schemes[i]["internet_flow"].asInt(),
+        slice_schemes[i]["backlog_flow"].asInt(),
+        slice_schemes[i]["video_bitrate"].asInt(),
+        slice_schemes[i]["if_bitrate"].asDouble()
+      );
+    }
   }
 
   //Create GW
@@ -303,8 +306,9 @@ static void SingleCellWithInterference (
     double start_time = 0.1;
     double duration_time = start_time + flow_duration;
 
+    SliceConfig config = slice_configs[user_to_slice[idUE]];
     // *** video application
-    for (int j = 0; j < nbVideo; j++) {
+    for (int j = 0; j < config.nb_video; j++) {
       // create application
       TraceBased* video_app = new TraceBased();
       VideoApplication.push_back(video_app);
@@ -318,7 +322,7 @@ static void SingleCellWithInterference (
       //string video_trace ("highway_H264_");
       //string video_trace ("mobile_H264_");
 
-      switch (videoBitRate)
+      switch (config.video_bitrate)
       {
         case 128: {
           string _file (path + "src/flows/application/Trace/" + video_trace + "128k.dat");
@@ -357,57 +361,6 @@ static void SingleCellWithInterference (
           break;
         }
       }
-      // create qos parameters
-      if (downlink_scheduler_type == ENodeB::DLScheduler_TYPE_FLS)
-      {
-        QoSForFLS *qos = new QoSForFLS ();
-        qos->SetMaxDelay (maxDelay);
-        if (maxDelay == 0.1)
-        {
-          std::cout << "Target Delay = 0.1 s, M = 9" << std::endl;
-          qos->SetNbOfCoefficients (9);
-        }
-        else if (maxDelay == 0.08)
-        {
-          std::cout << "Target Delay = 0.08 s, M = 7" << std::endl;
-          qos->SetNbOfCoefficients (7);
-        }
-        else if (maxDelay == 0.06)
-        {
-          std::cout << "Target Delay = 0.06 s, M = 5" << std::endl;
-          qos->SetNbOfCoefficients (5);
-        }
-        else if (maxDelay == 0.04)
-        {
-          std::cout << "Target Delay = 0.04 s, M = 3" << std::endl;
-          qos->SetNbOfCoefficients (3);
-        }
-        else
-        {
-          std::cout << "ERROR: target delay is not available"<< std::endl;
-          return;
-        }
-        video_app->SetQoSParameters (qos);
-      }
-      else if (downlink_scheduler_type == ENodeB::DLScheduler_TYPE_EXP)
-      {
-        QoSForEXP *qos = new QoSForEXP ();
-        qos->SetMaxDelay (maxDelay);
-        video_app->SetQoSParameters (qos);
-      }
-      else if (downlink_scheduler_type == ENodeB::DLScheduler_TYPE_MLWDF)
-      {
-        QoSForM_LWDF *qos = new QoSForM_LWDF ();
-        qos->SetMaxDelay (maxDelay);
-        video_app->SetQoSParameters (qos);
-      }
-      else
-      {
-        QoSParameters *qos = new QoSParameters ();
-        qos->SetMaxDelay (maxDelay);
-        video_app->SetQoSParameters (qos);
-      }
-
       //create classifier parameters
       ClassifierParameters *cp = new ClassifierParameters (gw->GetIDNetworkNode(),
           ue->GetIDNetworkNode(),
@@ -421,11 +374,10 @@ static void SingleCellWithInterference (
       //update counter
       destinationPort++;
       applicationID++;
-      videoApplication++;
     }
 
     // *** backlogged application
-    for (int j = 0; j < nbBE; j++) {
+    for (int j = 0; j < config.nb_backlogflow; j++) {
       // create application
       InfiniteBuffer* be_app = new InfiniteBuffer();
       BEApplication.push_back(be_app);
@@ -454,12 +406,11 @@ static void SingleCellWithInterference (
       //update counter
       destinationPort++;
       applicationID++;
-      beApplication++;
     }
 
     // heavy tail distributed internet flows with const bitrate
-    for (int j = 0; j < nbInternetFlow; j++) {
-      double flow_rate = internetFlowRate / (slice_users[user_to_slice[idUE]] * nbInternetFlow);
+    for (int j = 0; j < config.nb_internetflow; j++) {
+      double flow_rate = config.if_bitrate / config.nb_internetflow;
       InternetFlow* ip_app = new InternetFlow();
       IPApplication.push_back(ip_app);
       ip_app->SetSource(gw);
@@ -486,7 +437,6 @@ static void SingleCellWithInterference (
 
       destinationPort ++;
       applicationID ++;
-      ipApplication ++;
     }
   }
 

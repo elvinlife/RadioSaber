@@ -32,40 +32,26 @@
 #include "../../../phy/lte-phy.h"
 #include "../../../core/spectrum/bandwidth-manager.h"
 #include "../../../core/idealMessages/ideal-control-messages.h"
+#include <jsoncpp/json/json.h>
 #include <fstream>
 #include <sstream>
 
 DL_PF_PacketScheduler::DL_PF_PacketScheduler(std::string config_fname)
 {
-  std::ifstream ifs(config_fname, std::ifstream::in);
-  if (ifs.is_open()) {
-    std::string line;
-    while (std::getline(ifs, line)) {
-      if (line[0] == '#') {
-        continue;
-      }
-      std::string args;
-      std::istringstream iss(line);
-      iss >> args;
-      if (args == "num_slices:") {
-        iss >> num_slices_;
-      }
-      else if (args == "slice_ues:") {
-        int begin_id = 0, num_ue;
-        for (int i = 0; i < num_slices_; ++i) {
-          iss >> num_ue;
-          for (int j = 0; j < num_ue; ++j) {
-            user_to_slice_[begin_id + j] = i;
-          }
-          begin_id += num_ue;
-        }
-      }
+  std::ifstream ifs(config_fname);
+  Json::Reader reader;
+  Json::Value obj;
+  reader.parse(ifs, obj);
+  ifs.close();
+  const Json::Value& ues_per_slice = obj["ues_per_slice"];
+  num_slices_ = ues_per_slice.size();
+  int num_ue;
+  for (int i = 0; i < num_slices_; i++) {
+    num_ue = ues_per_slice[i].asInt();
+    for (int j = 0; j < num_ue; j++) {
+      user_to_slice_.push_back(i);
     }
   }
-  else {
-    throw std::runtime_error("Fail to open configuration file.");
-  }
-  ifs.close();
   SetMacEntity (0);
   CreateFlowsToSchedule ();
 }

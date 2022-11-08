@@ -110,21 +110,15 @@ main (int argc, char *argv[])
     if (strcmp(argv[1], "SingleCellWithI")==0)
     {
       double radius = atof(argv[2]);
-      int nbVideo = atoi(argv[3]);
-      int nbBE = atoi(argv[4]);
-      int nbInternetFlow = atoi(argv[5]);
-      int sched_type = atoi(argv[6]);
-      int frame_struct = atoi(argv[7]);
-      int speed = atoi(argv[8]);
-      double maxDelay = atof(argv[9]);
-      int videoBitRate = atoi(argv[10]);
-      double internetFlowRate = atof(argv[11]);
-      int seed = atoi(argv[12]);
-      string config_fname = string(argv[13]);
+      int sched_type = atoi(argv[3]);
+      int frame_struct = atoi(argv[4]);
+      int speed = atoi(argv[5]);
+      int seed = atoi(argv[6]);
+      string config_fname = string(argv[7]);
       SingleCellWithInterference(
-        radius, nbVideo, nbBE, nbInternetFlow,
-        sched_type, frame_struct, speed, maxDelay,
-        videoBitRate, internetFlowRate, seed, config_fname);
+        radius, sched_type,
+        frame_struct, speed,
+        seed, config_fname);
     }
     if (strcmp(argv[1], "SingleCellCustomize") == 0)
     {

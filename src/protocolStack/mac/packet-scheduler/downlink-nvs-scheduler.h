@@ -24,6 +24,8 @@
 
 #include "packet-scheduler.h"
 #include <vector>
+#define MAX_SLICES 100
+#define MAX_UES 1000
 
 class DownlinkNVSScheduler: public PacketScheduler {
 	enum Scheduler {MT, PF, TTA, MLWDF};
