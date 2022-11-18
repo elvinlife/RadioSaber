@@ -33,6 +33,7 @@
 #include "../../../core/spectrum/bandwidth-manager.h"
 #include "../../../flows/MacQueue.h"
 #include "../../../utility/eesm-effective-sinr.h"
+#include <jsoncpp/json/json.h>
 #include <cstdio>
 #include <limits>
 #include <fstream>
@@ -43,54 +44,42 @@
 
 DownlinkNVSScheduler::DownlinkNVSScheduler(std::string config_fname, bool is_nongreedy)
   : is_nongreedy_(is_nongreedy) {
-  std::ifstream ifs(config_fname, std::ifstream::in);
-  if (ifs.is_open()) {
-    std::string line;
-    while (std::getline(ifs, line)) {
-      if (line[0] == '#') {
-        continue;
-      }
-      std::string args;
-      std::istringstream iss(line);
-      iss >> args;
-      if (args == "num_slices:") {
-        iss >> num_slices_;
-      }
-      else if (args == "slice_weights:") {
-        for (int i = 0; i < num_slices_; ++i) {
-          iss >> slice_weights_[i];
-        }
-      }
-      else if (args == "slice_ues:") {
-        int begin_id = 0, num_ue;
-        for (int i = 0; i < num_slices_; ++i) {
-          iss >> num_ue;
-          for (int j = 0; j < num_ue; ++j) {
-            user_to_slice_[begin_id + j] = i;
-          }
-          begin_id += num_ue;
-        }
-      }
-      else if (args == "slice_algos:") {
-        int algo;
-        for (int i = 0; i < num_slices_; ++i) {
-          iss >> algo;
-          if (algo == 0)
-            slice_algo_[i] = MT;
-          else if (algo == 1)
-            slice_algo_[i] = PF;
-          else if (algo == 2)
-            slice_algo_[i] = MLWDF;
-          else
-            slice_algo_[i] = PF;
-        }
-      }
-    }
-  }
-  else {
+  std::ifstream ifs(config_fname);
+  if (!ifs.is_open()) {
     throw std::runtime_error("Fail to open configuration file.");
   }
+  Json::Reader reader;
+  Json::Value obj;
+  reader.parse(ifs, obj);
   ifs.close();
+  const Json::Value& ues_per_slice = obj["ues_per_slice"];
+  num_slices_ = ues_per_slice.size();
+  int num_ue;
+  for (int i = 0; i < num_slices_; i++) {
+    num_ue = ues_per_slice[i].asInt();
+    for (int j = 0; j < num_ue; j++) {
+      user_to_slice_.push_back(i);
+    }
+  }
+  const Json::Value& slice_schemes = obj["slices"];
+  for (int i = 0; i < slice_schemes.size(); i++) {
+    int n_slices = slice_schemes[i]["n_slices"].asInt();
+    for (int j = 0; j < n_slices; j++) {
+      slice_weights_.push_back(
+        slice_schemes[i]["weight"].asDouble()
+      );
+      slice_algo_params_.emplace_back(
+        slice_schemes[i]["algo_alpha"].asInt(),
+        slice_schemes[i]["algo_beta"].asInt(),
+        slice_schemes[i]["algo_epsilon"].asInt(),
+        slice_schemes[i]["algo_psi"].asInt()
+      );
+    }
+  }
+  slice_priority_.resize(num_slices_);
+  std::fill(slice_priority_.begin(), slice_priority_.end(), 0);
+  slice_ewma_time_.resize(num_slices_);
+  std::fill(slice_ewma_time_.begin(), slice_ewma_time_.end(), 0);
 
   SetMacEntity (0);
   CreateUsersToSchedule();
@@ -105,12 +94,6 @@ int DownlinkNVSScheduler::SelectSliceToServe()
 {
   int slice_id = 0;
   double max_score = 0;
-
-#ifdef SCHEDULER_DEBUG
-  for(int i = 0; i < num_type2_slices_; ++i) {
-    std::cout << i << ": weight: " << type2_weights_[i] << " time: " << type2_exp_time_[i] << std::endl;
-  }
-#endif
 
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
@@ -135,12 +118,12 @@ int DownlinkNVSScheduler::SelectSliceToServe()
   }
   for (int i = 0; i < num_slices_; ++i) {
     if (! slice_with_queue[i]) continue;
-    if (slice_exp_time_[i] == 0) {
+    if (slice_ewma_time_[i] == 0) {
       slice_id = i;
       break;
     }
     else {
-      double score = slice_weights_[i] / slice_exp_time_[i];
+      double score = slice_weights_[i] / slice_ewma_time_[i];
       if (score >= max_score) {
         max_score = score;
         slice_id = i;
@@ -149,9 +132,9 @@ int DownlinkNVSScheduler::SelectSliceToServe()
   }
   for (int i = 0; i < num_slices_; ++i) {
     if (! slice_with_queue[i]) continue;
-    slice_exp_time_[i] = (1-beta_) * slice_exp_time_[i];
+    slice_ewma_time_[i] = (1-beta_) * slice_ewma_time_[i];
     if (i == slice_id) {
-      slice_exp_time_[i] += beta_ * 1;
+      slice_ewma_time_[i] += beta_ * 1;
     }
   }
   return slice_id;
@@ -159,12 +142,15 @@ int DownlinkNVSScheduler::SelectSliceToServe()
 
 void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
 {
-  ClearUsersToSchedule();
+#ifdef SCHEDULER_DEBUG
+	std::cout << "\t Select Flows to schedule" << std::endl;
+#endif
 
+  ClearUsersToSchedule();
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
-  memset(slice_priority_, 0, sizeof(int) * MAX_SLICES);
+  std::fill(slice_priority_.begin(), slice_priority_.end(), 0);
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
 	{
 	  //SELECT FLOWS TO SCHEDULE
@@ -174,7 +160,7 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
     if (user_to_slice_[user_id] != slice_serve)
       continue;
 
-	  if (bearer->HasPackets () && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE) {
+	  if (bearer->HasPackets() && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE) {
 		  //compute data to transmit
 		  int dataToTransmit;
 		  if (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER) {
@@ -186,13 +172,14 @@ void DownlinkNVSScheduler::SelectFlowsToSchedule (int slice_serve)
 
 		  //compute spectral efficiency
 		  ENodeB *enb = (ENodeB*) GetMacEntity ()->GetDevice ();
-		  ENodeB::UserEquipmentRecord *ueRecord = enb->GetUserEquipmentRecord (bearer->GetDestination ()->GetIDNetworkNode ());
+		  ENodeB::UserEquipmentRecord *ueRecord = 
+        enb->GetUserEquipmentRecord (bearer->GetDestination ()->GetIDNetworkNode ());
 		  std::vector<double> spectralEfficiency;
 		  std::vector<int> cqiFeedbacks = ueRecord->GetCQI ();
 		  int numberOfCqi = cqiFeedbacks.size ();
+      AMCModule *amc = GetMacEntity()->GetAmcModule();
 		  for (int i = 0; i < numberOfCqi; i++) {
-			  double sEff = GetMacEntity ()->GetAmcModule ()->GetEfficiencyFromCQI (cqiFeedbacks.at (i));
-			  spectralEfficiency.push_back (sEff);
+        spectralEfficiency.push_back(amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
 			}
 
 		  //create flow to scheduler record
@@ -374,43 +361,29 @@ double
 DownlinkNVSScheduler::ComputeSchedulingMetric(UserToSchedule* user, double spectralEfficiency)
 {
   double metric = 0;
+  double averageRate = 1;
   int slice_id = user_to_slice_[user->GetUserID()];
-  // get the aggregate transmission rate of all flows
-  double average_rate = user->GetAverageTransmissionRate();
-
-  if (schedule_scheme_ == 0) {
-    switch (slice_algo_[slice_id]) {
-      case MT:
-        metric = spectralEfficiency;
-        break;
-      case PF:
-        metric = (spectralEfficiency * 180000.) / average_rate;
-        break;
-      default:
-        metric = spectralEfficiency;
+  for (int i = 0; i < MAX_BEARERS; ++i) {
+    if (user->m_bearers[i]) {
+      averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
     }
   }
-  else if (schedule_scheme_ == 1) {
-    // select the highest priority first
-    // if the user doesn't have data with slice_priority_, it's not scheduled at all
-    if (user->m_dataToTransmit[slice_priority_[slice_id]] == 0){
+  spectralEfficiency = spectralEfficiency * 180000 / 1000; // set the unit to kbps
+  averageRate /= 1000.0; // set the unit of both params to kbps
+  SchedulerAlgoParam param = slice_algo_params_[slice_id];
+  if (param.alpha == 0) {
+    metric = pow(spectralEfficiency, param.epsilon) / pow(averageRate, param.psi);
+  }
+  else {
+    // the prioritized flow has no packet, set metric to 0
+    if (user->m_dataToTransmit[slice_priority_[slice_id]] == 0) {
       metric = 0;
     }
     else {
-      if (slice_algo_[slice_id] == MT) {
-        metric = spectralEfficiency;
-      }
-      else if (slice_algo_[slice_id] == PF) {
-        metric = (spectralEfficiency * 180000.) / average_rate;
-      }
-      else if (slice_algo_[slice_id] == MLWDF) {
-        RadioBearer* bearer = user->m_bearers[slice_priority_[slice_id]];
-        double HoL = bearer->GetHeadOfLinePacketDelay();
-        metric = HoL * (spectralEfficiency * 180000.) / average_rate;
-      }
-      else {
-        throw std::runtime_error("Invalid Scheduling algorithm");
-      }
+      RadioBearer* bearer = user->m_bearers[slice_priority_[slice_id]];
+      double HoL = bearer->GetHeadOfLinePacketDelay();
+      metric = HoL * pow(spectralEfficiency, param.epsilon)
+          / pow(averageRate, param.psi);
     }
   }
   return metric;
@@ -424,11 +397,6 @@ DownlinkNVSScheduler::UpdateAverageTransmissionRate (int slice_serve)
 
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
   {
-    // RadioBearer *bearer = (*it);
-    // int user_id = bearer->GetUserID();
-    // if (user_to_slice_[user_id] != slice_serve)
-    //   continue;
-
 	  RadioBearer *bearer = (*it);
     bearer->UpdateAverageTransmissionRate ();
   }

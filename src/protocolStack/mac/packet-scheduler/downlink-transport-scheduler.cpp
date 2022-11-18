@@ -54,6 +54,9 @@ using coord_cqi_t = std::pair<coord_t, double>;
 DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname, int interslice_algo)
 {
   std::ifstream ifs(config_fname);
+  if (!ifs.is_open()) {
+    throw std::runtime_error("Fail to open configuration file.");
+  }
   Json::Reader reader;
   Json::Value obj;
   reader.parse(ifs, obj);
@@ -105,38 +108,33 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 #endif
 
   ClearUsersToSchedule();
-
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
   std::fill(slice_priority_.begin(), slice_priority_.end(), 0);
-  for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++)
-	{
+  for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++) {
 	  //SELECT FLOWS TO SCHEDULE
 	  RadioBearer *bearer = (*it);
 
-	  if (bearer->HasPackets() && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE)
-		{
+	  if (bearer->HasPackets() && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE) {
 		  //compute data to transmit
 		  int dataToTransmit;
-		  if (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-			{
+		  if (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER) {
 			  dataToTransmit = 100000000;
 			}
-		  else
-			{
+		  else {
 			  dataToTransmit = bearer->GetQueueSize ();
 			}
 
 		  //compute spectral efficiency
 		  ENodeB *enb = (ENodeB*) GetMacEntity ()->GetDevice ();
-		  ENodeB::UserEquipmentRecord *ueRecord = enb->GetUserEquipmentRecord (bearer->GetDestination ()->GetIDNetworkNode ());
+		  ENodeB::UserEquipmentRecord *ueRecord =
+        enb->GetUserEquipmentRecord (bearer->GetDestination ()->GetIDNetworkNode ());
 		  std::vector<double> spectralEfficiency;
 		  std::vector<int> cqiFeedbacks = ueRecord->GetCQI ();
 		  int numberOfCqi = cqiFeedbacks.size ();
       AMCModule *amc = GetMacEntity()->GetAmcModule();
-		  for (int i = 0; i < numberOfCqi; i++)
-			{
+		  for (int i = 0; i < numberOfCqi; i++) {
         spectralEfficiency.push_back(amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
 			}
       
@@ -148,7 +146,6 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule ()
       InsertFlowToUser(bearer, dataToTransmit, spectralEfficiency, cqiFeedbacks);
 		}
 	}
-  //std::cerr << std::endl;
 }
 
 void
@@ -162,12 +159,9 @@ DownlinkTransportScheduler::DoSchedule (void)
   UpdateAverageTransmissionRate ();
   SelectFlowsToSchedule ();
 
-  if (GetUsersToSchedule()->size() == 0)
-	{}
-  else
-	{
-	  RBsAllocation ();
-	}
+  if (GetUsersToSchedule()->size() != 0) {
+    RBsAllocation ();
+  }
 
   StopSchedule ();
 }

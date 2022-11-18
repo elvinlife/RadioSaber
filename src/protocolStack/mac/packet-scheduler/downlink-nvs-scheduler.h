@@ -24,23 +24,19 @@
 
 #include "packet-scheduler.h"
 #include <vector>
-#define MAX_SLICES 100
-#define MAX_UES 1000
 
 class DownlinkNVSScheduler: public PacketScheduler {
-	enum Scheduler {MT, PF, TTA, MLWDF};
 private:
-	int       user_to_slice_[MAX_UES];
-	double    slice_weights_[MAX_SLICES];
-	double    slice_exp_time_[MAX_SLICES];
-	Scheduler slice_algo_[MAX_SLICES];
-  
-	int       slice_priority_[MAX_SLICES];
-	int       num_slices_ = 0;
-	int       schedule_scheme_ = 1;
-  bool      is_nongreedy_;
+  // below use customizable scheduler params
+  int                             num_slices_ = 1;
+  std::vector<int>                user_to_slice_;
+  std::vector<double>             slice_weights_;
+  std::vector<SchedulerAlgoParam> slice_algo_params_;
+  std::vector<int>                slice_priority_;
+  std::vector<double>             slice_ewma_time_;
 
-  // the beta_ for inter-slice scheduling
+  bool      is_nongreedy_;
+  // the ewma beta for inter-slice scheduling
   const double beta_ = 0.01;
 
 public:
