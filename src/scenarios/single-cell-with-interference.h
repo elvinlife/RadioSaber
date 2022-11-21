@@ -57,17 +57,14 @@ struct SliceConfig {
   int nb_video;
   int nb_internetflow;
   int nb_backlogflow;
-  int video_bitrate;
-  double if_bitrate;
+  std::vector<int>      video_bitrate;    // the video bitrate of a single user
+  std::vector<double>   if_bitrate;       // the aggregate data rate of the slice
 
   SliceConfig(int _nb_video, int _nb_internetflow,
-              int _nb_backlogflow, int _video_bitrate,
-              double _if_bitrate)
+              int _nb_backlogflow)
   : nb_video(_nb_video),
     nb_internetflow(_nb_internetflow),
-    nb_backlogflow(_nb_backlogflow),
-    video_bitrate(_video_bitrate),
-    if_bitrate(_if_bitrate) {}
+    nb_backlogflow(_nb_backlogflow) {}
 };
 
 static void SingleCellWithInterference (
@@ -76,11 +73,9 @@ static void SingleCellWithInterference (
     int frame_struct,
     int speed,
     int seed,
+    double duration,
     string config_fname)
 {
-  double duration = 12;
-  double flow_duration = 12;
-
   int nbCells = 1;
   int cluster = 3;
   double bandwidth = 100;
@@ -115,7 +110,7 @@ static void SingleCellWithInterference (
       std::cout << "Scheduler NVS " << std::endl;
       break;
     case 8:
-      downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
+      downlink_scheduler_type = ENodeB::DLScheduler_SEQUENTIAL;
       std::cout << "Scheduler Greedy " << std::endl;
       break;
     case 9:
@@ -127,7 +122,7 @@ static void SingleCellWithInterference (
       std::cout << "Scheduler UpperBound " << std::endl;
       break;
     case 11:
-      downlink_scheduler_type = ENodeB::DLScheduler_NVS_OPTIMAL;
+      downlink_scheduler_type = ENodeB::DLScheduler_NVS_NONGREEDY;
       std::cout << "Scheduler Vogel " << std::endl;
       break;
     default:
@@ -246,19 +241,28 @@ static void SingleCellWithInterference (
   for (int i = 0; i < slice_schemes.size(); i++) {
     int n_slices = slice_schemes[i]["n_slices"].asInt();
     for (int j = 0; j < n_slices; j++) {
-      slice_configs.emplace_back(
-        slice_schemes[i]["video_app"].asInt(),
+      SliceConfig config(slice_schemes[i]["video_app"].asInt(),
         slice_schemes[i]["internet_flow"].asInt(),
-        slice_schemes[i]["backlog_flow"].asInt(),
-        slice_schemes[i]["video_bitrate"].asInt(),
-        slice_schemes[i]["if_bitrate"].asDouble()
+        slice_schemes[i]["backlog_flow"].asInt()
       );
+      const Json::Value& video_bitrate = slice_schemes[i]["video_bitrate"];
+      for (int k = 0; k < video_bitrate.size(); k++) {
+        config.video_bitrate.push_back(video_bitrate[k].asInt());
+      }
+      const Json::Value& if_bitrate = slice_schemes[i]["if_bitrate"];
+      for (int k = 0; k < if_bitrate.size(); k++) {
+        config.if_bitrate.push_back(if_bitrate[k].asDouble());
+      }
+      slice_configs.push_back(config);
     }
   }
 
   //Create GW
   Gateway *gw = new Gateway ();
   nm->GetGatewayContainer ()->push_back (gw);
+
+  double start_time = 0.1;
+  double duration_time = start_time + duration;
 
   for (int idUE = 0; idUE < total_ues; idUE++)
   {
@@ -303,9 +307,6 @@ static void SingleCellWithInterference (
     eNBs->at (0)->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
 
     // CREATE DOWNLINK APPLICATION FOR THIS UE
-    double start_time = 0.1;
-    double duration_time = start_time + flow_duration;
-
     SliceConfig config = slice_configs[user_to_slice[idUE]];
     // *** video application
     for (int j = 0; j < config.nb_video; j++) {
@@ -322,7 +323,7 @@ static void SingleCellWithInterference (
       //string video_trace ("highway_H264_");
       //string video_trace ("mobile_H264_");
 
-      switch (config.video_bitrate)
+      switch (config.video_bitrate[j])
       {
         case 128: {
           string _file (path + "src/flows/application/Trace/" + video_trace + "128k.dat");
@@ -369,7 +370,8 @@ static void SingleCellWithInterference (
           TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
       video_app->SetClassifierParameters (cp);
 
-      std::cout << "CREATED VIDEO APPLICATION, ID " << applicationID << std::endl;
+      std::cout << "CREATED VIDEO APPLICATION, ID " << applicationID
+        << " Video Bitrate: " << config.video_bitrate[j] << " Kbps" << std::endl;
 
       //update counter
       destinationPort++;
@@ -410,7 +412,7 @@ static void SingleCellWithInterference (
 
     // heavy tail distributed internet flows with const bitrate
     for (int j = 0; j < config.nb_internetflow; j++) {
-      double flow_rate = config.if_bitrate / config.nb_internetflow;
+      double flow_rate = config.if_bitrate[j] / slice_users[user_to_slice[idUE]];
       InternetFlow* ip_app = new InternetFlow();
       IPApplication.push_back(ip_app);
       ip_app->SetSource(gw);
@@ -419,7 +421,7 @@ static void SingleCellWithInterference (
       ip_app->SetStartTime(start_time);
       ip_app->SetStopTime(duration_time);
       ip_app->SetAvgRate(flow_rate);
-      ip_app->SetPriority(0);
+      ip_app->SetPriority(j);
 
       QoSParameters* qosParameters = new QoSParameters();
       ip_app->SetQoSParameters(qosParameters);
@@ -433,14 +435,15 @@ static void SingleCellWithInterference (
       );
       ip_app->SetClassifierParameters(cp);
 
-      std::cout << "CREATED InternetFlow APPLICATION, ID " << applicationID << std::endl;
+      std::cout << "CREATED InternetFlow APPLICATION, ID " << applicationID
+        << " Flow Rate: " << flow_rate << " Mbps" << std::endl;
 
       destinationPort ++;
       applicationID ++;
     }
   }
 
-  simulator->SetStop(duration);
+  simulator->SetStop(duration_time);
   simulator->Run ();
 
   //Delete created objects

@@ -128,7 +128,7 @@ static void SingleCellCustomize (
       std::cout << "Scheduler NVS " << std::endl;
       break;
     case 8:
-      downlink_scheduler_type = ENodeB::DLScheduler_GREEDY;
+      downlink_scheduler_type = ENodeB::DLScheduler_SEQUENTIAL;
       std::cout << "Scheduler Greedy " << std::endl;
       break;
     case 10:

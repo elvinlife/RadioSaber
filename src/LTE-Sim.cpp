@@ -114,11 +114,13 @@ main (int argc, char *argv[])
       int frame_struct = atoi(argv[4]);
       int speed = atoi(argv[5]);
       int seed = atoi(argv[6]);
-      string config_fname = string(argv[7]);
+      double duration = atof(argv[7]);
+      string config_fname = string(argv[8]);
       SingleCellWithInterference(
         radius, sched_type,
         frame_struct, speed,
-        seed, config_fname);
+        seed, duration,
+        config_fname);
     }
     if (strcmp(argv[1], "SingleCellCustomize") == 0)
     {

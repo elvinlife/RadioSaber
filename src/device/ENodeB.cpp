@@ -348,13 +348,13 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
         mac->SetDownlinkPacketScheduler( scheduler );
         break;
 
-      case ENodeB::DLScheduler_NVS_OPTIMAL:
+      case ENodeB::DLScheduler_NVS_NONGREEDY:
         scheduler = new DownlinkNVSScheduler(config_fname, true);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
         break;
 
-      case ENodeB::DLScheduler_GREEDY:
+      case ENodeB::DLScheduler_SEQUENTIAL:
         scheduler = new DownlinkTransportScheduler(config_fname, 0);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
