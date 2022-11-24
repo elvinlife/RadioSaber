@@ -87,7 +87,7 @@ DL_PF_PacketScheduler::DoStopSchedule (void)
       int user_id = flow->GetBearer()->GetUserID();
 
       std::cerr << GetTimeStamp()
-          << " flow: " << app_id
+          << " app: " << app_id
           << " cumu_bytes: " << flow->GetBearer()->GetCumulateBytes()
           << " cumu_rbs: " << flow->GetBearer()->GetCumulateRBs()
           << " hol_delay: " << flow->GetBearer()->GetHeadOfLinePacketDelay()

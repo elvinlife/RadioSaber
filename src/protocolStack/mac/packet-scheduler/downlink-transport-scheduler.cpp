@@ -190,9 +190,9 @@ DownlinkTransportScheduler::DoStopSchedule(void)
             );
         std::cerr << GetTimeStamp()
           << " app: " << user->m_bearers[i]->GetApplication()->GetApplicationID()
-          << " bytes: " << user->m_bearers[i]->GetCumulateBytes()
-          << " rbs: " << user->m_bearers[i]->GetCumulateRBs()
-          << " delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
+          << " cumu_bytes: " << user->m_bearers[i]->GetCumulateBytes()
+          << " cumu_rbs: " << user->m_bearers[i]->GetCumulateRBs()
+          << " hol_delay: " << user->m_bearers[i]->GetHeadOfLinePacketDelay()
           << " user: " << user->GetUserID()
           << " slice: " << user_to_slice_[user->GetUserID()]
           << std::endl;
