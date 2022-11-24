@@ -750,9 +750,15 @@ DownlinkTransportScheduler::ComputeSchedulingMetric(UserToSchedule* user, double
     }
     else {
       RadioBearer* bearer = user->m_bearers[slice_priority_[slice_id]];
-      double HoL = bearer->GetHeadOfLinePacketDelay();
-      metric = HoL * pow(spectralEfficiency, param.epsilon)
+      if (param.beta) {
+        double HoL = bearer->GetHeadOfLinePacketDelay();
+        metric = HoL * pow(spectralEfficiency, param.epsilon)
           / pow(averageRate, param.psi);
+      }
+      else {
+        metric = pow(spectralEfficiency, param.epsilon)
+          / pow(averageRate, param.psi);
+      }
     }
   }
   return metric;
