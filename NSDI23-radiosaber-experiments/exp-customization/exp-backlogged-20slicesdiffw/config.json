@@ -1,0 +1,23 @@
+{
+  "slices":
+  [
+    {
+      "n_slices": 10, "weight": 0.025,
+      "video_app": 0, "video_bitrate": 0,
+      "internet_flow": 0, "if_bitrate": 0,
+      "backlog_flow": 1,
+      "algo_alpha": 0, "algo_beta": 0, "algo_epsilon": 1, "algo_psi": 0
+    },
+    {
+      "n_slices": 10, "weight": 0.075,
+      "video_app": 0, "video_bitrate": 0,
+      "internet_flow": 0, "if_bitrate": 0,
+      "backlog_flow": 1,
+      "algo_alpha": 0, "algo_beta": 0, "algo_epsilon": 1, "algo_psi": 1
+    }
+  ],
+  "ues_per_slice":
+  [
+    5, 6, 6, 10, 7, 15, 9, 9, 14, 8, 14, 5, 14, 15, 7, 11, 15, 11, 13, 10
+  ]
+}

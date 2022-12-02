@@ -44,5 +44,6 @@ TOOLS/make_sum
 *.png
 *.backup
 
-NSDI23-radiosaber-experiments
+*.pdf
+*.py
 pbecc-traces-noise0/mapping.config
