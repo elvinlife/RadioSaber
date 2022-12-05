@@ -1,0 +1,16 @@
+{
+  "slices":
+  [
+    {
+      "n_slices": 20, "weight": 0.05,
+      "video_app": 0, "video_bitrate": 0,
+      "internet_flow": 1, "if_bitrate": [24],
+      "backlog_flow": 0,
+      "algo_alpha": 0, "algo_beta": 0, "algo_epsilon": 1, "algo_psi": 1
+    }
+  ],
+  "ues_per_slice":
+  [
+    8, 7, 15, 9, 8, 14, 6, 10, 15, 12, 15, 12, 5, 5, 11, 11, 9, 6, 11, 8 
+  ]
+}
