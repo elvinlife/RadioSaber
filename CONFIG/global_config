@@ -54,6 +54,8 @@ static bool _channel_AWGN_ = false;
 //#define TEST_DL_SINR
 
 #define USE_REAL_TRACE
+// #define FIRST_SYNTHETIC_EXP
+// #define SECOND_SYNTHETIC_EXP
 
 #endif /* PARAMETERS_H_ */
                            
