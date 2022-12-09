@@ -1,7 +1,25 @@
-RadioSaber is State-of-the-Art 5G RAN slicing algorithm that achieves high spectrum efficiency, ensures weighted fairness among slices subject to their SLA(service-level-agreement), and allow slices to customize their scheduling policies. For more details, please check our paper published in NSDI'2023.
+# RadioSaber
+![Status](https://img.shields.io/badge/Version-Experimental-green.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+RadioSaber is State-of-the-Art 5G RAN slicing algorithm that achieves high spectrum efficiency, ensures weighted fairness among slices subject to their SLA(service-level-agreement), and allows slices to customize their scheduling policies. For more details, please check our paper published in NSDI'2023.
+
+- [RadioSaber](#radiosaber)
+  * [Overview of RadioSaber](#overview-of-radiosaber)
+  * [Software Installation](#software-installation)
+  * [How to run RadioSaber](#how-to-run-radiosaber)
+  * [Experiments and Reproducibility](#experiments-and-reproducibility)
+    + [Spectrum Efficiency and Fairness(Sec 6.1):](#spectrum-efficiency-and-fairness-sec-61--)
+    + [Diverse Enterprise Schedulers(Sec 6.2):](#diverse-enterprise-schedulers-sec-62--)
+    + [What Makes RadioSaber Win Over NVS(Sec 6.3):](#what-makes-radiosaber-win-over-nvs-sec-63--)
+    + [Varying Number of Slices and UEs per Slice(Sec 6.4)](#varying-number-of-slices-and-ues-per-slice-sec-64-)
+    + [Non-greedy Enterprise Schedulers(Sec 6.5)](#non-greedy-enterprise-schedulers-sec-65-)
+    + [Is There a Better Inter-Slice Scheduler?(Sec 6.6)](#is-there-a-better-inter-slice-scheduler--sec-66-)
+    + [Scheduling Latency and Overhead(Sec 6.7)](#scheduling-latency-and-overhead-sec-67-)
+  * [Contact](#contact)
 
 ## Overview of RadioSaber
-RadioSaber is built upon LTE-Sim, an open source framework to simulate the Radio Access networks in LTE. LTE-Sim simulates all the software stacks in RAN(PDCP, RLC, MAC and RRC), channel propagation model in the physical layer, diverse applications with different QoS requirements, user mobility, etc. Here, RadioSaber mostly focuses on the flow scheduling policy in the MAC layer. To capture the flow scheduling scenario of 5G base stations in real world, we extend the LTE-Sim to support 100MHz downlink in cells, allocation of RBGs(resource block group) instead of RBs(resource block), subband CQI report mechanism, and to use real channel quality traces collected with SDR(software defined radios)
+RadioSaber is built upon LTE-Sim, an open-source framework to simulate the Radio Access networks in LTE. LTE-Sim simulates all the software stacks in RAN(PDCP, RLC, MAC, and RRC), channel propagation model in the physical layer, diverse applications with different QoS requirements, user mobility, etc. Here, RadioSaber mostly focuses on the flow scheduling policy in the MAC layer. To capture the flow scheduling scenario of 5G base stations in the real world, we extend the LTE-Sim to support 100MHz downlink in cells, allocation of RBGs(resource block group) instead of RBs(resource block), subband CQI report mechanism, and use real channel quality traces collected with SDR(software defined radios)
 
 ## Software Installation
 Currently, RadioSaber is only tested and supported in Ubuntu environment
@@ -14,7 +32,6 @@ make -j8
 ```
 
 ## How to run RadioSaber
-
 Since RadioSaber is built upon LTE-Sim, there is a lot legacy code we won't use. After you've built RadioSaber, run the following command to start an experiment:
 
 ```
@@ -30,24 +47,48 @@ Parameters:
   * 8: Sequential, a channel-aware inter-slice scheduler that has lower time complexity and lower spectrum efficiency
   * 9: RadioSaber, our channel-aware inter-slice scheduler
   * 10: Upperbound, an impractical scheme that offers an upper-bound on the spectrum efficiency that any inter-slice scheduler can achieve
-  * 11: NVS-Nongreedy, the inter-slice scheduler applies NVS while enterprise schedulers apply non-greedy proportional fairness algorithm proposed by [Mobicom18](https://dl.acm.org/doi/abs/10.1145/3241539.3241552)
+  * 11: NVS-Nongreedy, the inter-slice scheduler applies NVS while enterprise schedulers apply a non-greedy proportional fairness algorithm proposed by [Mobicom18](https://dl.acm.org/doi/abs/10.1145/3241539.3241552)
 * frame struct: the cellular applies FDD or TDD. It must be set to 1 to apply FDD
-* mobility speed: the mobility speed of UEs. It doesn't matter here since the CQI of UEs are traced collected from SDR instead of being simulated by the simulator
+* mobility speed: the mobility speed of UEs. If the simulator uses collected CQI traces instead of simulating the channel quality, then it doesn't matter.
 * random seed: random seed
-* config file: a json-based configuration file
+* config file: a JSON-based configuration file
 
 Config File:
 
-The config file is in JSON file format. It configures the scheduling algorithm, number of UEs, weight of every slice, and how UEs in every slice instantiate applications and flows.
+The config file is in JSON file format. It configures the scheduling algorithm, number of UEs, the weight of every slice, and how UEs in every slice instantiate applications and flows.
 
 ## Experiments and Reproducibility
+### Spectrum Efficiency and Fairness(Sec 6.1):
+* Change the working directory: ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/exp-customization```, and run this experiment with ```./run_backlogged.sh```
 
-### Spectrum Efficiency and Fairness($\S6.1$)
-### Diverse Enterprise Schedulers($\S6.2$)
-### What Makes RadioSaber Win Over NVS($\S6.3$)
-### Varying Number of Slices and UEs per Slice($\S6.4$)
-### Non-greedy Enterprise Schedulers($\S6.5$)
-### Is There a Better Inter-Slice Scheduler?($\S6.6$)
-### Scheduling Latency and Overhead($\S6.7$)
+* For slices with the same weights, the config file is: ```./exp-backlogged-20slicesdiffw/config.json```
+For slices with different weights, the config file is: ```./exp-backlogged-20slicesdiffw/config ```
 
+* After experiments finish, run ```./plot_throughput.py``` to get the throughput and radio resource distribution graph
+
+### Diverse Enterprise Schedulers(Sec 6.2):
+* Change the working directory: ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/exp-customization```, and run this experiment with ```./run_customize.sh```
+* The config file locates in ```./exp-customize-20slices/config.json```
+* Run ```./plot_fctdelay.py``` to get the CDF graphs of flow completion time and packet delay time
+
+### What Makes RadioSaber Win Over NVS(Sec 6.3):
+For both synthetic experiments, we don't use real CQI traces but leverage the simulator to simulate the channel quality of every user based on his mobility and geo-location.
+
+* Check the global config file ```./src/load-parameters.h```, and comment the flag ```#define USE_REAL_TRACE```. To run the first experiment, uncomment and define the flag ```#define FIRST_SYNTHETIC_EXP```; To run the second experiment, uncomment and define the flag ```#define SECOND_SYNTHETIC_EXP```
+* Change the working directory: ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/wideband-100500-urban```, and run ```./run_backlogged.sh``` to get results of the first synthetic experiment
+* Change the working directory: ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/noncomplement-100500-urban```, and run ```./run_backlogged.sh``` to get results of the second synthetic experiment
+
+### Varying Number of Slices and UEs per Slice(Sec 6.4)
+In this section
+
+### Non-greedy Enterprise Schedulers(Sec 6.5)
+In this section
+
+### Is There a Better Inter-Slice Scheduler?(Sec 6.6)
+In this section
+
+### Scheduling Latency and Overhead(Sec 6.7)
 [https://github.com/elvinlife/radiosaber-overhead](https://github.com/elvinlife/radiosaber-overhead)
+
+## Contact
+Contact yc28 [at] illinois [dot] edu for assistance
