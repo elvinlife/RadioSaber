@@ -51,7 +51,9 @@ public:
 
 	virtual void RBsAllocation ();
 	virtual double ComputeSchedulingMetric (
-		UserToSchedule* user, double spectralEfficiency );
+		UserToSchedule* user,
+    double spectralEfficiency
+  );
 	void UpdateAverageTransmissionRate (int);
 
   void RBsAllocationOptimalPF();

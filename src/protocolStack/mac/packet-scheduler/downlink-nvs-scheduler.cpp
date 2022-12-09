@@ -33,6 +33,7 @@
 #include "../../../core/spectrum/bandwidth-manager.h"
 #include "../../../flows/MacQueue.h"
 #include "../../../utility/eesm-effective-sinr.h"
+#include "../../../load-parameters.h"
 #include <jsoncpp/json/json.h>
 #include <cstdio>
 #include <limits>
@@ -311,9 +312,8 @@ DownlinkNVSScheduler::RBsAllocation()
   AMCModule *amc = GetMacEntity()->GetAmcModule();
   PdcchMapIdealControlMessage *pdcchMsg = new PdcchMapIdealControlMessage();
   std::cout << GetTimeStamp() << std::endl;
-  for (size_t j = 0; j < users->size(); j++) {
-    UserToSchedule* ue = users->at(j);
-
+  for (auto it = users->begin(); it != users->end(); it++) {
+    UserToSchedule *ue = *it;
     if (ue->GetListOfAllocatedRBs()->size() > 0) {
       std::vector<double> estimatedSinrValues;
 
@@ -321,8 +321,7 @@ DownlinkNVSScheduler::RBsAllocation()
       for (size_t i = 0; i < ue->GetListOfAllocatedRBs()->size (); i++ ) {
         int rbid = ue->GetListOfAllocatedRBs()->at(i);
         if (rbid % rbg_size == 0)
-          std::cout << " " << rbid / rbg_size <<
-            "(" << ue->GetCqiFeedbacks().at(rbid) << ")";
+          std::cout << " " << rbid / rbg_size << "(" << ue->GetCqiFeedbacks().at(rbid) << ")";
         
         double sinr = amc->GetSinrFromCQI(
           ue->GetCqiFeedbacks().at(
@@ -334,12 +333,13 @@ DownlinkNVSScheduler::RBsAllocation()
       int mcs = amc->GetMCSFromCQI(amc->GetCQIFromSinr(effectiveSinr));
       int transportBlockSize = amc->GetTBSizeFromMCS(mcs, ue->GetListOfAllocatedRBs()->size());
 
-      // // calculate the transport block size as if the user can have multiple mcs
-      //int mcs = 1;
-      //int transportBlockSize = 0;
-      //for (int i = 0; i < estimatedSinrValues.size(); i++) {
-      //    transportBlockSize += amc->GetTBSizeFromMCS(amc->GetMCSFromCQI(amc->GetCQIFromSinr(estimatedSinrValues[i])), 1);
-      //}
+      #if defined(FIRST_SYNTHETIC_EXP) || defined(SECOND_SYNTHETIC_EXP)
+      // calculate the transport block size as if the user can have multiple mcs
+      transportBlockSize = 0;
+      for (int i = 0; i < estimatedSinrValues.size(); i++) {
+         transportBlockSize += amc->GetTBSizeFromMCS(amc->GetMCSFromCQI(amc->GetCQIFromSinr(estimatedSinrValues[i])), 1);
+      }
+      #endif
       ue->UpdateAllocatedBits(transportBlockSize);
       for (size_t rb = 0; rb < ue->GetListOfAllocatedRBs()->size(); rb++) {
         pdcchMsg->AddNewRecord(

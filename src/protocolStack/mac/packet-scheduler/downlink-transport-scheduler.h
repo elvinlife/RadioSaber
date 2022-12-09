@@ -48,13 +48,10 @@ public:
 	virtual void DoStopSchedule (void);
 
 	virtual void RBsAllocation ();
-	void FinalizeAllocation();
-
 	virtual double ComputeSchedulingMetric (
 		UserToSchedule* user,
 		double spectralEfficiency
 	);
-
 	void UpdateAverageTransmissionRate (void);
 };
 

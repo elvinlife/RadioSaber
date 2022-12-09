@@ -45,5 +45,5 @@ TOOLS/make_sum
 *.backup
 
 *.pdf
-*.py
+src/load-parameters.h
 pbecc-traces-noise0/mapping.config

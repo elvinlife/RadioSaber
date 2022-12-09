@@ -118,7 +118,6 @@ MacroCellUrbanAreaChannelRealization::GetPathLoss (void)
     }
   */
 
-  //m_pathLoss = 128.1 + (37.6 * log10 (distance * 0.001)); // 80.4-106(100-1000)
   m_pathLoss = 118.1 + (37.6 * log10 (distance * 0.001));
 
   UserEquipment* ue;
