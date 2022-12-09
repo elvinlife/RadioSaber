@@ -1,3 +1,4 @@
+#!/bin/bash
 #ODIR="slices"
 ODIR="slices-ip"
 

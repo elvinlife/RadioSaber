@@ -209,7 +209,7 @@ DownlinkNVSScheduler::DoSchedule (void)
 
   if (GetUsersToSchedule()->size() != 0) {
     if (is_nongreedy_)
-      RBsAllocationOptimalPF();
+      RBsAllocationNonGreedyPF();
     else
       RBsAllocation();
   }
@@ -403,7 +403,7 @@ DownlinkNVSScheduler::UpdateAverageTransmissionRate (int slice_serve)
 }
 
 void
-DownlinkNVSScheduler::RBsAllocationOptimalPF() {
+DownlinkNVSScheduler::RBsAllocationNonGreedyPF() {
   int nb_rbs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
   size_t rbg_size = get_rbg_size(nb_rbs);
   // currently nb_rbgs should be divisible

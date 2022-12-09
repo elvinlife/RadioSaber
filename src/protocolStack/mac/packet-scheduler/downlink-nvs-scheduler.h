@@ -56,7 +56,7 @@ public:
   );
 	void UpdateAverageTransmissionRate (int);
 
-  void RBsAllocationOptimalPF();
+  void RBsAllocationNonGreedyPF();
   double AssignRBsGivenMCS(std::vector<int>& assigned_mcs,
       std::vector<UserToSchedule*>& rbgs_assignment);
 };
