@@ -38,12 +38,6 @@ def get_throughput(dname, ues):
         cumu_bytes, cumu_rbs = get_cumubytes( dname + "/maxcell_" + INTRA + str(i) + ".log", ues)
         avg_throughput['maxcell'].append(cumu_bytes * ratio)
         rbs_dict['maxcell'].append(cumu_rbs)
-        # b, _ = get_cumubytes( dname + "/greedy_" + INTRA + str(i) + ".log", ues)
-        # avg_throughput['greedy'].append(b * ratio)
-        # b, _ = get_cumubytes( dname + "/upperbound_" + INTRA + str(i) + ".log", ues)
-        # avg_throughput['upperbound'].append(b * ratio)
-        # if avg_throughput['greedy'][-1] / avg_throughput['maxcell'][-1] > 0.95:
-        #     avg_throughput['greedy'][-1] *= 0.96
     return avg_throughput
 
 def plot_exp1_graph():
@@ -89,62 +83,7 @@ def plot_exp1_graph():
     fig.savefig("exp1-fix20slices-ip-"+ INTRA + FTYPE)
     # fig.savefig("exp1-fix20slices-"+ INTRA + FTYPE)
 
-def plot_exp2_graph():
-    default_fontsize = 20
-    #dnames = ['5ues-ip', '10ues-ip', '15ues-ip', '20ues-ip']
-    dnames = ['5ues', '10ues', '15ues', '20ues']
-    x_array = np.arange(0, 4, 1)
-    #ue_array = [5, 10, 15, 20]
-    ue_array = [10, 15, 20]
-    y1_array = []
-    y2_array = []
-    y4_array = []
-    y5_array = []
-    yerr1_array = []
-    yerr2_array = []
-    yerr4_array = []
-    yerr5_array = []
-    for i in range(len(dnames)):
-        print(dnames[i])
-        cumu_bytes = get_throughput( dnames[i], ue_array[i]*20 )
-        print(cumu_bytes)
-        y1_array.append( np.mean( cumu_bytes['nvs'] ) )
-        yerr1_array.append( np.std( cumu_bytes['nvs'] ) )
-        y2_array.append( np.mean( cumu_bytes['greedy'] ) )
-        yerr2_array.append( np.std( cumu_bytes['greedy'] ) )
-        y4_array.append( np.mean( cumu_bytes['maxcell'] ) )
-        yerr4_array.append( np.std( cumu_bytes['maxcell'] ) )
-        y5_array.append( np.mean( cumu_bytes['upperbound'] ) )
-        yerr5_array.append( np.std( cumu_bytes['upperbound'] ) )
-
-    fig, ax = plt.subplots(figsize=(8, 5))
-    bar_width = 0.16
-    ax.bar( x_array - 1.5 * bar_width, y1_array, width=bar_width, label="NVS", color="tab:orange" )
-    ax.bar( x_array - 0.5 * bar_width, y2_array, width=bar_width, label="Greedy", color="tab:brown" )
-    ax.bar( x_array + 0.5 * bar_width, y4_array, width=bar_width, label="RadioSaber", color="tab:blue" )
-    ax.bar( x_array + 1.5 * bar_width, y5_array, width=bar_width, label="Upperbound", color="tab:green" )
-    ax.errorbar(x_array - 1.5 * bar_width, y1_array, yerr1_array, fmt=".",  capsize=8)
-    ax.errorbar(x_array - 0.5 * bar_width, y2_array, yerr2_array, fmt=".",  capsize=8)
-    ax.errorbar(x_array + 0.5 * bar_width, y4_array, yerr4_array, fmt=".",  capsize=8)
-    ax.errorbar(x_array + 1.5 * bar_width, y5_array, yerr5_array, fmt=".",  capsize=8)
-    ax.set_ylim(100, 400)
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.set_xlabel("Users in a Slice", fontsize=default_fontsize + 4)
-    ax.set_ylabel("Throughput(Mbps)", fontsize=default_fontsize + 4)
-    ax.tick_params(axis="both", labelsize=default_fontsize)
-    ax.set_xticks( x_array )
-    ax.set_xticklabels( ue_array )
-    ax.grid( axis="y", alpha=0.4 )
-    ax.legend(ncol=4, loc='upper center', frameon=False, handlelength=1.0, handleheight=1.0, fontsize=default_fontsize - 5)
-    plt.tight_layout()
-
-    #fig.savefig("exp2-fix20slices-ip-"+ INTRA + FTYPE)
-    fig.savefig("exp2-fix20slices-"+ INTRA + FTYPE)
-
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
 plot_exp1_graph()
-#plot_exp2_graph()

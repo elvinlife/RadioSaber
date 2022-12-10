@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 import matplotlib
 from collections import defaultdict
 import numpy as np
-INTRA="pf"
-LABEL="PF"
+INTRA="mt"
+LABEL="MT"
 FTYPE=".pdf"
 COLORS=["dimgrey", "brown", "cornflowerblue", "wheat"]
 
 def get_onetrace(fname, n_users):
     begin_ts = 0
-    end_ts = 10000
+    end_ts = 8000
     cumu_bytes = [0 for i in range(n_users)]
     cumu_rbs = [0 for i in range(n_users)]
     with open(fname, "r") as fin:
@@ -37,12 +37,10 @@ def get_throughput(dname, ues):
         cumu_bytes['nvs'].append(b * ratio)
         b, _ = get_onetrace( dname + "/maxcell_" + INTRA + str(i) + ".log", ues)
         cumu_bytes['maxcell'].append(b * ratio)
-        # b, _ = get_onetrace( dname + "/greedy_" + INTRA + str(i) + ".log", ues)
-        # cumu_bytes['greedy'].append(b * ratio)
-        # b, _ = get_onetrace( dname + "/upperbound_" + INTRA + str(i) + ".log", ues)
-        # cumu_bytes['upperbound'].append(b * ratio)
-        # if cumu_bytes['greedy'][-1] / cumu_bytes['maxcell'][-1] > 0.95:
-        #     cumu_bytes['greedy'][-1] *= 0.97
+        b, _ = get_onetrace( dname + "/sequential_" + INTRA + str(i) + ".log", ues)
+        cumu_bytes['sequential'].append(b * ratio)
+        b, _ = get_onetrace( dname + "/upperbound_" + INTRA + str(i) + ".log", ues)
+        cumu_bytes['upperbound'].append(b * ratio)
     return cumu_bytes
 
 def plot_exp1_graph():
@@ -107,8 +105,8 @@ def plot_exp2_graph():
         cumu_bytes = get_throughput( dnames[i], slice_array[i]*15)
         y1_array.append( np.mean( cumu_bytes['nvs'] ) )
         yerr1_array.append( np.std( cumu_bytes['nvs'] ) )
-        y2_array.append( np.mean( cumu_bytes['greedy'] ) )
-        yerr2_array.append( np.std( cumu_bytes['greedy'] ) )
+        y2_array.append( np.mean( cumu_bytes['sequential'] ) )
+        yerr2_array.append( np.std( cumu_bytes['sequential'] ) )
         y3_array.append( np.mean( cumu_bytes['maxcell'] ) )
         yerr3_array.append( np.std( cumu_bytes['maxcell'] ) )
         y4_array.append( np.mean( cumu_bytes['upperbound'] ) )
@@ -125,7 +123,7 @@ def plot_exp2_graph():
     ax.errorbar(x_array + 1.5 * bar_width, y4_array, yerr4_array, fmt=".",  capsize=12, color="black")
 
     for i in range(4):
-        print("%d slices: radiosaber %f higher than greedy; %f lower than upperbound" %  \
+        print("%d slices: radiosaber %f higher than sequential; %f lower than upperbound" %  \
                 ( slice_array[i], y3_array[i] / y2_array[i] - 1, \
                     1 - y3_array[i] / y4_array[i] ) )
 
@@ -147,5 +145,5 @@ def plot_exp2_graph():
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
-plot_exp1_graph()
-#plot_exp2_graph()
+#plot_exp1_graph()
+plot_exp2_graph()

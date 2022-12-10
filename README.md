@@ -79,13 +79,20 @@ For both synthetic experiments, we don't use real CQI traces but leverage the si
 * Change the working directory: ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/noncomplement-100500-urban```, and run ```./run_backlogged.sh``` to get results of the second synthetic experiment
 
 ### Varying Number of Slices and UEs per Slice(Sec 6.4)
-In this section
+* Vary the number of slices with 5-15 users per slice:
+	* Change the working directory: ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/exp-fixranues```
+	* Run the script: ```./run_exps.sh```
+* Vary the number of users per slice with 20 slices:
+	* Change the working directory: ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/exp-fix20slices```
+	* Run the script: ```./run_exps.sh```
 
 ### Non-greedy Enterprise Schedulers(Sec 6.5)
-In this section
+The scripts and config files locate in the directory ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/exp-nongreedy```
 
 ### Is There a Better Inter-Slice Scheduler?(Sec 6.6)
-In this section
+* Change the working directory: ```cd ${PATH-TO-RADIOSABER}/NSDI23-radiosaber-experiments/exp-fixranues```
+* Launch the experiment with: ```./run_multi_interslice.sh```
+* Use the function ```plot_exp2_graph()``` in ```plot_all.py``` to plot the graph
 
 ### Scheduling Latency and Overhead(Sec 6.7)
 [https://github.com/elvinlife/radiosaber-overhead](https://github.com/elvinlife/radiosaber-overhead)

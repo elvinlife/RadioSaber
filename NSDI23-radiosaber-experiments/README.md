@@ -1,0 +1,5 @@
+For Evaluation 6.1 and 6.2, check directory 'exp-customization'
+For Evaluation 6.3, check directory 'noncomplement-100500-urban' and 'wideband-100500-urban'
+For Evaluation 6.4, check directory 'exp-fixranues' and 'exp-fix20slices'
+For Evaluation 6.5, check directory 'exp-nongreedy'
+For Evaluation 6.6, check directory 'exp-fixranues'
