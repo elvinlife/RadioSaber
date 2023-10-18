@@ -39,11 +39,9 @@ TOOLS/make_gput
 TOOLS/make_plr
 TOOLS/make_sum
 .vscode
-*.log
 *.error
 *.png
 *.backup
 
 *.pdf
 src/load-parameters.h
-pbecc-traces-noise0/mapping.config

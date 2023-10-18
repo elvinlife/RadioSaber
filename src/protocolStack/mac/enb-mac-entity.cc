@@ -46,7 +46,7 @@ EnbMacEntity::EnbMacEntity ()
   m_downlinkScheduler = NULL;
   m_uplinkScheduler = NULL;
   #ifdef USE_REAL_TRACE
-  std::string fname = path + "pbecc-traces-noise0/mapping.config";
+  std::string fname = path + "cqi-traces-noise0/mapping.config";
   std::ifstream ifs(fname, std::ifstream::in);
   int uid, tid;
   while (ifs >> uid >> tid) {
@@ -169,7 +169,7 @@ EnbMacEntity::ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg)
     if (m_userCQITrace.find(user_id) == m_userCQITrace.end()) {
       int trace_id = m_userMapping[user_id % m_userMapping.size()];
       std::cerr << "user " << user_id << " uses trace " << trace_id << std::endl;
-      std::string fname = path + "pbecc-traces-noise0/ue" + std::to_string(trace_id) + ".log";
+      std::string fname = path + "cqi-traces-noise0/ue" + std::to_string(trace_id) + ".log";
       std::ifstream ifs(fname, std::ifstream::in);
       int cqi = 0;
       for (int i = 0; i < MAX_TTI_TRACE; ++i) {

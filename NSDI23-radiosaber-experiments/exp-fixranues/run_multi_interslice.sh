@@ -13,6 +13,6 @@ run_onecase() {
     done
 }
 
-TRACE_PATH="$HOME/Research/RadioSaber/pbecc-traces-noise0/"
+TRACE_PATH="$HOME/Research/RadioSaber/cqi-traces-noise0/"
 cp $TRACE_PATH/mapping0.config $TRACE_PATH/mapping.config
 run_onecase 0 mt
