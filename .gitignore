@@ -45,3 +45,7 @@ TOOLS/make_sum
 
 *.pdf
 src/load-parameters.h
+cqi-traces-noise0/mapping.config
+
+# Generated logs
+NSDI23-radiosaber-experiments/**/*.log

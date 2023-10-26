@@ -9,7 +9,7 @@ import numpy as np
 BEGIN_IDX=0
 INTRA=""
 INPUT_DIR="exp-customize-20slices"
-FTYPE=".pdf"
+FTYPE=".png"
 COLORS=["brown", "dimgrey", "cornflowerblue"]
 
 def get_cdf(data, ratio=0, upperbound=100000):

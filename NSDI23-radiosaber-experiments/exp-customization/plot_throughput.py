@@ -8,7 +8,7 @@ INTRA=""
 TIMES=2
 # INPUT_DIR="exp-backlogged-20slicesdiffw"
 INPUT_DIR="exp-backlogged-20slices"
-FTYPE=".pdf"
+FTYPE=".png"
 n_users=450
 COLORS=["brown", "dimgrey", "cornflowerblue"]
 
