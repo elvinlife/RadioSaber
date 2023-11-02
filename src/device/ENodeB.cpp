@@ -355,31 +355,43 @@ ENodeB::SetDLScheduler (ENodeB::DLSchedulerType type, string config_fname)
         break;
 
       case ENodeB::DLScheduler_SEQUENTIAL:
-        scheduler = new DownlinkTransportScheduler(config_fname, 0);
+        scheduler = new DownlinkTransportScheduler(config_fname, 0, 0);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
         break;
       
       case ENodeB::DLScheduler_SUBOPT:
-        scheduler = new DownlinkTransportScheduler(config_fname, 1);
+        scheduler = new DownlinkTransportScheduler(config_fname, 1, 0);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
         break;
 
       case ENodeB::DLScheduler_MAXCELL:
-        scheduler = new DownlinkTransportScheduler(config_fname, 2);
+        scheduler = new DownlinkTransportScheduler(config_fname, 2, 0);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
         break;
 
       case ENodeB::DLScheduler_VOGEL:
-        scheduler = new DownlinkTransportScheduler(config_fname, 3);
+        scheduler = new DownlinkTransportScheduler(config_fname, 3, 0);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
         break;
 
       case ENodeB::DLScheduler_UpperBound:
-        scheduler = new DownlinkTransportScheduler(config_fname, 4);
+        scheduler = new DownlinkTransportScheduler(config_fname, 4, 0);
+        scheduler->SetMacEntity(mac);
+        mac->SetDownlinkPacketScheduler(scheduler);
+        break;
+
+      case ENodeB::DLSScheduler_SEQUENTIAL_FAIRNESS:
+        scheduler = new DownlinkTransportScheduler(config_fname, 0, 1);
+        scheduler->SetMacEntity(mac);
+        mac->SetDownlinkPacketScheduler(scheduler);
+        break;
+
+      case ENodeB::DLSScheduler_SEQUENTIAL_MLWDF:
+        scheduler = new DownlinkTransportScheduler(config_fname, 0, 2);
         scheduler->SetMacEntity( mac );
         mac->SetDownlinkPacketScheduler( scheduler );
         break;

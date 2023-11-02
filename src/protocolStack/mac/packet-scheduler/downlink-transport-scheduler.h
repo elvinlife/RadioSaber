@@ -37,10 +37,11 @@ private:
 
 	const double  beta_ = 0.1;
 	int           inter_sched_ = 0;
+    int inter_metric_ = 0;
 
-public:
-	DownlinkTransportScheduler(std::string config_fname, int algo);
-	virtual ~DownlinkTransportScheduler();
+   public:
+    DownlinkTransportScheduler(std::string config_fname, int algo, int metric);
+    virtual ~DownlinkTransportScheduler();
 
 	void SelectFlowsToSchedule ();
 
