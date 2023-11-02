@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef HANDOVERENTITY_H_
 #define HANDOVERENTITY_H_
 
@@ -28,21 +27,21 @@ class UserEquipment;
 class HoManager;
 
 class HandoverEntity {
-public:
-	HandoverEntity();
-	virtual ~HandoverEntity();
+ public:
+  HandoverEntity();
+  virtual ~HandoverEntity();
 
-	void SetDevice (NetworkNode* d);
-	NetworkNode* GetDevice ();
+  void SetDevice(NetworkNode* d);
+  NetworkNode* GetDevice();
 
-	void SetHoManager (HoManager *h);
-	HoManager* GetHoManager (void);
+  void SetHoManager(HoManager* h);
+  HoManager* GetHoManager(void);
 
-	bool CheckHandoverNeed (UserEquipment* ue);
+  bool CheckHandoverNeed(UserEquipment* ue);
 
-private:
-	NetworkNode* m_device;
-	HoManager* m_hoManager;
+ private:
+  NetworkNode* m_device;
+  HoManager* m_hoManager;
 };
 
 #endif /* HANDOVERENTITY_H_ */

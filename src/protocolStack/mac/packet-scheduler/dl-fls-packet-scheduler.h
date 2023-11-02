@@ -19,44 +19,40 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef DL_FLS_PACKET_SCHEDULER_H_
 #define DL_FLS_PACKET_SCHEDULER_H_
 
 #include "downlink-packet-scheduler.h"
 
-
 class DL_FLS_PacketScheduler : public DownlinkPacketScheduler {
-public:
-	DL_FLS_PacketScheduler();
-	virtual ~DL_FLS_PacketScheduler();
+ public:
+  DL_FLS_PacketScheduler();
+  virtual ~DL_FLS_PacketScheduler();
 
-	enum LowerLevelSchedulerType {
-		MAXIMUM_THROUGHPUT,
-		PROPORTIONAL_FAIR
-	};
+  enum LowerLevelSchedulerType { MAXIMUM_THROUGHPUT, PROPORTIONAL_FAIR };
 
-	void SetLowerLevelSchedulerType (LowerLevelSchedulerType type);
-	LowerLevelSchedulerType GetLowerLevelSchedulerType (void) const;
-	virtual void DoSchedule (void);
-	virtual void DoStopSchedule (void);
-	void RunControlLaw ();
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
-	void Select_RT_FlowsToSchedule ();
-	void Select_NRT_FlowsToSchedule ();
-	void UpdateDataToTransmitAndAverageDataRate (void);
+  void SetLowerLevelSchedulerType(LowerLevelSchedulerType type);
+  LowerLevelSchedulerType GetLowerLevelSchedulerType(void) const;
+  virtual void DoSchedule(void);
+  virtual void DoStopSchedule(void);
+  void RunControlLaw();
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
+  void Select_RT_FlowsToSchedule();
+  void Select_NRT_FlowsToSchedule();
+  void UpdateDataToTransmitAndAverageDataRate(void);
 
-	void RBsAllocation ();
+  void RBsAllocation();
 
+ private:
+  bool m_runControlLaw;
+  int m_subFrameCounter;
+  int m_startPrbAllocation;
+  bool m_freePrb;
+  bool m_rtAllocation;
 
-private:
-	bool m_runControlLaw;
-	int m_subFrameCounter;
-	int m_startPrbAllocation;
-	bool m_freePrb;
-	bool m_rtAllocation;
-
-	LowerLevelSchedulerType m_lowerLevelSchedulerType;
+  LowerLevelSchedulerType m_lowerLevelSchedulerType;
 };
 
 #endif /* DL_FLS_PACKET_SCHEDULER_H_ */

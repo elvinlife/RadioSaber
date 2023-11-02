@@ -24,21 +24,13 @@
 
 #include "Building.h"
 
-
 class ApartmentGrid : public Building {
-public:
-	ApartmentGrid ();
-	ApartmentGrid (int idBuilding,
-			 int type,
-		     int nbFloors,
-		     double side_X,
-		     double side_Y,
-		     double center_X,
-		     double center_Y);
+ public:
+  ApartmentGrid();
+  ApartmentGrid(int idBuilding, int type, int nbFloors, double side_X,
+                double side_Y, double center_X, double center_Y);
 
-	virtual ~ApartmentGrid();
-
+  virtual ~ApartmentGrid();
 };
-
 
 #endif /* APARTMENTGRID_H_ */

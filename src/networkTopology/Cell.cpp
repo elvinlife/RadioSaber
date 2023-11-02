@@ -19,87 +19,60 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "Cell.h"
 
-Cell::Cell()
-{}
+Cell::Cell() {}
 
-Cell::Cell(int idCell,
-		   double radius,
-		   double minDistance,
-		   double X,
-		   double Y)
-{
+Cell::Cell(int idCell, double radius, double minDistance, double X, double Y) {
   m_idCell = idCell;
   m_radius = radius;
   m_minDistance = minDistance;
-  CartesianCoordinates *Position = new CartesianCoordinates(X,Y);
+  CartesianCoordinates* Position = new CartesianCoordinates(X, Y);
   SetCellCenterPosition(Position);
 }
 
-Cell::~Cell()
-{
+Cell::~Cell() {
   delete m_CellCenterPosition;
 }
 
-void
-Cell::SetIdCell (int idCell)
-{
+void Cell::SetIdCell(int idCell) {
   m_idCell = idCell;
 }
 
-int
-Cell::GetIdCell (void) const
-{
+int Cell::GetIdCell(void) const {
   return m_idCell;
 }
 
-void
-Cell::SetRadius (double radius)
-{
+void Cell::SetRadius(double radius) {
   m_radius = radius;
 }
 
-double
-Cell::GetRadius (void) const
-{
+double Cell::GetRadius(void) const {
   return m_radius;
 }
 
-void
-Cell::SetMinDistance (double minDistance)
-{
+void Cell::SetMinDistance(double minDistance) {
   m_minDistance = minDistance;
 }
 
-double
-Cell::GetMinDistance (void) const
-{
+double Cell::GetMinDistance(void) const {
   return m_minDistance;
 }
 
-void
-Cell::SetCellCenterPosition(CartesianCoordinates *position)
-{
-	m_CellCenterPosition = position;
+void Cell::SetCellCenterPosition(CartesianCoordinates* position) {
+  m_CellCenterPosition = position;
 }
 
-CartesianCoordinates*
-Cell::GetCellCenterPosition () const
-{
-	return m_CellCenterPosition;
+CartesianCoordinates* Cell::GetCellCenterPosition() const {
+  return m_CellCenterPosition;
 }
 
 //Debug
-void
-Cell::Print (void)
-{
+void Cell::Print(void) {
   std::cout << "Cell object:"
-      "\n\t m_idCell = " << m_idCell <<
-      "\n\t m_radius = " << m_radius <<
-	  "\n\t m_minDistance = " <<  m_minDistance <<
-	  std::endl;
+               "\n\t m_idCell = "
+            << m_idCell << "\n\t m_radius = " << m_radius
+            << "\n\t m_minDistance = " << m_minDistance << std::endl;
 
-  GetCellCenterPosition ()->Print();
+  GetCellCenterPosition()->Print();
 }

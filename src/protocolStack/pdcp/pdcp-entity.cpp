@@ -21,8 +21,6 @@
 
 #include "pdcp-entity.h"
 
-PdcpEntity::PdcpEntity()
-{}
+PdcpEntity::PdcpEntity() {}
 
-PdcpEntity::~PdcpEntity()
-{}
+PdcpEntity::~PdcpEntity() {}

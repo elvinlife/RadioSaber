@@ -22,43 +22,42 @@
 #ifndef DOWNLINKNVSSCHEDULER_H_
 #define DOWNLINKNVSSCHEDULER_H_
 
-#include "packet-scheduler.h"
 #include <vector>
+#include "packet-scheduler.h"
 
-class DownlinkNVSScheduler: public PacketScheduler {
-private:
+class DownlinkNVSScheduler : public PacketScheduler {
+ private:
   // below use customizable scheduler params
-  int                             num_slices_ = 1;
-  std::vector<int>                user_to_slice_;
-  std::vector<double>             slice_weights_;
+  int num_slices_ = 1;
+  std::vector<int> user_to_slice_;
+  std::vector<double> slice_weights_;
   std::vector<SchedulerAlgoParam> slice_algo_params_;
-  std::vector<int>                slice_priority_;
-  std::vector<double>             slice_ewma_time_;
+  std::vector<int> slice_priority_;
+  std::vector<double> slice_ewma_time_;
 
-  bool      is_nongreedy_;
+  bool is_nongreedy_;
   // the ewma beta for inter-slice scheduling
   const double beta_ = 0.01;
 
-public:
-	DownlinkNVSScheduler(std::string config_fname="", bool is_nongreedy = false);
-	virtual ~DownlinkNVSScheduler();
+ public:
+  DownlinkNVSScheduler(std::string config_fname = "",
+                       bool is_nongreedy = false);
+  virtual ~DownlinkNVSScheduler();
 
-	int  SelectSliceToServe();
-	void SelectFlowsToSchedule ( int );
+  int SelectSliceToServe();
+  void SelectFlowsToSchedule(int);
 
-	virtual void DoSchedule (void);
-	virtual void DoStopSchedule (void);
+  virtual void DoSchedule(void);
+  virtual void DoStopSchedule(void);
 
-	virtual void RBsAllocation ();
-	virtual double ComputeSchedulingMetric (
-		UserToSchedule* user,
-    double spectralEfficiency
-  );
-	void UpdateAverageTransmissionRate (int);
+  virtual void RBsAllocation();
+  virtual double ComputeSchedulingMetric(UserToSchedule* user,
+                                         double spectralEfficiency);
+  void UpdateAverageTransmissionRate(int);
 
   void RBsAllocationNonGreedyPF();
   double AssignRBsGivenMCS(std::vector<int>& assigned_mcs,
-      std::vector<UserToSchedule*>& rbgs_assignment);
+                           std::vector<UserToSchedule*>& rbgs_assignment);
 };
 
 #endif /* DOWNLINKPACKETSCHEDULER_H_ */

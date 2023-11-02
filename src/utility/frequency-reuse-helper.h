@@ -19,15 +19,14 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef FREQUENCY_REUSE_HELPER_H_
 #define FREQUENCY_REUSE_HELPER_H_
 
-#include <stdint.h>
-#include "stdlib.h"
 #include <math.h>
-#include "../core/spectrum/bandwidth-manager.h"
+#include <stdint.h>
 #include "../componentManagers/FrameManager.h"
+#include "../core/spectrum/bandwidth-manager.h"
+#include "stdlib.h"
 
 /*
 
@@ -44,222 +43,221 @@ operative band		bandwidth 			Channel bandwidth (MHz)
 XXX: now is supported only the 1-th operative sub-band
 */
 
-static std::vector <BandwidthManager*>
-RunFrequencyReuseTechniques(int nodes, int cluster, double bandwidth)
-{
-  std::vector <BandwidthManager*> spectrum;
+static std::vector<BandwidthManager*> RunFrequencyReuseTechniques(
+    int nodes, int cluster, double bandwidth) {
+  std::vector<BandwidthManager*> spectrum;
 
-  if (FrameManager::Init ()->GetFrameStructure () == FrameManager::FRAME_STRUCTURE_FDD)
-    {
+  if (FrameManager::Init()->GetFrameStructure() ==
+      FrameManager::FRAME_STRUCTURE_FDD) {
 
-      if (bandwidth == 5)
-        {
-          if (cluster > 12)
-            {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"<< std::endl;
-    	      cluster = 12;
-            }
+    if (bandwidth == 5) {
+      if (cluster > 12) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"
+                  << std::endl;
+        cluster = 12;
+      }
 
-          int operatibeSubBands = 25;
-          int counter = 0;
+      int operatibeSubBands = 25;
+      int counter = 0;
 
-          for (int i = 0; i < nodes; i++)
-            {
-    	      int offset = counter * operatibeSubBands;
+      for (int i = 0; i < nodes; i++) {
+        int offset = counter * operatibeSubBands;
 
-         	  BandwidthManager *s = new BandwidthManager (bandwidth, bandwidth, offset, offset);
-       	      spectrum.push_back (s);
+        BandwidthManager* s =
+            new BandwidthManager(bandwidth, bandwidth, offset, offset);
+        spectrum.push_back(s);
 
-         	  counter++;
-    	      if (counter == cluster) counter = 0;
-            }
-        }
-
-      else if (bandwidth == 10)
-        {
-          if (cluster > 6)
-            {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"<< std::endl;
-    	      cluster = 6;
-            }
-
-          int operatibeSubBands = 50;
-          int counter = 0;
-
-          for (int i = 0; i < nodes; i++)
-            {
-    	      int offset = counter * operatibeSubBands;
-
-    	      BandwidthManager *s = new BandwidthManager (bandwidth, bandwidth, offset, offset);
-    	      spectrum.push_back (s);
-
-    	      counter++;
-    	      if (counter == cluster) counter = 0;
-            }
-        }
-
-      else if (bandwidth == 15)
-        {
-          if (cluster > 4)
-            {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"<< std::endl;
-    	      cluster = 4;
-            }
-
-          int operatibeSubBands = 75;
-          int counter = 0;
-
-          for (int i = 0; i < nodes; i++)
-            {
-    	      int offset = counter * operatibeSubBands;
-
-    	      BandwidthManager *s = new BandwidthManager (bandwidth, bandwidth, offset, offset);
-      	      spectrum.push_back (s);
-
-    	      counter++;
-    	      if (counter == cluster) counter = 0;
-            }
-        }
-
-      else if (bandwidth == 20)
-        {
-          if (cluster > 3)
-            {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER: "<< bandwidth << " -> " << cluster << std::endl;
-    	      cluster = 3;
-            }
-
-          int operatibeSubBands = 100;
-          int counter = 0;
-
-          for (int i = 0; i < nodes; i++)
-            {
-    	      int offset = counter * operatibeSubBands;
-
-       	      BandwidthManager *s = new BandwidthManager (bandwidth, bandwidth, offset, offset);
-    	      spectrum.push_back (s);
-
-       	      counter++;
-    	      if (counter == cluster) counter = 0;
-            }
-        }
-      
-      else if (bandwidth == 100) {
-        if (cluster > 3) {
-          std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER" << std::endl;
-          cluster = 3;
-        }
-        int dlSubBands = 500;
-        int ulSubBands = 100;
-        int counter = 0;
-        for (int i = 0; i < nodes; i++) {
-          int dloffset = counter * dlSubBands;
-          int uloffset = counter * ulSubBands;
-          BandwidthManager *s = new BandwidthManager(20, bandwidth, uloffset, dloffset);
-          spectrum.push_back(s);
-          counter ++;
-          if (counter == cluster) counter = 0;
-        }
+        counter++;
+        if (counter == cluster)
+          counter = 0;
       }
     }
-  else //case TDD
-    {
-      if (bandwidth == 5)
-        {
-          if (cluster > 12)
-            {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"<< std::endl;
-    	      cluster = 12;
-            }
 
-          int operatibeSubBands = 25;
-          int counter = 0;
+    else if (bandwidth == 10) {
+      if (cluster > 6) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"
+                  << std::endl;
+        cluster = 6;
+      }
 
-          for (int i = 0; i < nodes; i++)
-            {
-    	      int offset = counter * operatibeSubBands;
+      int operatibeSubBands = 50;
+      int counter = 0;
 
-         	  BandwidthManager *s = new BandwidthManager (bandwidth, bandwidth, offset, offset, true);
-       	      spectrum.push_back (s);
+      for (int i = 0; i < nodes; i++) {
+        int offset = counter * operatibeSubBands;
 
-         	  counter++;
-    	      if (counter == cluster) counter = 0;
-            }
-        }
+        BandwidthManager* s =
+            new BandwidthManager(bandwidth, bandwidth, offset, offset);
+        spectrum.push_back(s);
 
-      else if (bandwidth == 10)
-        {
-          if (cluster > 6)
-            {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"<< std::endl;
-    	      cluster = 6;
-            }
-
-          int operatibeSubBands = 50;
-          int counter = 0;
-
-          for (int i = 0; i < nodes; i++)
-            {
-    	      int offset = counter * operatibeSubBands;
-
-    	      BandwidthManager *s = new BandwidthManager (bandwidth, bandwidth, offset, offset, true);
-    	      spectrum.push_back (s);
-
-    	      counter++;
-    	      if (counter == cluster) counter = 0;
-            }
-        }
-
-      else if (bandwidth == 15)
-        {
-          if (cluster > 4)
-            {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"<< std::endl;
-    	      cluster = 4;
-            }
-
-          int operatibeSubBands = 75;
-          int counter = 0;
-
-          for (int i = 0; i < nodes; i++)
-            {
-    	      int offset = counter * operatibeSubBands;
-
-    	      BandwidthManager *s = new BandwidthManager (bandwidth, bandwidth, offset, offset, true);
-      	      spectrum.push_back (s);
-
-    	      counter++;
-    	      if (counter == cluster) counter = 0;
-            }
-        }
-
-      else if (bandwidth == 20)
-        {
-          if (cluster > 3)
-            {
-    	      std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"<< std::endl;
-    	      cluster = 3;
-            }
-
-          int operatibeSubBands = 100;
-          int counter = 0;
-
-          for (int i = 0; i < nodes; i++)
-            {
-    	      int offset = counter * operatibeSubBands;
-
-       	      BandwidthManager *s = new BandwidthManager (bandwidth, bandwidth, offset, offset, true);
-    	      spectrum.push_back (s);
-
-       	      counter++;
-    	      if (counter == cluster) counter = 0;
-            }
-        }
+        counter++;
+        if (counter == cluster)
+          counter = 0;
+      }
     }
+
+    else if (bandwidth == 15) {
+      if (cluster > 4) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"
+                  << std::endl;
+        cluster = 4;
+      }
+
+      int operatibeSubBands = 75;
+      int counter = 0;
+
+      for (int i = 0; i < nodes; i++) {
+        int offset = counter * operatibeSubBands;
+
+        BandwidthManager* s =
+            new BandwidthManager(bandwidth, bandwidth, offset, offset);
+        spectrum.push_back(s);
+
+        counter++;
+        if (counter == cluster)
+          counter = 0;
+      }
+    }
+
+    else if (bandwidth == 20) {
+      if (cluster > 3) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER: "
+                  << bandwidth << " -> " << cluster << std::endl;
+        cluster = 3;
+      }
+
+      int operatibeSubBands = 100;
+      int counter = 0;
+
+      for (int i = 0; i < nodes; i++) {
+        int offset = counter * operatibeSubBands;
+
+        BandwidthManager* s =
+            new BandwidthManager(bandwidth, bandwidth, offset, offset);
+        spectrum.push_back(s);
+
+        counter++;
+        if (counter == cluster)
+          counter = 0;
+      }
+    }
+
+    else if (bandwidth == 100) {
+      if (cluster > 3) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"
+                  << std::endl;
+        cluster = 3;
+      }
+      int dlSubBands = 500;
+      int ulSubBands = 100;
+      int counter = 0;
+      for (int i = 0; i < nodes; i++) {
+        int dloffset = counter * dlSubBands;
+        int uloffset = counter * ulSubBands;
+        BandwidthManager* s =
+            new BandwidthManager(20, bandwidth, uloffset, dloffset);
+        spectrum.push_back(s);
+        counter++;
+        if (counter == cluster)
+          counter = 0;
+      }
+    }
+  } else  //case TDD
+  {
+    if (bandwidth == 5) {
+      if (cluster > 12) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"
+                  << std::endl;
+        cluster = 12;
+      }
+
+      int operatibeSubBands = 25;
+      int counter = 0;
+
+      for (int i = 0; i < nodes; i++) {
+        int offset = counter * operatibeSubBands;
+
+        BandwidthManager* s =
+            new BandwidthManager(bandwidth, bandwidth, offset, offset, true);
+        spectrum.push_back(s);
+
+        counter++;
+        if (counter == cluster)
+          counter = 0;
+      }
+    }
+
+    else if (bandwidth == 10) {
+      if (cluster > 6) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"
+                  << std::endl;
+        cluster = 6;
+      }
+
+      int operatibeSubBands = 50;
+      int counter = 0;
+
+      for (int i = 0; i < nodes; i++) {
+        int offset = counter * operatibeSubBands;
+
+        BandwidthManager* s =
+            new BandwidthManager(bandwidth, bandwidth, offset, offset, true);
+        spectrum.push_back(s);
+
+        counter++;
+        if (counter == cluster)
+          counter = 0;
+      }
+    }
+
+    else if (bandwidth == 15) {
+      if (cluster > 4) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"
+                  << std::endl;
+        cluster = 4;
+      }
+
+      int operatibeSubBands = 75;
+      int counter = 0;
+
+      for (int i = 0; i < nodes; i++) {
+        int offset = counter * operatibeSubBands;
+
+        BandwidthManager* s =
+            new BandwidthManager(bandwidth, bandwidth, offset, offset, true);
+        spectrum.push_back(s);
+
+        counter++;
+        if (counter == cluster)
+          counter = 0;
+      }
+    }
+
+    else if (bandwidth == 20) {
+      if (cluster > 3) {
+        std::cout << "ERROR: INVALID VALUES OF BANDWIDTH -> CLUSTER"
+                  << std::endl;
+        cluster = 3;
+      }
+
+      int operatibeSubBands = 100;
+      int counter = 0;
+
+      for (int i = 0; i < nodes; i++) {
+        int offset = counter * operatibeSubBands;
+
+        BandwidthManager* s =
+            new BandwidthManager(bandwidth, bandwidth, offset, offset, true);
+        spectrum.push_back(s);
+
+        counter++;
+        if (counter == cluster)
+          counter = 0;
+      }
+    }
+  }
 
   return spectrum;
 }
-
-
 
 #endif /* FREQUENCY_REUSE_HELPER_H_ */

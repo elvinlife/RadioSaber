@@ -19,11 +19,8 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "ho-manager.h"
 
-HoManager::HoManager()
-{}
+HoManager::HoManager() {}
 
-HoManager::~HoManager()
-{}
+HoManager::~HoManager() {}

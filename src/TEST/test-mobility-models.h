@@ -19,92 +19,86 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
+#include <stdlib.h>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <queue>
 #include "../channel/LteChannel.h"
-#include "../phy/enb-lte-phy.h"
-#include "../phy/ue-lte-phy.h"
-#include "../core/spectrum/bandwidth-manager.h"
-#include "../networkTopology/Cell.h"
-#include "../protocolStack/packet/packet-burst.h"
-#include "../protocolStack/packet/Packet.h"
+#include "../channel/propagation-model/macrocell-urban-area-channel-realization.h"
+#include "../componentManagers/FrameManager.h"
 #include "../core/eventScheduler/simulator.h"
-#include "../flows/application/InfiniteBuffer.h"
-#include "../flows/application/VoIP.h"
-#include "../flows/application/CBR.h"
-#include "../flows/application/TraceBased.h"
+#include "../core/spectrum/bandwidth-manager.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
-#include "../flows/QoS/QoSParameters.h"
 #include "../flows/QoS/QoSForEXP.h"
 #include "../flows/QoS/QoSForFLS.h"
 #include "../flows/QoS/QoSForM_LWDF.h"
-#include "../componentManagers/FrameManager.h"
-#include "../utility/seed.h"
-#include "../utility/RandomVariable.h"
-#include "../channel/propagation-model/macrocell-urban-area-channel-realization.h"
-#include "../phy/wideband-cqi-eesm-error-model.h"
+#include "../flows/QoS/QoSParameters.h"
+#include "../flows/application/CBR.h"
+#include "../flows/application/InfiniteBuffer.h"
+#include "../flows/application/TraceBased.h"
+#include "../flows/application/VoIP.h"
+#include "../networkTopology/Cell.h"
+#include "../phy/enb-lte-phy.h"
 #include "../phy/simple-error-model.h"
-#include <iostream>
-#include <queue>
-#include <fstream>
-#include <stdlib.h>
-#include <cstring>
+#include "../phy/ue-lte-phy.h"
+#include "../phy/wideband-cqi-eesm-error-model.h"
+#include "../protocolStack/packet/Packet.h"
+#include "../protocolStack/packet/packet-burst.h"
+#include "../utility/RandomVariable.h"
+#include "../utility/seed.h"
 
 /*
 * ENABLE IN load-parameters.h:
 * #define PLOT_USER_POSITION
 */
 
-static void TestMobilityModels (double radius, int nbUE,
-                                int mobility_model, int speed,
-                                double duration)
-{
+static void TestMobilityModels(double radius, int nbUE, int mobility_model,
+                               int speed, double duration) {
 
   Mobility::MobilityModel model;
   if (mobility_model == 0)
-	  model = Mobility::RANDOM_DIRECTION;
+    model = Mobility::RANDOM_DIRECTION;
   else if (mobility_model == 1)
-	  model = Mobility::RANDOM_WALK;
+    model = Mobility::RANDOM_WALK;
 
-  srand (time(NULL));
+  srand(time(NULL));
 
   // CREATE COMPONENT MANAGER
-  Simulator *simulator = Simulator::Init();
-  FrameManager *frameManager = FrameManager::Init();
+  Simulator* simulator = Simulator::Init();
+  FrameManager* frameManager = FrameManager::Init();
   NetworkManager* networkManager = NetworkManager::Init();
 
   frameManager->SetFrameStructure(FrameManager::FRAME_STRUCTURE_FDD);
 
   // CREATE CELL
-  Cell *cell = new Cell (0, radius, 0.035, 0, 0);
-  networkManager->GetCellContainer ()->push_back (cell);
+  Cell* cell = new Cell(0, radius, 0.035, 0, 0);
+  networkManager->GetCellContainer()->push_back(cell);
 
   //Create ENodeB
-  ENodeB* enb = new ENodeB (1, cell, 0, 0);
-  networkManager->GetENodeBContainer ()->push_back (enb);
+  ENodeB* enb = new ENodeB(1, cell, 0, 0);
+  networkManager->GetENodeBContainer()->push_back(enb);
 
   //Create UEs
   int idUE = 2;
-  for (int i = 0; i < nbUE; i++)
-    {
-	  //ue's random position
-	  int maxXY = radius * 1000; // in metres
-	  double posX = GetRandomVariable (maxXY); // rand () %maxXY;
-	  double posY = GetRandomVariable (maxXY); // rand () %maxXY;
-	  double speedDirection = (double)(rand() %360) * ((2*3.14)/360);
+  for (int i = 0; i < nbUE; i++) {
+    //ue's random position
+    int maxXY = radius * 1000;               // in metres
+    double posX = GetRandomVariable(maxXY);  // rand () %maxXY;
+    double posY = GetRandomVariable(maxXY);  // rand () %maxXY;
+    double speedDirection = (double)(rand() % 360) * ((2 * 3.14) / 360);
 
-	  UserEquipment* ue = new UserEquipment (idUE,
-			                                 posX, posY, speed, speedDirection,
-			                                 cell,
-			                                 enb,
-			                                 0,
-			                                 model);
+    UserEquipment* ue = new UserEquipment(idUE, posX, posY, speed,
+                                          speedDirection, cell, enb, 0, model);
 
-	  std::cout << "Created UE - id " << idUE << " position " << posX << " " << posY << std::endl;
+    std::cout << "Created UE - id " << idUE << " position " << posX << " "
+              << posY << std::endl;
 
-      networkManager->GetUserEquipmentContainer ()->push_back (ue);
+    networkManager->GetUserEquipmentContainer()->push_back(ue);
 
-      idUE++;
-    }
+    idUE++;
+  }
 
   simulator->SetStop(duration);
-  simulator->Run ();
+  simulator->Run();
 }

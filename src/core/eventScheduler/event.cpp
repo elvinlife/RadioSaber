@@ -19,37 +19,24 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #include "event.h"
 
-Event::Event()
-{}
+Event::Event() {}
 
-Event::~Event()
-{}
+Event::~Event() {}
 
-void
-Event::SetTimeStamp (double time)
-{
+void Event::SetTimeStamp(double time) {
   m_timeStamp = time;
 }
 
-double
-Event::GetTimeStamp (void) const
-{
+double Event::GetTimeStamp(void) const {
   return m_timeStamp;
 }
 
-void
-Event::SetUID (int uid)
-{
+void Event::SetUID(int uid) {
   m_uid = uid;
 }
 
-int
-Event::GetUID (void) const
-{
+int Event::GetUID(void) const {
   return m_uid;
 }
-

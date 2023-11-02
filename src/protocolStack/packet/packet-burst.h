@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef PACKET_BURST_H
 #define PACKET_BURST_H
 
@@ -27,29 +26,26 @@
 #include <list>
 #include "Packet.h"
 
-
-class PacketBurst
-{
+class PacketBurst {
   /*
    * This class implement a burst as a list of packets
    */
 
-public:
-  PacketBurst (void);
-  virtual ~PacketBurst (void);
+ public:
+  PacketBurst(void);
+  virtual ~PacketBurst(void);
 
-  PacketBurst* Copy (void);
-  void AddPacket (Packet* packet);
-  std::list<Packet* > GetPackets (void) const;
-  uint32_t GetNPackets (void) const;
-  uint32_t GetSize (void) const;
+  PacketBurst* Copy(void);
+  void AddPacket(Packet* packet);
+  std::list<Packet*> GetPackets(void) const;
+  uint32_t GetNPackets(void) const;
+  uint32_t GetSize(void) const;
 
-  std::list<Packet* >::const_iterator Begin (void) const;
-  std::list<Packet* >::const_iterator End (void) const;
+  std::list<Packet*>::const_iterator Begin(void) const;
+  std::list<Packet*>::const_iterator End(void) const;
 
-private:
-  std::list<Packet* > m_packets;
+ private:
+  std::list<Packet*> m_packets;
 };
-
 
 #endif /* PACKET_BURST */

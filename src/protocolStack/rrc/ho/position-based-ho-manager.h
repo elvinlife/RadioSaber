@@ -19,18 +19,17 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef POSITIONBASEDHOMANAGER_H_
 #define POSITIONBASEDHOMANAGER_H_
 
 #include "ho-manager.h"
 
-class PositionBasedHoManager: public HoManager {
-public:
-	PositionBasedHoManager();
-	virtual ~PositionBasedHoManager();
+class PositionBasedHoManager : public HoManager {
+ public:
+  PositionBasedHoManager();
+  virtual ~PositionBasedHoManager();
 
-	virtual bool CheckHandoverNeed (UserEquipment* ue);
+  virtual bool CheckHandoverNeed(UserEquipment* ue);
 };
 
 #endif /* POSITIONBASEDHOMANAGER_H_ */

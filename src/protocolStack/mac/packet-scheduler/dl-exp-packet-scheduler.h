@@ -19,26 +19,27 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef DL_EXP_PACKET_SCHEDULER_H_
 #define DL_EXP_PACKET_SCHEDULER_H_
 
 #include "downlink-packet-scheduler.h"
 
 class DL_EXP_PacketScheduler : public DownlinkPacketScheduler {
-public:
-	DL_EXP_PacketScheduler();
-	virtual ~DL_EXP_PacketScheduler();
+ public:
+  DL_EXP_PacketScheduler();
+  virtual ~DL_EXP_PacketScheduler();
 
-	virtual void DoSchedule (void);
+  virtual void DoSchedule(void);
 
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
 
-	void ComputeAW ();
-	double GetAW (void) const;
+  void ComputeAW();
+  double GetAW(void) const;
 
-private:
-	double m_aW;
+ private:
+  double m_aW;
 };
 
 #endif /* DL_EXP_PACKET_SCHEDULER_H_ */

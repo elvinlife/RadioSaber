@@ -19,14 +19,13 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef ENB_MAC_ENTITY_H
 #define ENB_MAC_ENTITY_H
 
 #include <list>
-#include "mac-entity.h"
 #include <unordered_map>
 #include <vector>
+#include "mac-entity.h"
 using std::vector;
 
 /*
@@ -38,29 +37,27 @@ class CqiIdealControlMessage;
 class PdcchMapIdealControlMessage;
 class SchedulingRequestIdealControlMessage;
 
-class EnbMacEntity : public MacEntity
-{
-public:
+class EnbMacEntity : public MacEntity {
+ public:
+  EnbMacEntity(void);
+  virtual ~EnbMacEntity(void);
 
-  EnbMacEntity (void);
-  virtual ~EnbMacEntity (void);
+  void SetUplinkPacketScheduler(PacketScheduler* s);
+  void SetDownlinkPacketScheduler(PacketScheduler* s);
+  PacketScheduler* GetUplinkPacketScheduler(void);
+  PacketScheduler* GetDownlinkPacketScheduler(void);
 
+  void ReceiveCqiIdealControlMessage(CqiIdealControlMessage* msg);
+  void SendPdcchMapIdealControlMessage(PdcchMapIdealControlMessage* msg);
+  void ReceiveSchedulingRequestIdealControlMessage(
+      SchedulingRequestIdealControlMessage* msg);
 
-  void SetUplinkPacketScheduler (PacketScheduler* s);
-  void SetDownlinkPacketScheduler (PacketScheduler* s);
-  PacketScheduler* GetUplinkPacketScheduler (void);
-  PacketScheduler* GetDownlinkPacketScheduler (void);
-
-  void ReceiveCqiIdealControlMessage  (CqiIdealControlMessage* msg);
-  void SendPdcchMapIdealControlMessage  (PdcchMapIdealControlMessage* msg);
-  void ReceiveSchedulingRequestIdealControlMessage (SchedulingRequestIdealControlMessage *msg);
-private:
+ private:
   std::unordered_map<int, vector<vector<int>>> m_userCQITrace;
   std::vector<int> m_userMapping;
 
   PacketScheduler* m_uplinkScheduler;
   PacketScheduler* m_downlinkScheduler;
 };
-
 
 #endif /* ENB_MAC_ENTITY_H */

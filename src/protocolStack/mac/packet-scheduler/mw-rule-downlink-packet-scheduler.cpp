@@ -20,122 +20,108 @@
  */
 
 #include "mw-rule-downlink-packet-scheduler.h"
-#include "../mac-entity.h"
+#include "../../../core/idealMessages/ideal-control-messages.h"
+#include "../../../core/spectrum/bandwidth-manager.h"
+#include "../../../device/ENodeB.h"
+#include "../../../device/NetworkNode.h"
+#include "../../../flows/MacQueue.h"
+#include "../../../flows/QoS/QoSParameters.h"
+#include "../../../flows/application/Application.h"
+#include "../../../flows/radio-bearer.h"
+#include "../../../phy/lte-phy.h"
+#include "../../../protocolStack/mac/AMCModule.h"
+#include "../../../protocolStack/rrc/rrc-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
-#include "../../../device/NetworkNode.h"
-#include "../../../flows/radio-bearer.h"
-#include "../../../protocolStack/rrc/rrc-entity.h"
-#include "../../../flows/application/Application.h"
-#include "../../../device/ENodeB.h"
-#include "../../../protocolStack/mac/AMCModule.h"
-#include "../../../phy/lte-phy.h"
-#include "../../../core/spectrum/bandwidth-manager.h"
-#include "../../../core/idealMessages/ideal-control-messages.h"
-#include "../../../flows/QoS/QoSParameters.h"
-#include "../../../flows/MacQueue.h"
+#include "../mac-entity.h"
 
-MwRulePacketScheduler::MwRulePacketScheduler()
-{
-  SetMacEntity (0);
-  CreateFlowsToSchedule ();
+MwRulePacketScheduler::MwRulePacketScheduler() {
+  SetMacEntity(0);
+  CreateFlowsToSchedule();
 }
 
-MwRulePacketScheduler::~MwRulePacketScheduler()
-{
-  Destroy ();
+MwRulePacketScheduler::~MwRulePacketScheduler() {
+  Destroy();
 }
 
-
-double
-MwRulePacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel)
-{
+double MwRulePacketScheduler::ComputeSchedulingMetric(RadioBearer* bearer,
+                                                      double spectralEfficiency,
+                                                      int subChannel) {
 #ifdef SCHEDULER_DEBUG
-	std::cout << "\t ComputeSchedulingMetric for flow "
-			<< bearer->GetApplication ()->GetApplicationID () << std::endl;
+  std::cout << "\t ComputeSchedulingMetric for flow "
+            << bearer->GetApplication()->GetApplicationID() << std::endl;
 #endif
 
   double metric;
 
-  if ((bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-	  ||
-	  (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_CBR))
-	{
-	  metric = (spectralEfficiency * 180000.)
-				/
-				bearer->GetAverageTransmissionRate();
+  if ((bearer->GetApplication()->GetApplicationType() ==
+       Application::APPLICATION_TYPE_INFINITE_BUFFER) ||
+      (bearer->GetApplication()->GetApplicationType() ==
+       Application::APPLICATION_TYPE_CBR)) {
+    metric =
+        (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
 
 #ifdef SCHEDULER_DEBUG
-	std::cout << "\t\t non real time flow: metric = " << metric << std::endl;
+    std::cout << "\t\t non real time flow: metric = " << metric << std::endl;
 #endif
 
-	}
-  else
-	{
-	  QoSParameters *qos = bearer->GetQoSParameters ();
-	  double HOL = bearer->GetHeadOfLinePacketDelay ();
-	  double targetDelay = qos->GetMaxDelay ();
+  } else {
+    QoSParameters* qos = bearer->GetQoSParameters();
+    double HOL = bearer->GetHeadOfLinePacketDelay();
+    double targetDelay = qos->GetMaxDelay();
 
 #ifdef SCHEDULER_DEBUG
-	  std::cout << "\t\t real time flow: HOL = " << HOL << ", target delay = " << targetDelay;
+    std::cout << "\t\t real time flow: HOL = " << HOL
+              << ", target delay = " << targetDelay;
 #endif
 
-	  //compute sum of HOL and average spectral efficiency
-//#ifdef SCHEDULER_DEBUG
-//	  std::cout << "\n\t\t\t compute sum HOL for all real time flows"<< std::endl;
-//#endif
+    //compute sum of HOL and average spectral efficiency
+    //#ifdef SCHEDULER_DEBUG
+    //	  std::cout << "\n\t\t\t compute sum HOL for all real time flows"<< std::endl;
+    //#endif
 
-	  double sumHOL = 0;
-	  int nbFlows = 0;
-	  FlowsToSchedule *flowsToSchedule = GetFlowsToSchedule ();
-	  FlowsToSchedule::iterator iter;
-	  FlowToSchedule *flow;
+    double sumHOL = 0;
+    int nbFlows = 0;
+    FlowsToSchedule* flowsToSchedule = GetFlowsToSchedule();
+    FlowsToSchedule::iterator iter;
+    FlowToSchedule* flow;
 
-	  for (iter = flowsToSchedule->begin (); iter != flowsToSchedule->end (); iter++)
-	    {
-		  flow = (*iter);
-		  if (!flow->GetBearer ()->HasPackets ())
-		    {}
-		  else
-			{
-			  if ((flow->GetBearer ()->GetApplication ()->GetApplicationType ()
-					  != Application::APPLICATION_TYPE_INFINITE_BUFFER)
-			   		  &&
-			          (flow->GetBearer ()->GetApplication ()->GetApplicationType ()
-			        		  != Application::APPLICATION_TYPE_CBR))
-			    {
-			      sumHOL += flow->GetBearer ()->GetHeadOfLinePacketDelay ();
-			      nbFlows++;
+    for (iter = flowsToSchedule->begin(); iter != flowsToSchedule->end();
+         iter++) {
+      flow = (*iter);
+      if (!flow->GetBearer()->HasPackets()) {
+      } else {
+        if ((flow->GetBearer()->GetApplication()->GetApplicationType() !=
+             Application::APPLICATION_TYPE_INFINITE_BUFFER) &&
+            (flow->GetBearer()->GetApplication()->GetApplicationType() !=
+             Application::APPLICATION_TYPE_CBR)) {
+          sumHOL += flow->GetBearer()->GetHeadOfLinePacketDelay();
+          nbFlows++;
 
-//#ifdef SCHEDULER_DEBUG
-//	              std::cout << "\t\t\t --> HOL for flow " << flow->GetBearer ()->GetApplication ()->GetApplicationID ()
-//	            		  << " = " << flow->GetBearer ()->GetHeadOfLinePacketDelay ()<< std::endl;
-//#endif
-			    }
-			  else
-			    {
-//#ifdef SCHEDULER_DEBUG
-//	              std::cout << "\t\t\t --> non real time flow, go on! " << std::endl;
-//#endif
-			    }
-			}
-	    }
+          //#ifdef SCHEDULER_DEBUG
+          //	              std::cout << "\t\t\t --> HOL for flow " << flow->GetBearer ()->GetApplication ()->GetApplicationID ()
+          //	            		  << " = " << flow->GetBearer ()->GetHeadOfLinePacketDelay ()<< std::endl;
+          //#endif
+        } else {
+          //#ifdef SCHEDULER_DEBUG
+          //	              std::cout << "\t\t\t --> non real time flow, go on! " << std::endl;
+          //#endif
+        }
+      }
+    }
 
+    //COMPUTE METRIC USING EXP RULE:
+    double numerator = (6 / targetDelay) * HOL;
+    double denominator = (1 + sqrt(sumHOL / nbFlows));
+    double weight =
+        (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
 
-	  //COMPUTE METRIC USING EXP RULE:
-	  double numerator = (6/targetDelay) * HOL;
-	  double denominator = (1 + sqrt (sumHOL/nbFlows));
-	  double weight = (spectralEfficiency * 180000.)
-				      /
-	    	          bearer->GetAverageTransmissionRate();
-
-	  metric = (exp (numerator / denominator)) * weight;
+    metric = (exp(numerator / denominator)) * weight;
 
 #ifdef SCHEDULER_DEBUG
-	  std::cout << " --> metric = " << metric << std::endl;
+    std::cout << " --> metric = " << metric << std::endl;
 #endif
-	}
+  }
 
   return metric;
 }
-

@@ -19,104 +19,77 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "protocol-stack.h"
 #include "../device/NetworkNode.h"
 
-ProtocolStack::ProtocolStack()
-{
+ProtocolStack::ProtocolStack() {
   m_nas = NULL;
   m_rrc = NULL;
   m_mac = NULL;
   m_pdcp = NULL;
 }
 
-ProtocolStack::ProtocolStack(NetworkNode* device)
-{
-  m_rrc = new RrcEntity ();
-  m_rrc->SetDevice (device);
+ProtocolStack::ProtocolStack(NetworkNode* device) {
+  m_rrc = new RrcEntity();
+  m_rrc->SetDevice(device);
 
-  m_pdcp = new PdcpEntity ();
+  m_pdcp = new PdcpEntity();
 
-  m_nas = new NasEntity ();
-  m_nas->SetDevice (device);
+  m_nas = new NasEntity();
+  m_nas->SetDevice(device);
 
-  if (device->GetNodeType() == NetworkNode::TYPE_ENODEB)
-    {
-      m_mac = new EnbMacEntity ();
-      m_mac->SetDevice(device);
-    }
-  else if (device->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION)
-  {
-    m_mac = new HenbMacEntity ();
+  if (device->GetNodeType() == NetworkNode::TYPE_ENODEB) {
+    m_mac = new EnbMacEntity();
+    m_mac->SetDevice(device);
+  } else if (device->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION) {
+    m_mac = new HenbMacEntity();
     m_mac->SetDevice(device);
   }
 
-  else if (device->GetNodeType() == NetworkNode::TYPE_UE)
-    {
-	  m_mac = new UeMacEntity ();
-	  m_mac->SetDevice(device);
-    }
-  else
-    {
-	  //ADD other devices
-	  m_mac = NULL;
-    }
-
+  else if (device->GetNodeType() == NetworkNode::TYPE_UE) {
+    m_mac = new UeMacEntity();
+    m_mac->SetDevice(device);
+  } else {
+    //ADD other devices
+    m_mac = NULL;
+  }
 }
 
-ProtocolStack::~ProtocolStack()
-{
+ProtocolStack::~ProtocolStack() {
   delete m_rrc;
   delete m_mac;
   delete m_nas;
   delete m_pdcp;
 }
 
-RrcEntity*
-ProtocolStack::GetRrcEntity (void)
-{
+RrcEntity* ProtocolStack::GetRrcEntity(void) {
   return m_rrc;
 }
 
-MacEntity*
-ProtocolStack::GetMacEntity (void)
-{
+MacEntity* ProtocolStack::GetMacEntity(void) {
   return m_mac;
 }
 
-NasEntity*
-ProtocolStack::GetNasEntity (void)
-{
+NasEntity* ProtocolStack::GetNasEntity(void) {
   return m_nas;
 }
 
-PdcpEntity*
-ProtocolStack::GetPdcpEntity (void)
-{
+PdcpEntity* ProtocolStack::GetPdcpEntity(void) {
   return m_pdcp;
 }
 
-void
-ProtocolStack::SetNasEntity (NasEntity* e)
-{
+void ProtocolStack::SetNasEntity(NasEntity* e) {
   m_nas = e;
 }
 
-void
-ProtocolStack::SetRrcEntity (RrcEntity* e)
-{
+void ProtocolStack::SetRrcEntity(RrcEntity* e) {
   m_rrc = e;
 }
 
-void
-ProtocolStack::SetMacEntity (MacEntity* e)
-{
+void ProtocolStack::SetMacEntity(MacEntity* e) {
   m_mac = e;
 }
 
-void
-ProtocolStack::SetPdcpEntity (PdcpEntity* e)
-{
+void ProtocolStack::SetPdcpEntity(PdcpEntity* e) {
   m_pdcp = e;
 }

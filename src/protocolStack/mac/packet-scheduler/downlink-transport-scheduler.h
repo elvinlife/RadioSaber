@@ -22,38 +22,36 @@
 #ifndef DOWNLINKTRANSPORTSCHEDULER_H_
 #define DOWNLINKTRANSPORTSCHEDULER_H_
 
-#include "packet-scheduler.h"
 #include <vector>
+#include "packet-scheduler.h"
 
-class DownlinkTransportScheduler: public PacketScheduler {
-private:
+class DownlinkTransportScheduler : public PacketScheduler {
+ private:
   // below use customizable scheduler params
-  int                             num_slices_ = 1;
-  std::vector<int>                user_to_slice_;
-  std::vector<double>             slice_weights_;
+  int num_slices_ = 1;
+  std::vector<int> user_to_slice_;
+  std::vector<double> slice_weights_;
   std::vector<SchedulerAlgoParam> slice_algo_params_;
-  std::vector<int>                slice_priority_;
-  std::vector<double>             slice_rbs_offset_;
+  std::vector<int> slice_priority_;
+  std::vector<double> slice_rbs_offset_;
 
-	const double  beta_ = 0.1;
-	int           inter_sched_ = 0;
-    int inter_metric_ = 0;
+  const double beta_ = 0.1;
+  int inter_sched_ = 0;
+  int inter_metric_ = 0;
 
-   public:
-    DownlinkTransportScheduler(std::string config_fname, int algo, int metric);
-    virtual ~DownlinkTransportScheduler();
+ public:
+  DownlinkTransportScheduler(std::string config_fname, int algo, int metric);
+  virtual ~DownlinkTransportScheduler();
 
-	void SelectFlowsToSchedule ();
+  void SelectFlowsToSchedule();
 
-	virtual void DoSchedule (void);
-	virtual void DoStopSchedule (void);
+  virtual void DoSchedule(void);
+  virtual void DoStopSchedule(void);
 
-	virtual void RBsAllocation ();
-	virtual double ComputeSchedulingMetric (
-		UserToSchedule* user,
-		double spectralEfficiency
-	);
-	void UpdateAverageTransmissionRate (void);
+  virtual void RBsAllocation();
+  virtual double ComputeSchedulingMetric(UserToSchedule* user,
+                                         double spectralEfficiency);
+  void UpdateAverageTransmissionRate(void);
 };
 
 #endif /* DOWNLINKPACKETSCHEDULER_H_ */

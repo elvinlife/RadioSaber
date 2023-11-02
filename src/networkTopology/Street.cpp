@@ -19,25 +19,19 @@
  */
 
 #include "Street.h"
-#include "Building.h"
-#include "../core/cartesianCoodrdinates/CartesianCoordinates.h"
 #include <assert.h>
+#include "../core/cartesianCoodrdinates/CartesianCoordinates.h"
+#include "Building.h"
 
-
-Street::Street( int id,
-		        CartesianCoordinates* center,
-		        double theta,
-		        int nbBuilding,
-		        int building_type,
-		        double street_width, double building_distance,
-		        double apartmentSide)
-{
+Street::Street(int id, CartesianCoordinates* center, double theta,
+               int nbBuilding, int building_type, double street_width,
+               double building_distance, double apartmentSide) {
   m_streetID = id;
 
   m_centerPosition = center;
 
   m_thetaStreet = theta;
-  assert (m_thetaStreet == 0 || m_thetaStreet == 90);
+  assert(m_thetaStreet == 0 || m_thetaStreet == 90);
 
   m_buildingTypeInStreet = building_type;
   m_nbBuildings = nbBuilding;
@@ -46,54 +40,56 @@ Street::Street( int id,
   m_apartmentSide = apartmentSide;
 }
 
-Street::~Street()
-{
+Street::~Street() {
   delete m_centerPosition;
 }
 
-std::vector<CartesianCoordinates*>*
-Street::GetBuildingDistributionInStreet ( void )
-{
-  std::vector<CartesianCoordinates*> *vectorOfCoordinates = new std::vector<CartesianCoordinates*>;
+std::vector<CartesianCoordinates*>* Street::GetBuildingDistributionInStreet(
+    void) {
+  std::vector<CartesianCoordinates*>* vectorOfCoordinates =
+      new std::vector<CartesianCoordinates*>;
 
-  if (m_buildingTypeInStreet == 0 )
-  {//Building::TYPE_3GPP_5x5_grid
+  if (m_buildingTypeInStreet == 0) {  //Building::TYPE_3GPP_5x5_grid
 
-	  double street_length = ( m_nbBuildings * 5 * m_apartmentSide ) +
-								  ( (m_nbBuildings - 1) * m_buildingDistance );
+    double street_length = (m_nbBuildings * 5 * m_apartmentSide) +
+                           ((m_nbBuildings - 1) * m_buildingDistance);
 
-	  for (int i = 0; i < m_nbBuildings; i++)
-	  {
-		  double x_1, x_2, y_1, y_2;
+    for (int i = 0; i < m_nbBuildings; i++) {
+      double x_1, x_2, y_1, y_2;
 
-		  if ( m_thetaStreet == 0 )
-		  {
-			  x_1 = m_centerPosition->GetCoordinateX() - street_length/2 + m_apartmentSide*2.5 + ( i * ( 5 * m_apartmentSide + m_buildingDistance ) );
-			  y_1 = m_centerPosition->GetCoordinateY() + m_streetWidth/2 + m_apartmentSide*2.5;
+      if (m_thetaStreet == 0) {
+        x_1 = m_centerPosition->GetCoordinateX() - street_length / 2 +
+              m_apartmentSide * 2.5 +
+              (i * (5 * m_apartmentSide + m_buildingDistance));
+        y_1 = m_centerPosition->GetCoordinateY() + m_streetWidth / 2 +
+              m_apartmentSide * 2.5;
 
-			  x_2 = x_1;
-			  y_2 = m_centerPosition->GetCoordinateY() - m_streetWidth/2 - m_apartmentSide*2.5;
-		  }
-		  else if ( m_thetaStreet == 90 )
-		  {
-			  x_1 = m_centerPosition->GetCoordinateX() - m_streetWidth/2 - m_apartmentSide*2.5;
-			  y_1 = m_centerPosition->GetCoordinateY() - street_length/2 + m_apartmentSide*2.5 + ( i * ( 5 * m_apartmentSide + m_buildingDistance ) );;
+        x_2 = x_1;
+        y_2 = m_centerPosition->GetCoordinateY() - m_streetWidth / 2 -
+              m_apartmentSide * 2.5;
+      } else if (m_thetaStreet == 90) {
+        x_1 = m_centerPosition->GetCoordinateX() - m_streetWidth / 2 -
+              m_apartmentSide * 2.5;
+        y_1 = m_centerPosition->GetCoordinateY() - street_length / 2 +
+              m_apartmentSide * 2.5 +
+              (i * (5 * m_apartmentSide + m_buildingDistance));
+        ;
 
-			  x_2 = m_centerPosition->GetCoordinateX() + m_streetWidth/2 + m_apartmentSide*2.5;
-			  y_2 = y_1;
-		  }
+        x_2 = m_centerPosition->GetCoordinateX() + m_streetWidth / 2 +
+              m_apartmentSide * 2.5;
+        y_2 = y_1;
+      }
 
+      CartesianCoordinates* newCoordinates_1 =
+          new CartesianCoordinates(x_1, y_1);
+      CartesianCoordinates* newCoordinates_2 =
+          new CartesianCoordinates(x_2, y_2);
 
-		  CartesianCoordinates *newCoordinates_1 = new CartesianCoordinates( x_1, y_1);
-		  CartesianCoordinates *newCoordinates_2 = new CartesianCoordinates( x_2, y_2);
-
-		  vectorOfCoordinates->push_back(newCoordinates_1);
-		  vectorOfCoordinates->push_back(newCoordinates_2);
-	  }
-  }
-  else
-  {
-	 ////XXX: TO BE IMPLEMENTED
+      vectorOfCoordinates->push_back(newCoordinates_1);
+      vectorOfCoordinates->push_back(newCoordinates_2);
+    }
+  } else {
+    ////XXX: TO BE IMPLEMENTED
   }
 
   return vectorOfCoordinates;

@@ -25,11 +25,13 @@
 #include <vector>
 
 class ErrorModel {
-public:
-	ErrorModel();
-	virtual ~ErrorModel();
+ public:
+  ErrorModel();
+  virtual ~ErrorModel();
 
-	virtual bool CheckForPhysicalError (std::vector<int> channels, std::vector<int> mcs, std::vector<double> m_sinr) = 0;
+  virtual bool CheckForPhysicalError(std::vector<int> channels,
+                                     std::vector<int> mcs,
+                                     std::vector<double> m_sinr) = 0;
 };
 
 #endif /* ERRORMODEL_H_ */

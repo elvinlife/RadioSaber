@@ -19,40 +19,37 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef INTERNETFLOW_H_
 #define INTERNETFLOW_H_
 
-#include "Application.h"
 #include <random>
+#include "Application.h"
 
 class InternetFlow : public Application {
-public:
+ public:
   static int m_avg_flowsize;
   static int m_typeflow;
   static int m_flowsize[];
   static double m_flowcdf[];
 
-	InternetFlow();
-	virtual ~InternetFlow();
+  InternetFlow();
+  virtual ~InternetFlow();
 
-	virtual void DoStart (void);
-	virtual void DoStop (void);
+  virtual void DoStart(void);
+  virtual void DoStop(void);
 
-  void    ScheduleTransmit (double time);
-  void    Send (void);
+  void ScheduleTransmit(double time);
+  void Send(void);
   // set average sending rate(in Mbps)
-  void    SetAvgRate(double rate);
+  void SetAvgRate(double rate);
 
-private:
+ private:
+  double GetInterval(void);
+  int GetSize(void) const;
+  double m_interval;
+  int m_flowCounter;
 
-  double  GetInterval(void);
-  int     GetSize(void) const;
-	double  m_interval;
-  int     m_flowCounter;
-
-  double  m_lambda;
+  double m_lambda;
   std::default_random_engine m_generator;
   std::exponential_distribution<double> m_distribute;
 };

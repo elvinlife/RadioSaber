@@ -22,8 +22,7 @@
 #include "am-state-variables.h"
 #include "iostream"
 
-AmStateVariables::AmStateVariables()
-{
+AmStateVariables::AmStateVariables() {
   m_am_window_size = 512;
   m_vt_a = 0;
   m_vt_ms = m_vt_a + m_am_window_size;
@@ -36,7 +35,7 @@ AmStateVariables::AmStateVariables()
 
   m_vr_r = 0;
   m_vr_mr = m_vr_r + m_am_window_size;
-  m_vr_x = m_am_window_size; //XXX ???
+  m_vr_x = m_am_window_size;  //XXX ???
   m_vr_ms = 0;
   m_vr_h = 0;
 
@@ -49,32 +48,26 @@ AmStateVariables::AmStateVariables()
   m_poll_Byte = 10;
 }
 
-AmStateVariables::~AmStateVariables()
-{
-}
+AmStateVariables::~AmStateVariables() {}
 
-void
-AmStateVariables::Print (void)
-{
+void AmStateVariables::Print(void) {
   std::cout << "AmStateVariables"
-		  "\t TX STATE: VT(A)=" << m_vt_a << " VT(MS)=" << m_vt_ms << " VT(S)=" << m_vt_s <<
-		  "\t RX STATE: VR(R)=" << m_vr_r << " VR(MR)=" << m_vr_mr << " VR(H)=" << m_vr_h <<
-		  std::endl;
+               "\t TX STATE: VT(A)="
+            << m_vt_a << " VT(MS)=" << m_vt_ms << " VT(S)=" << m_vt_s
+            << "\t RX STATE: VR(R)=" << m_vr_r << " VR(MR)=" << m_vr_mr
+            << " VR(H)=" << m_vr_h << std::endl;
 }
 
-void
-AmStateVariables::PrintTxVariables (void)
-{
+void AmStateVariables::PrintTxVariables(void) {
   std::cout << "TX AmStateVariables"
-		  "\t TX STATE: VT(A)=" << m_vt_a << " VT(MS)=" << m_vt_ms << " VT(S)=" << m_vt_s <<
-		  std::endl;
+               "\t TX STATE: VT(A)="
+            << m_vt_a << " VT(MS)=" << m_vt_ms << " VT(S)=" << m_vt_s
+            << std::endl;
 }
 
-void
-AmStateVariables::PrintRxVariables (void)
-{
+void AmStateVariables::PrintRxVariables(void) {
   std::cout << "RX AmStateVariables"
-		  "\t RX STATE: VR(R)=" << m_vr_r << " VR(MR)=" << m_vr_mr << " VR(H)=" << m_vr_h <<
-		  std::endl;
+               "\t RX STATE: VR(R)="
+            << m_vr_r << " VR(MR)=" << m_vr_mr << " VR(H)=" << m_vr_h
+            << std::endl;
 }
-

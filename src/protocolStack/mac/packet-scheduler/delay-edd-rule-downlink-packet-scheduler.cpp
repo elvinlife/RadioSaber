@@ -20,65 +20,57 @@
  */
 
 #include "delay-edd-rule-downlink-packet-scheduler.h"
-#include "../mac-entity.h"
+#include "../../../core/idealMessages/ideal-control-messages.h"
+#include "../../../core/spectrum/bandwidth-manager.h"
+#include "../../../device/ENodeB.h"
+#include "../../../device/NetworkNode.h"
+#include "../../../flows/MacQueue.h"
+#include "../../../flows/QoS/QoSParameters.h"
+#include "../../../flows/application/Application.h"
+#include "../../../flows/radio-bearer.h"
+#include "../../../phy/lte-phy.h"
+#include "../../../protocolStack/mac/AMCModule.h"
+#include "../../../protocolStack/rrc/rrc-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
-#include "../../../device/NetworkNode.h"
-#include "../../../flows/radio-bearer.h"
-#include "../../../protocolStack/rrc/rrc-entity.h"
-#include "../../../flows/application/Application.h"
-#include "../../../device/ENodeB.h"
-#include "../../../protocolStack/mac/AMCModule.h"
-#include "../../../phy/lte-phy.h"
-#include "../../../core/spectrum/bandwidth-manager.h"
-#include "../../../core/idealMessages/ideal-control-messages.h"
-#include "../../../flows/QoS/QoSParameters.h"
-#include "../../../flows/MacQueue.h"
+#include "../mac-entity.h"
 
-DelayEddRuleDownlinkPacketScheduler::DelayEddRuleDownlinkPacketScheduler()
-{
-  SetMacEntity (0);
-  CreateFlowsToSchedule ();
+DelayEddRuleDownlinkPacketScheduler::DelayEddRuleDownlinkPacketScheduler() {
+  SetMacEntity(0);
+  CreateFlowsToSchedule();
 }
 
-DelayEddRuleDownlinkPacketScheduler::~DelayEddRuleDownlinkPacketScheduler()
-{
-  Destroy ();
+DelayEddRuleDownlinkPacketScheduler::~DelayEddRuleDownlinkPacketScheduler() {
+  Destroy();
 }
 
-
-double
-DelayEddRuleDownlinkPacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel)
-{
+double DelayEddRuleDownlinkPacketScheduler::ComputeSchedulingMetric(
+    RadioBearer* bearer, double spectralEfficiency, int subChannel) {
   double metric;
 
-  if ((bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-	  ||
-	  (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_CBR))
-	{
-	  metric = (spectralEfficiency * 180000.)
-				/
-				bearer->GetAverageTransmissionRate();
+  if ((bearer->GetApplication()->GetApplicationType() ==
+       Application::APPLICATION_TYPE_INFINITE_BUFFER) ||
+      (bearer->GetApplication()->GetApplicationType() ==
+       Application::APPLICATION_TYPE_CBR)) {
+    metric =
+        (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
 
 #ifdef SCHEDULER_DEBUG
-	  std::cout << "METRIC: " << bearer->GetApplication ()->GetApplicationID ()
-			 << " " << spectralEfficiency
-			 << " " << bearer->GetAverageTransmissionRate ()
-			 << " --> " << metric
-			 << std::endl;
+    std::cout << "METRIC: " << bearer->GetApplication()->GetApplicationID()
+              << " " << spectralEfficiency << " "
+              << bearer->GetAverageTransmissionRate() << " --> " << metric
+              << std::endl;
 #endif
 
-	}
-  else
-	{
-      double maxDelay = bearer->GetQoSParameters ()->GetMaxDelay ();
-      double headOfLineDelay = bearer->GetHeadOfLinePacketDelay ();
+  } else {
+    double maxDelay = bearer->GetQoSParameters()->GetMaxDelay();
+    double headOfLineDelay = bearer->GetHeadOfLinePacketDelay();
 
-      metric = maxDelay - headOfLineDelay;
+    metric = maxDelay - headOfLineDelay;
 
-      if (metric < 0.000001) metric = 0.000001;
-	}
+    if (metric < 0.000001)
+      metric = 0.000001;
+  }
 
   return metric;
 }
-

@@ -19,59 +19,50 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "dl-mlwdf-packet-scheduler.h"
-#include "../mac-entity.h"
+#include "../../../core/spectrum/bandwidth-manager.h"
+#include "../../../device/ENodeB.h"
+#include "../../../device/NetworkNode.h"
+#include "../../../flows/MacQueue.h"
+#include "../../../flows/QoS/QoSForM_LWDF.h"
+#include "../../../flows/application/Application.h"
+#include "../../../flows/radio-bearer.h"
+#include "../../../phy/lte-phy.h"
+#include "../../../protocolStack/mac/AMCModule.h"
+#include "../../../protocolStack/rrc/rrc-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
-#include "../../../device/NetworkNode.h"
-#include "../../../flows/radio-bearer.h"
-#include "../../../protocolStack/rrc/rrc-entity.h"
-#include "../../../flows/application/Application.h"
-#include "../../../device/ENodeB.h"
-#include "../../../protocolStack/mac/AMCModule.h"
-#include "../../../phy/lte-phy.h"
-#include "../../../core/spectrum/bandwidth-manager.h"
-#include "../../../flows/QoS/QoSForM_LWDF.h"
-#include "../../../flows/MacQueue.h"
+#include "../mac-entity.h"
 
-DL_MLWDF_PacketScheduler::DL_MLWDF_PacketScheduler()
-{
-  SetMacEntity (0);
-  CreateFlowsToSchedule ();
+DL_MLWDF_PacketScheduler::DL_MLWDF_PacketScheduler() {
+  SetMacEntity(0);
+  CreateFlowsToSchedule();
 }
 
-DL_MLWDF_PacketScheduler::~DL_MLWDF_PacketScheduler()
-{
-  Destroy ();
+DL_MLWDF_PacketScheduler::~DL_MLWDF_PacketScheduler() {
+  Destroy();
 }
 
-
-void
-DL_MLWDF_PacketScheduler::DoSchedule ()
-{
+void DL_MLWDF_PacketScheduler::DoSchedule() {
 #ifdef SCHEDULER_DEBUG
-	std::cout << "Start DL packet scheduler for node "
-			<< GetMacEntity ()->GetDevice ()->GetIDNetworkNode()<< std::endl;
+  std::cout << "Start DL packet scheduler for node "
+            << GetMacEntity()->GetDevice()->GetIDNetworkNode() << std::endl;
 #endif
 
-  UpdateAverageTransmissionRate ();
-  CheckForDLDropPackets ();
-  SelectFlowsToSchedule ();
+  UpdateAverageTransmissionRate();
+  CheckForDLDropPackets();
+  SelectFlowsToSchedule();
 
-  if (GetFlowsToSchedule ()->size() == 0)
-	{}
-  else
-	{
-	  RBsAllocation ();
-	}
+  if (GetFlowsToSchedule()->size() == 0) {
+  } else {
+    RBsAllocation();
+  }
 
-  StopSchedule ();
+  StopSchedule();
 }
 
-double
-DL_MLWDF_PacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel)
-{
+double DL_MLWDF_PacketScheduler::ComputeSchedulingMetric(
+    RadioBearer* bearer, double spectralEfficiency, int subChannel) {
   /*
    * For the M-LWDF scheduler the metric is computed
    * as follows:
@@ -82,51 +73,39 @@ DL_MLWDF_PacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double s
 
   double metric;
 
-  if ((bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-	  ||
-	  (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_CBR))
-    {
-	  metric = (spectralEfficiency * 180000.)
-				/
-	    	    bearer->GetAverageTransmissionRate();
+  if ((bearer->GetApplication()->GetApplicationType() ==
+       Application::APPLICATION_TYPE_INFINITE_BUFFER) ||
+      (bearer->GetApplication()->GetApplicationType() ==
+       Application::APPLICATION_TYPE_CBR)) {
+    metric =
+        (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
 
 #ifdef SCHEDULER_DEBUG
-	  std::cout << "METRIC: " << bearer->GetApplication ()->GetApplicationID ()
-			 << " " << spectralEfficiency
-			 << " " << bearer->GetAverageTransmissionRate ()
-			 << " --> " << metric
-			 << std::endl;
+    std::cout << "METRIC: " << bearer->GetApplication()->GetApplicationID()
+              << " " << spectralEfficiency << " "
+              << bearer->GetAverageTransmissionRate() << " --> " << metric
+              << std::endl;
 #endif
 
-    }
-  else
-    {
+  } else {
 
-     QoSForM_LWDF *qos = (QoSForM_LWDF*) bearer->GetQoSParameters ();
+    QoSForM_LWDF* qos = (QoSForM_LWDF*)bearer->GetQoSParameters();
 
-     double a = (-log10 (qos->GetDropProbability())) / qos->GetMaxDelay ();
-     double HOL = bearer->GetHeadOfLinePacketDelay ();
+    double a = (-log10(qos->GetDropProbability())) / qos->GetMaxDelay();
+    double HOL = bearer->GetHeadOfLinePacketDelay();
 
-	 metric = (a * HOL)
-			 *
-			 ((spectralEfficiency * 180000.)
-			 /
-			 bearer->GetAverageTransmissionRate ());
+    metric = (a * HOL) * ((spectralEfficiency * 180000.) /
+                          bearer->GetAverageTransmissionRate());
 
 #ifdef SCHEDULER_DEBUG
-	 std::cout << "METRIC: " << bearer->GetApplication ()->GetApplicationID ()
-			 << " " << a
-			 << " " << Simulator::Init()->Now()
-			 << " " << bearer->GetMacQueue()->Peek().GetTimeStamp()
-			 << " " << HOL
-			 << " " << spectralEfficiency
-			 << " " << bearer->GetAverageTransmissionRate ()
-			 << " --> " << metric
-			 << std::endl;
+    std::cout << "METRIC: " << bearer->GetApplication()->GetApplicationID()
+              << " " << a << " " << Simulator::Init()->Now() << " "
+              << bearer->GetMacQueue()->Peek().GetTimeStamp() << " " << HOL
+              << " " << spectralEfficiency << " "
+              << bearer->GetAverageTransmissionRate() << " --> " << metric
+              << std::endl;
 #endif
-
-    }
+  }
 
   return metric;
 }
-

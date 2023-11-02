@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef three_gpp_DOWNLINCHANNELREALIZATION_H_
 #define three_gpp_DOWNLINCHANNELREALIZATION_H_
 
@@ -28,24 +27,24 @@
 
 class NetworkNode;
 
-class ThreeGppDownlinChannelRealization: public ChannelRealization {
-public:
-	ThreeGppDownlinChannelRealization (NetworkNode* src, NetworkNode* dst);
-	virtual ~ThreeGppDownlinChannelRealization ();
+class ThreeGppDownlinChannelRealization : public ChannelRealization {
+ public:
+  ThreeGppDownlinChannelRealization(NetworkNode* src, NetworkNode* dst);
+  virtual ~ThreeGppDownlinChannelRealization();
 
-	void SetPenetrationLoss (double pnl);
-	double GetPenetrationLoss (void);
-	double GetPathLoss (void);
-	void SetShadowing (double sh);
-	double GetShadowing (void);
-	virtual void UpdateModels (void);
+  void SetPenetrationLoss(double pnl);
+  double GetPenetrationLoss(void);
+  double GetPathLoss(void);
+  void SetShadowing(double sh);
+  double GetShadowing(void);
+  virtual void UpdateModels(void);
 
-	virtual std::vector<double> GetLoss ();
+  virtual std::vector<double> GetLoss();
 
-private:
-	double m_penetrationLoss;
-	double m_pathLoss;
-	double m_shadowing;
+ private:
+  double m_penetrationLoss;
+  double m_pathLoss;
+  double m_shadowing;
 };
 
 #endif /* three_gpp_DOWNLINCHANNELREALIZATION_H_ */

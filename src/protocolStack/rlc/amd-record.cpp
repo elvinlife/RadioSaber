@@ -22,14 +22,12 @@
 #include "amd-record.h"
 #include "../packet/Packet.h"
 
-AmdRecord::AmdRecord (Packet* p, int sn)
-{
+AmdRecord::AmdRecord(Packet* p, int sn) {
   m_packet = p;
   m_sn = sn;
   m_retx_count = 0;
 }
 
-AmdRecord::~AmdRecord()
-{
+AmdRecord::~AmdRecord() {
   delete m_packet;
 }

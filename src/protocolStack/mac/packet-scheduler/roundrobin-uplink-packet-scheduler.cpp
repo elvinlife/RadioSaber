@@ -20,111 +20,104 @@
  */
 
 #include "roundrobin-uplink-packet-scheduler.h"
-#include "../mac-entity.h"
+#include "../../../core/idealMessages/ideal-control-messages.h"
+#include "../../../core/spectrum/bandwidth-manager.h"
+#include "../../../device/ENodeB.h"
+#include "../../../device/NetworkNode.h"
+#include "../../../flows/MacQueue.h"
+#include "../../../flows/QoS/QoSParameters.h"
+#include "../../../flows/application/Application.h"
+#include "../../../flows/radio-bearer.h"
+#include "../../../phy/lte-phy.h"
+#include "../../../protocolStack/mac/AMCModule.h"
+#include "../../../protocolStack/rrc/rrc-entity.h"
+#include "../../../utility/eesm-effective-sinr.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
-#include "../../../device/NetworkNode.h"
-#include "../../../flows/radio-bearer.h"
-#include "../../../protocolStack/rrc/rrc-entity.h"
-#include "../../../flows/application/Application.h"
-#include "../../../device/ENodeB.h"
-#include "../../../protocolStack/mac/AMCModule.h"
-#include "../../../phy/lte-phy.h"
-#include "../../../core/spectrum/bandwidth-manager.h"
-#include "../../../core/idealMessages/ideal-control-messages.h"
-#include "../../../flows/QoS/QoSParameters.h"
-#include "../../../flows/MacQueue.h"
-#include "../../../utility/eesm-effective-sinr.h"
+#include "../mac-entity.h"
 
-RoundRobinUplinkPacketScheduler::RoundRobinUplinkPacketScheduler()
-{
-  SetMacEntity (0);
-  CreateUsersToSchedule ();
+RoundRobinUplinkPacketScheduler::RoundRobinUplinkPacketScheduler() {
+  SetMacEntity(0);
+  CreateUsersToSchedule();
 
   m_roundRobinId = 0;
 }
 
-RoundRobinUplinkPacketScheduler::~RoundRobinUplinkPacketScheduler()
-{
-  Destroy ();
+RoundRobinUplinkPacketScheduler::~RoundRobinUplinkPacketScheduler() {
+  Destroy();
 }
 
-double
-RoundRobinUplinkPacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel)
-{
+double RoundRobinUplinkPacketScheduler::ComputeSchedulingMetric(
+    RadioBearer* bearer, double spectralEfficiency, int subChannel) {
   double metric;
   return metric;
 }
 
-double
-RoundRobinUplinkPacketScheduler::ComputeSchedulingMetric (UserToSchedule* user, int subchannel)
-{
+double RoundRobinUplinkPacketScheduler::ComputeSchedulingMetric(
+    UserToSchedule* user, int subchannel) {
   double metric;
 
-  int channelCondition = user->m_channelContition.at (subchannel);
-  double spectralEfficiency = GetMacEntity ()->GetAmcModule ()->GetSinrFromCQI (channelCondition);
+  int channelCondition = user->m_channelContition.at(subchannel);
+  double spectralEfficiency =
+      GetMacEntity()->GetAmcModule()->GetSinrFromCQI(channelCondition);
 
   metric = spectralEfficiency * 180000;
 
   return metric;
 }
 
-
-void
-RoundRobinUplinkPacketScheduler::RBsAllocation ()
-{
+void RoundRobinUplinkPacketScheduler::RBsAllocation() {
 #ifdef SCHEDULER_DEBUG
-	std::cout << " ---- RR UL RBs Allocation";
+  std::cout << " ---- RR UL RBs Allocation";
 #endif
 
-	UsersToSchedule *users = GetUsersToSchedule ();
-	int nbOfRBs = GetMacEntity ()->GetDevice ()->GetPhy ()->GetBandwidthManager ()->GetUlSubChannels ().size ();
-
+  UsersToSchedule* users = GetUsersToSchedule();
+  int nbOfRBs = GetMacEntity()
+                    ->GetDevice()
+                    ->GetPhy()
+                    ->GetBandwidthManager()
+                    ->GetUlSubChannels()
+                    .size();
 
   //RBs allocation
   int nbPrbToAssign = 5;
   int stop_nbOfRBs = nbOfRBs;
-  if ((nbOfRBs / users->size ()) > nbPrbToAssign)
-    {
-	  nbPrbToAssign = ceil (nbOfRBs / users->size ());
-	  stop_nbOfRBs = nbPrbToAssign * users->size ();
-    }
-
+  if ((nbOfRBs / users->size()) > nbPrbToAssign) {
+    nbPrbToAssign = ceil(nbOfRBs / users->size());
+    stop_nbOfRBs = nbPrbToAssign * users->size();
+  }
 
 #ifdef SCHEDULER_DEBUG
-  std::cout << "  PRB to assign " << nbOfRBs
-		  << ", PRB for user " << nbPrbToAssign << std::endl;
+  std::cout << "  PRB to assign " << nbOfRBs << ", PRB for user "
+            << nbPrbToAssign << std::endl;
 #endif
 
   int s = 0;
-  while (s < stop_nbOfRBs)
-    {
-	  if (m_roundRobinId >= users->size ()) m_roundRobinId = 0; //restart again from the beginning
+  while (s < stop_nbOfRBs) {
+    if (m_roundRobinId >= users->size())
+      m_roundRobinId = 0;  //restart again from the beginning
 
-	  UserToSchedule* scheduledUser = users->at (m_roundRobinId);
+    UserToSchedule* scheduledUser = users->at(m_roundRobinId);
 
-	  std::vector<double> sinrs;
-	  for (int i = 0; i < nbPrbToAssign; i++)
-	    {
-		  double chCondition = scheduledUser->m_channelContition.at (s+i);
-		  double sinr = chCondition;
-		  sinrs.push_back (sinr);
-		  scheduledUser->m_listOfAllocatedRBs.push_back (s+i);
-	    }
-
-	  double effectiveSinr =  GetEesmEffectiveSinr (sinrs);
-	  int mcs = GetMacEntity ()->GetAmcModule ()->GetMCSFromCQI (
-			  GetMacEntity ()->GetAmcModule ()->GetCQIFromSinr (effectiveSinr));
-	  int tbs = (
-			  (GetMacEntity ()->GetAmcModule ()->GetTBSizeFromMCS (mcs, nbPrbToAssign))
-			  / 8);
-
-	  scheduledUser->m_transmittedData = tbs;
-	  scheduledUser->m_selectedMCS = mcs;
-
-	  s = s + nbPrbToAssign;
-	  m_roundRobinId++;
-
-
+    std::vector<double> sinrs;
+    for (int i = 0; i < nbPrbToAssign; i++) {
+      double chCondition = scheduledUser->m_channelContition.at(s + i);
+      double sinr = chCondition;
+      sinrs.push_back(sinr);
+      scheduledUser->m_listOfAllocatedRBs.push_back(s + i);
     }
+
+    double effectiveSinr = GetEesmEffectiveSinr(sinrs);
+    int mcs = GetMacEntity()->GetAmcModule()->GetMCSFromCQI(
+        GetMacEntity()->GetAmcModule()->GetCQIFromSinr(effectiveSinr));
+    int tbs = ((GetMacEntity()->GetAmcModule()->GetTBSizeFromMCS(
+                   mcs, nbPrbToAssign)) /
+               8);
+
+    scheduledUser->m_transmittedData = tbs;
+    scheduledUser->m_selectedMCS = mcs;
+
+    s = s + nbPrbToAssign;
+    m_roundRobinId++;
+  }
 }

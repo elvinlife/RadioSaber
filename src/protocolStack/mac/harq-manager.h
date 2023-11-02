@@ -23,9 +23,9 @@
 #define HARQMANAGER_H_
 
 class HarqManager {
-public:
-	HarqManager();
-	virtual ~HarqManager();
+ public:
+  HarqManager();
+  virtual ~HarqManager();
 };
 
 #endif /* HARQMANAGER_H_ */

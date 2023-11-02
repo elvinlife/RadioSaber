@@ -19,69 +19,59 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "macrocell-rural-area-channel-realization.h"
-#include "../../device/UserEquipment.h"
+#include "../../core/eventScheduler/simulator.h"
+#include "../../core/spectrum/bandwidth-manager.h"
 #include "../../device/ENodeB.h"
 #include "../../device/HeNodeB.h"
+#include "../../device/UserEquipment.h"
+#include "../../load-parameters.h"
+#include "../../phy/lte-phy.h"
 #include "../../utility/RandomVariable.h"
 #include "shadowing-trace.h"
-#include "../../core/spectrum/bandwidth-manager.h"
-#include "../../phy/lte-phy.h"
-#include "../../core/eventScheduler/simulator.h"
-#include "../../load-parameters.h"
 
-
-MacroCellRuralAreaChannelRealization::MacroCellRuralAreaChannelRealization(NetworkNode* src, NetworkNode* dst)
-{
-  SetSamplingPeriod (0.5);
+MacroCellRuralAreaChannelRealization::MacroCellRuralAreaChannelRealization(
+    NetworkNode* src, NetworkNode* dst) {
+  SetSamplingPeriod(0.5);
 
   m_penetrationLoss = 10;
   m_shadowing = 0;
   m_pathLoss = 0;
-  SetFastFading (new FastFading ());
+  SetFastFading(new FastFading());
 
-  SetSourceNode (src);
-  SetDestinationNode (dst);
+  SetSourceNode(src);
+  SetDestinationNode(dst);
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
-  std::cout << "Created Channe Realization between "
-		  << src->GetIDNetworkNode () << " and " << dst->GetIDNetworkNode () << std::endl;
+  std::cout << "Created Channe Realization between " << src->GetIDNetworkNode()
+            << " and " << dst->GetIDNetworkNode() << std::endl;
 #endif
 
   if (_simple_jakes_model_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_JAKES);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_JAKES);
   if (_PED_A_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_PED_A);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_PED_A);
   if (_PED_B_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_PED_B);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_PED_B);
   if (_VEH_A_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_VEH_A);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_VEH_A);
   if (_VEH_B_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_VEH_B);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_VEH_B);
 
-  UpdateModels ();
+  UpdateModels();
 }
 
-MacroCellRuralAreaChannelRealization::~MacroCellRuralAreaChannelRealization()
-{
-}
+MacroCellRuralAreaChannelRealization::~MacroCellRuralAreaChannelRealization() {}
 
-void
-MacroCellRuralAreaChannelRealization::SetPenetrationLoss (double pnl)
-{
+void MacroCellRuralAreaChannelRealization::SetPenetrationLoss(double pnl) {
   m_penetrationLoss = pnl;
 }
 
-double
-MacroCellRuralAreaChannelRealization::GetPenetrationLoss (void)
-{
+double MacroCellRuralAreaChannelRealization::GetPenetrationLoss(void) {
   return m_penetrationLoss;
 }
 
-double
-MacroCellRuralAreaChannelRealization::GetPathLoss (void)
-{
+double MacroCellRuralAreaChannelRealization::GetPathLoss(void) {
   /*
    * According to  ---  insert standard 3gpp ---
    * the Path Loss Model For Rural Environment is
@@ -89,109 +79,95 @@ MacroCellRuralAreaChannelRealization::GetPathLoss (void)
    */
   double distance;
 
-  if (GetSourceNode ()->GetNodeType () == NetworkNode::TYPE_UE
-		  && GetDestinationNode ()->GetNodeType () == NetworkNode::TYPE_ENODEB)
-    {
-	  UserEquipment* ue = (UserEquipment*) GetSourceNode ();
-	  ENodeB* enb = (ENodeB*) GetDestinationNode ();
+  if (GetSourceNode()->GetNodeType() == NetworkNode::TYPE_UE &&
+      GetDestinationNode()->GetNodeType() == NetworkNode::TYPE_ENODEB) {
+    UserEquipment* ue = (UserEquipment*)GetSourceNode();
+    ENodeB* enb = (ENodeB*)GetDestinationNode();
 
-	  distance =  ue->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (enb->GetMobilityModel ()->GetAbsolutePosition ());
-    }
+    distance = ue->GetMobilityModel()->GetAbsolutePosition()->GetDistance(
+        enb->GetMobilityModel()->GetAbsolutePosition());
+  }
 
-  else if (GetDestinationNode ()->GetNodeType () == NetworkNode::TYPE_UE
-		  && GetSourceNode ()->GetNodeType () == NetworkNode::TYPE_ENODEB)
-    {
-	  UserEquipment* ue = (UserEquipment*) GetDestinationNode ();
-	  ENodeB* enb = (ENodeB*) GetSourceNode ();
+  else if (GetDestinationNode()->GetNodeType() == NetworkNode::TYPE_UE &&
+           GetSourceNode()->GetNodeType() == NetworkNode::TYPE_ENODEB) {
+    UserEquipment* ue = (UserEquipment*)GetDestinationNode();
+    ENodeB* enb = (ENodeB*)GetSourceNode();
 
-	  distance =  ue->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (enb->GetMobilityModel ()->GetAbsolutePosition ());
-    }
+    distance = ue->GetMobilityModel()->GetAbsolutePosition()->GetDistance(
+        enb->GetMobilityModel()->GetAbsolutePosition());
+  }
 
-  m_pathLoss = 100.54 + (34.1 * log10 (distance * 0.001)); //76.7-97.23(200-800)
-
+  m_pathLoss = 100.54 + (34.1 * log10(distance * 0.001));  //76.7-97.23(200-800)
 
   return m_pathLoss;
 }
 
-
-void
-MacroCellRuralAreaChannelRealization::SetShadowing (double sh)
-{
+void MacroCellRuralAreaChannelRealization::SetShadowing(double sh) {
   m_shadowing = sh;
 }
 
-double
-MacroCellRuralAreaChannelRealization::GetShadowing (void)
-{
+double MacroCellRuralAreaChannelRealization::GetShadowing(void) {
   return m_shadowing;
 }
 
-
-void
-MacroCellRuralAreaChannelRealization::UpdateModels ()
-{
+void MacroCellRuralAreaChannelRealization::UpdateModels() {
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
   std::cout << "\t --> UpdateModels" << std::endl;
 #endif
 
-
   //update shadowing
   m_shadowing = 0;
-  double probability = GetRandomVariable (101) / 100.0;
-  for (int i = 0; i < 201; i++)
-    {
-	  if (probability <= shadowing_probability[i])
-	    {
-		  m_shadowing = shadowing_value[i];
-          break;
-	    }
+  double probability = GetRandomVariable(101) / 100.0;
+  for (int i = 0; i < 201; i++) {
+    if (probability <= shadowing_probability[i]) {
+      m_shadowing = shadowing_value[i];
+      break;
     }
+  }
 
-  UpdateFastFading ();
+  UpdateFastFading();
 
-  SetLastUpdate ();
+  SetLastUpdate();
 }
 
-
-std::vector<double>
-MacroCellRuralAreaChannelRealization::GetLoss ()
-{
+std::vector<double> MacroCellRuralAreaChannelRealization::GetLoss() {
 #ifdef TEST_PROPAGATION_LOSS_MODEL
   std::cout << "\t  --> compute loss between "
-		  << GetSourceNode ()->GetIDNetworkNode () << " and "
-		  << GetDestinationNode ()->GetIDNetworkNode () << std::endl;
+            << GetSourceNode()->GetIDNetworkNode() << " and "
+            << GetDestinationNode()->GetIDNetworkNode() << std::endl;
 #endif
 
   // if (NeedForUpdate ())
   //   {
-	//    UpdateModels ();
+  //    UpdateModels ();
   //   }
 
   std::vector<double> loss;
 
-
-  int now_ms = Simulator::Init()->Now () * 1000;
-  int lastUpdate_ms = GetLastUpdate () * 1000;
+  int now_ms = Simulator::Init()->Now() * 1000;
+  int lastUpdate_ms = GetLastUpdate() * 1000;
   //int index = now_ms - lastUpdate_ms;
-  int index = now_ms % (int)(GetSamplingPeriod() * 1000); // sample period is 500ms here
+  int index = now_ms %
+              (int)(GetSamplingPeriod() * 1000);  // sample period is 500ms here
 
-  int nbOfSubChannels = GetSourceNode ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int nbOfSubChannels = GetSourceNode()
+                            ->GetPhy()
+                            ->GetBandwidthManager()
+                            ->GetDlSubChannels()
+                            .size();
 
-  for (int i = 0; i < nbOfSubChannels; i++)
-    {
-	  double l = GetFastFading ()->at (i).at (index) - GetPathLoss () - GetPenetrationLoss () - GetShadowing ();
-	  loss.push_back (l);
+  for (int i = 0; i < nbOfSubChannels; i++) {
+    double l = GetFastFading()->at(i).at(index) - GetPathLoss() -
+               GetPenetrationLoss() - GetShadowing();
+    loss.push_back(l);
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
-       std::cout << "\t\t mlp = " << GetFastFading ()->at (i).at (index)
-		  << " pl = " << GetPathLoss ()
-          << " pnl = " << GetPenetrationLoss()
-          << " sh = " << GetShadowing()
-          << " LOSS = " << l
-		  << std::endl;
+    std::cout << "\t\t mlp = " << GetFastFading()->at(i).at(index)
+              << " pl = " << GetPathLoss() << " pnl = " << GetPenetrationLoss()
+              << " sh = " << GetShadowing() << " LOSS = " << l << std::endl;
 #endif
-    }
+  }
 
   return loss;
 }

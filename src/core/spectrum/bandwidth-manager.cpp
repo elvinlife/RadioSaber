@@ -19,15 +19,14 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "bandwidth-manager.h"
 #include <stdio.h>
 #include <iostream>
 
-#define UL_LOW_FREQUENCY_BAND_1 1920 	//MHz
-#define UL_HIGH_FREQUENCY_BAND_1 1980 	//MHz
-#define DL_LOW_FREQUENCY_BAND_1 2110 	//MHz
-#define DL_HIGH_FREQUENCY_BAND_1 2170 	//MHz
+#define UL_LOW_FREQUENCY_BAND_1 1920   //MHz
+#define UL_HIGH_FREQUENCY_BAND_1 1980  //MHz
+#define DL_LOW_FREQUENCY_BAND_1 2110   //MHz
+#define DL_HIGH_FREQUENCY_BAND_1 2170  //MHz
 
 #define RBs_FOR_1_4_MHz 6
 #define RBs_FOR_3_MHz 15
@@ -37,12 +36,10 @@
 #define RBs_FOR_20_MHz 100
 #define RBs_FOR_100_MHz 512
 
-BandwidthManager::BandwidthManager()
-{
-}
+BandwidthManager::BandwidthManager() {}
 
-BandwidthManager::BandwidthManager(double ulBw, double dlBw, int ulOffset, int dlOffset)
-{
+BandwidthManager::BandwidthManager(double ulBw, double dlBw, int ulOffset,
+                                   int dlOffset) {
   m_ulBandwidth = ulBw;
   m_dlBandwidth = dlBw;
   m_ulOffsetBw = ulOffset;
@@ -53,121 +50,77 @@ BandwidthManager::BandwidthManager(double ulBw, double dlBw, int ulOffset, int d
   m_dlSubChannels.clear();
   m_ulSubChannels.clear();
 
-  if (dlBw == 1.4)
-    {
-      for (int i = dlOffset; i < dlOffset + RBs_FOR_1_4_MHz; i++)
-        {
-    	  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  if (dlBw == 1.4) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_1_4_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (dlBw == 3)
-    {
-      for (int i = dlOffset; i < dlOffset + RBs_FOR_3_MHz; i++)
-        {
-    	  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (dlBw == 3) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_3_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (dlBw == 5)
-    {
-      for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++)
-        {
-    	  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (dlBw == 5) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (dlBw == 10)
-    {
-      for (int i = dlOffset; i < dlOffset + RBs_FOR_10_MHz; i++)
-        {
-    	  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (dlBw == 10) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_10_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (dlBw == 15)
-    {
-      for (int i = dlOffset; i < dlOffset + RBs_FOR_15_MHz; i++)
-        {
-    	  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (dlBw == 15) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_15_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (dlBw == 20)
-    {
-      for (int i = dlOffset; i < dlOffset + RBs_FOR_20_MHz; i++)
-        {
-    	  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (dlBw == 20) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_20_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (dlBw == 100) {
+  } else if (dlBw == 100) {
     for (int i = dlOffset; i < dlOffset + RBs_FOR_100_MHz; i++) {
       m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
+  } else {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
   }
-  else
-    {
-      for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++)
-        {
-    	  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
-    }
 
-
-
-  if (ulBw == 1.4)
-    {
-      for (int i = ulOffset; i < ulOffset + RBs_FOR_1_4_MHz; i++)
-        {
-    	  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  if (ulBw == 1.4) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_1_4_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (ulBw == 3)
-    {
-      for (int i = ulOffset; i < ulOffset + RBs_FOR_3_MHz; i++)
-        {
-    	  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (ulBw == 3) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_3_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (ulBw == 5)
-    {
-      for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++)
-        {
-    	  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (ulBw == 5) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (ulBw == 10)
-    {
-      for (int i = ulOffset; i < ulOffset + RBs_FOR_10_MHz; i++)
-        {
-    	  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (ulBw == 10) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_10_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (ulBw == 15)
-    {
-      for (int i = ulOffset; i < ulOffset + RBs_FOR_15_MHz; i++)
-        {
-    	  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (ulBw == 15) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_15_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (ulBw == 20)
-    {
-      for (int i = ulOffset; i < ulOffset + RBs_FOR_20_MHz; i++)
-        {
-    	  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else if (ulBw == 20) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_20_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  else if (ulBw == 100) {
+  } else if (ulBw == 100) {
     for (int i = ulOffset; i < ulOffset + RBs_FOR_100_MHz; i++) {
       m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
-  }
-  else
-    {
-      for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++)
-        {
-    	  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-        }
+  } else {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
     }
+  }
 }
 
-BandwidthManager::BandwidthManager(double ulBw, double dlBw, int ulOffset, int dlOffset, bool tddTrue)
-{
+BandwidthManager::BandwidthManager(double ulBw, double dlBw, int ulOffset,
+                                   int dlOffset, bool tddTrue) {
   m_ulBandwidth = ulBw + dlBw;
   m_dlBandwidth = dlBw + ulBw;
   m_ulOffsetBw = ulOffset;
@@ -178,253 +131,169 @@ BandwidthManager::BandwidthManager(double ulBw, double dlBw, int ulOffset, int d
   m_dlSubChannels.clear();
   m_ulSubChannels.clear();
 
-  if (dlBw == 1.4)
-	{
-	  for (int i = dlOffset; i < dlOffset + RBs_FOR_1_4_MHz; i++)
-		{
-		  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (dlBw == 3)
-	{
-	  for (int i = dlOffset; i < dlOffset + RBs_FOR_3_MHz; i++)
-		{
-		  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (dlBw == 5)
-	{
-	  for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++)
-		{
-		  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (dlBw == 10)
-	{
-	  for (int i = dlOffset; i < dlOffset + RBs_FOR_10_MHz; i++)
-		{
-		  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (dlBw == 15)
-	{
-	  for (int i = dlOffset; i < dlOffset + RBs_FOR_15_MHz; i++)
-		{
-		  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (dlBw == 20)
-	{
-	  for (int i = dlOffset; i < dlOffset + RBs_FOR_20_MHz; i++)
-		{
-		  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else
-	{
-	  for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++)
-		{
-		  m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
+  if (dlBw == 1.4) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_1_4_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (dlBw == 3) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_3_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (dlBw == 5) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (dlBw == 10) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_10_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (dlBw == 15) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_15_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (dlBw == 20) {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_20_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else {
+    for (int i = dlOffset; i < dlOffset + RBs_FOR_5_MHz; i++) {
+      m_dlSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_ulSubChannels.push_back(DL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  }
 
-
-
-  if (ulBw == 1.4)
-	{
-	  for (int i = ulOffset; i < ulOffset + RBs_FOR_1_4_MHz; i++)
-		{
-		  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (ulBw == 3)
-	{
-	  for (int i = ulOffset; i < ulOffset + RBs_FOR_3_MHz; i++)
-		{
-		  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (ulBw == 5)
-	{
-	  for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++)
-		{
-		  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (ulBw == 10)
-	{
-	  for (int i = ulOffset; i < ulOffset + RBs_FOR_10_MHz; i++)
-		{
-		  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (ulBw == 15)
-	{
-	  for (int i = ulOffset; i < ulOffset + RBs_FOR_15_MHz; i++)
-		{
-		  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else if (ulBw == 20)
-	{
-	  for (int i = ulOffset; i < ulOffset + RBs_FOR_20_MHz; i++)
-		{
-		  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
-  else
-	{
-	  for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++)
-		{
-		  m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		  m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
-		}
-	}
+  if (ulBw == 1.4) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_1_4_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (ulBw == 3) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_3_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (ulBw == 5) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (ulBw == 10) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_10_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (ulBw == 15) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_15_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else if (ulBw == 20) {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_20_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  } else {
+    for (int i = ulOffset; i < ulOffset + RBs_FOR_5_MHz; i++) {
+      m_ulSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+      m_dlSubChannels.push_back(UL_LOW_FREQUENCY_BAND_1 + (i * 0.18));
+    }
+  }
 }
 
+BandwidthManager::~BandwidthManager() {}
 
-BandwidthManager::~BandwidthManager()
-{
-}
-
-void
-BandwidthManager::SetDlSubChannels (std::vector<double> s)
-{
+void BandwidthManager::SetDlSubChannels(std::vector<double> s) {
   m_dlSubChannels = s;
 }
 
-std::vector<double>
-BandwidthManager::GetDlSubChannels (void)
-{
+std::vector<double> BandwidthManager::GetDlSubChannels(void) {
   return m_dlSubChannels;
 }
 
-void
-BandwidthManager::SetUlSubChannels (std::vector<double> s)
-{
+void BandwidthManager::SetUlSubChannels(std::vector<double> s) {
   m_ulSubChannels = s;
 }
 
-std::vector<double>
-BandwidthManager::GetUlSubChannels (void)
-{
+std::vector<double> BandwidthManager::GetUlSubChannels(void) {
   return m_ulSubChannels;
 }
 
-void
-BandwidthManager::SetOperativeSubBand (int s)
-{
+void BandwidthManager::SetOperativeSubBand(int s) {
   m_operativeSubBand = s;
 }
 
-int
-BandwidthManager::GetOperativeSubBand (void)
-{
+int BandwidthManager::GetOperativeSubBand(void) {
   return m_operativeSubBand;
 }
 
-
-void
-BandwidthManager::SetUlBandwidth (double b)
-{
+void BandwidthManager::SetUlBandwidth(double b) {
   m_ulBandwidth = b;
 }
 
-void
-BandwidthManager::SetDlBandwidth (double b)
-{
+void BandwidthManager::SetDlBandwidth(double b) {
   m_dlBandwidth = b;
 }
 
-void
-BandwidthManager::SetUlOffsetBw (int o)
-{
+void BandwidthManager::SetUlOffsetBw(int o) {
   m_ulOffsetBw = o;
 }
 
-void
-BandwidthManager::SetDlOffsetBw (int o)
-{
+void BandwidthManager::SetDlOffsetBw(int o) {
   m_dlOffsetBw = o;
 }
 
-double
-BandwidthManager::GetUlBandwidth (void)
-{
+double BandwidthManager::GetUlBandwidth(void) {
   return m_ulBandwidth;
 }
 
-double
-BandwidthManager::GetDlBandwidth (void)
-{
+double BandwidthManager::GetDlBandwidth(void) {
   return m_dlBandwidth;
 }
 
-
-int
-BandwidthManager::GetUlOffsetBw (void)
-{
+int BandwidthManager::GetUlOffsetBw(void) {
   return m_ulOffsetBw;
 }
 
-int
-BandwidthManager::GetDlOffsetBw (void)
-{
+int BandwidthManager::GetDlOffsetBw(void) {
   return m_dlOffsetBw;
 }
 
-BandwidthManager*
-BandwidthManager::Copy ()
-{
-  BandwidthManager *s = new BandwidthManager ();
-  s->SetDlBandwidth (GetDlBandwidth ());
-  s->SetUlBandwidth (GetUlBandwidth ());
-  s->SetDlOffsetBw (GetDlOffsetBw ());
-  s->SetUlOffsetBw (GetUlOffsetBw ());
-  s->SetDlSubChannels (GetDlSubChannels ());
-  s->SetUlSubChannels (GetUlSubChannels ());
-  s->SetOperativeSubBand (GetOperativeSubBand ());
+BandwidthManager* BandwidthManager::Copy() {
+  BandwidthManager* s = new BandwidthManager();
+  s->SetDlBandwidth(GetDlBandwidth());
+  s->SetUlBandwidth(GetUlBandwidth());
+  s->SetDlOffsetBw(GetDlOffsetBw());
+  s->SetUlOffsetBw(GetUlOffsetBw());
+  s->SetDlSubChannels(GetDlSubChannels());
+  s->SetUlSubChannels(GetUlSubChannels());
+  s->SetOperativeSubBand(GetOperativeSubBand());
 
   return s;
 }
 
-void
-BandwidthManager::Print (void)
-{
+void BandwidthManager::Print(void) {
   std::cout << "BandwidthManager: " << this << std::endl;
 
-  std::cout << "\t operative sub band: " << m_operativeSubBand <<
-		  "\n\t m_dlBandwidth " << m_dlBandwidth <<
-		  "\n\t m_ulBandwidth " << m_ulBandwidth <<
-		  "\n\t m_dlOffsetBw " << m_dlOffsetBw <<
-  	      "\n\t m_ulOffsetBw " << m_ulOffsetBw << std::endl;
+  std::cout << "\t operative sub band: " << m_operativeSubBand
+            << "\n\t m_dlBandwidth " << m_dlBandwidth << "\n\t m_ulBandwidth "
+            << m_ulBandwidth << "\n\t m_dlOffsetBw " << m_dlOffsetBw
+            << "\n\t m_ulOffsetBw " << m_ulOffsetBw << std::endl;
 
   std::cout << "\t DL channels: ";
-  for (int i = 0; i < m_dlSubChannels.size (); i++)
-    {
-	  std::cout << m_dlSubChannels.at (i) << " ";
-    }
-  std::cout <<  std::endl;
+  for (int i = 0; i < m_dlSubChannels.size(); i++) {
+    std::cout << m_dlSubChannels.at(i) << " ";
+  }
+  std::cout << std::endl;
 
   std::cout << "\t UL channels: ";
-  for (int i = 0; i < m_ulSubChannels.size (); i++)
-    {
-	  std::cout << m_ulSubChannels.at (i) << " ";
-    }
-  std::cout <<  std::endl;
+  for (int i = 0; i < m_ulSubChannels.size(); i++) {
+    std::cout << m_ulSubChannels.at(i) << " ";
+  }
+  std::cout << std::endl;
 }
-
-

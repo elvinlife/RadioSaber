@@ -19,87 +19,90 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef USERSDISTRIBTION_H_
 #define USERSDISTRIBTION_H_
 
+#include "../componentManagers/NetworkManager.h"
 #include "../core/cartesianCoodrdinates/CartesianCoordinates.h"
 #include "CellPosition.h"
-#include "../componentManagers/NetworkManager.h"
 
-#include <vector>
 #include <iostream>
+#include <vector>
 
-static CartesianCoordinates*
-GetCartesianCoordinatesFromPolar (double r, double angle)
-{
-  double x = r * cos (angle);
-  double y = r * sin (angle);
+static CartesianCoordinates* GetCartesianCoordinatesFromPolar(double r,
+                                                              double angle) {
+  double x = r * cos(angle);
+  double y = r * sin(angle);
 
-  CartesianCoordinates *coordinates = new CartesianCoordinates ();
-  coordinates->SetCoordinates(x,y);
+  CartesianCoordinates* coordinates = new CartesianCoordinates();
+  coordinates->SetCoordinates(x, y);
   return coordinates;
 }
 
-static vector<CartesianCoordinates*>*
-GetUniformUsersDistribution (int idCell, int nbUE)
-{
-  NetworkManager * networkManager = NetworkManager::Init();
-  vector<CartesianCoordinates*> *vectorOfCoordinates = new vector<CartesianCoordinates*>;
+static vector<CartesianCoordinates*>* GetUniformUsersDistribution(int idCell,
+                                                                  int nbUE) {
+  NetworkManager* networkManager = NetworkManager::Init();
+  vector<CartesianCoordinates*>* vectorOfCoordinates =
+      new vector<CartesianCoordinates*>;
 
-  Cell *cell = networkManager->GetCellByID(idCell);
+  Cell* cell = networkManager->GetCellByID(idCell);
 
-  double radius = (cell->GetRadius()*1000)*0.8;
+  double radius = (cell->GetRadius() * 1000) * 0.8;
 
-  CartesianCoordinates *cellCoordinates = cell->GetCellCenterPosition();
-  double r; double angle;
+  CartesianCoordinates* cellCoordinates = cell->GetCellCenterPosition();
+  double r;
+  double angle;
 
-  for (int i = 0; i < nbUE; i++)
-    {
-	  r = (double)(rand() %(int)radius);
-	  angle = (double)(rand() %360) * ((2*3.14)/360);
+  for (int i = 0; i < nbUE; i++) {
+    r = (double)(rand() % (int)radius);
+    angle = (double)(rand() % 360) * ((2 * 3.14) / 360);
 
-	  CartesianCoordinates *newCoordinates = GetCartesianCoordinatesFromPolar (r, angle);
+    CartesianCoordinates* newCoordinates =
+        GetCartesianCoordinatesFromPolar(r, angle);
 
-	  //Compute absoluteCoordinates
-	  newCoordinates->SetCoordinateX (cellCoordinates->GetCoordinateX () + newCoordinates->GetCoordinateX ());
-	  newCoordinates->SetCoordinateY (cellCoordinates->GetCoordinateY () + newCoordinates->GetCoordinateY ());
+    //Compute absoluteCoordinates
+    newCoordinates->SetCoordinateX(cellCoordinates->GetCoordinateX() +
+                                   newCoordinates->GetCoordinateX());
+    newCoordinates->SetCoordinateY(cellCoordinates->GetCoordinateY() +
+                                   newCoordinates->GetCoordinateY());
 
-	  vectorOfCoordinates->push_back(newCoordinates);
-    }
+    vectorOfCoordinates->push_back(newCoordinates);
+  }
 
   return vectorOfCoordinates;
 }
 
-static vector<CartesianCoordinates*>*
-GetUniformUsersDistributionInFemtoCell (int idCell, int nbUE)
-{
-  NetworkManager * networkManager = NetworkManager::Init();
-  vector<CartesianCoordinates*> *vectorOfCoordinates = new vector<CartesianCoordinates*>;
+static vector<CartesianCoordinates*>* GetUniformUsersDistributionInFemtoCell(
+    int idCell, int nbUE) {
+  NetworkManager* networkManager = NetworkManager::Init();
+  vector<CartesianCoordinates*>* vectorOfCoordinates =
+      new vector<CartesianCoordinates*>;
 
-  Femtocell *cell = networkManager->GetFemtoCellByID(idCell);
+  Femtocell* cell = networkManager->GetFemtoCellByID(idCell);
 
   double side = cell->GetSide();
 
-  CartesianCoordinates *cellCoordinates = cell->GetCellCenterPosition();
-  double r; double angle;
+  CartesianCoordinates* cellCoordinates = cell->GetCellCenterPosition();
+  double r;
+  double angle;
 
-  for (int i = 0; i < nbUE; i++)
-    {
-	  r = (double)(rand() %(int)side);
-	  angle = (double)(rand() %360) * ((2*3.14)/360);
+  for (int i = 0; i < nbUE; i++) {
+    r = (double)(rand() % (int)side);
+    angle = (double)(rand() % 360) * ((2 * 3.14) / 360);
 
-	  CartesianCoordinates *newCoordinates = GetCartesianCoordinatesFromPolar (r, angle);
+    CartesianCoordinates* newCoordinates =
+        GetCartesianCoordinatesFromPolar(r, angle);
 
-	  //Compute absoluteCoordinates
-	  newCoordinates->SetCoordinateX (cellCoordinates->GetCoordinateX () + newCoordinates->GetCoordinateX ());
-	  newCoordinates->SetCoordinateY (cellCoordinates->GetCoordinateY () + newCoordinates->GetCoordinateY ());
+    //Compute absoluteCoordinates
+    newCoordinates->SetCoordinateX(cellCoordinates->GetCoordinateX() +
+                                   newCoordinates->GetCoordinateX());
+    newCoordinates->SetCoordinateY(cellCoordinates->GetCoordinateY() +
+                                   newCoordinates->GetCoordinateY());
 
-	  vectorOfCoordinates->push_back(newCoordinates);
-    }
+    vectorOfCoordinates->push_back(newCoordinates);
+  }
 
   return vectorOfCoordinates;
 }
-
 
 #endif /* USERSDISTRIBTION_H_ */

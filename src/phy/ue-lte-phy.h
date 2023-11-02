@@ -19,43 +19,42 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef UE_LTE_PHY_H_
 #define UE_LTE_PHY_H_
 
-#include "lte-phy.h"
 #include <vector>
+#include "lte-phy.h"
 
 class IdealControlMessage;
 
-class UeLtePhy :public LtePhy {
-public:
-	UeLtePhy();
-	virtual ~UeLtePhy();
+class UeLtePhy : public LtePhy {
+ public:
+  UeLtePhy();
+  virtual ~UeLtePhy();
 
-	virtual void DoSetBandwidthManager (void);
+  virtual void DoSetBandwidthManager(void);
 
-	virtual void StartTx (PacketBurst* p);
-	virtual void StartRx (PacketBurst* p, TransmittedSignal* txSignal);
+  virtual void StartTx(PacketBurst* p);
+  virtual void StartRx(PacketBurst* p, TransmittedSignal* txSignal);
 
-	void CreateCqiFeedbacks (std::vector<double> sinr);
+  void CreateCqiFeedbacks(std::vector<double> sinr);
 
-	virtual void SendIdealControlMessage (IdealControlMessage *msg);
-	virtual void ReceiveIdealControlMessage (IdealControlMessage *msg);
+  virtual void SendIdealControlMessage(IdealControlMessage* msg);
+  virtual void ReceiveIdealControlMessage(IdealControlMessage* msg);
 
-	void SendReferenceSymbols (void);
-	void SetTxSignalForReferenceSymbols (void);
-	TransmittedSignal* GetTxSignalForReferenceSymbols (void);
+  void SendReferenceSymbols(void);
+  void SetTxSignalForReferenceSymbols(void);
+  TransmittedSignal* GetTxSignalForReferenceSymbols(void);
 
-private:
-	std::vector<double> m_measuredSinr;
-	TransmittedSignal* m_txSignalForRerferenceSymbols;
+ private:
+  std::vector<double> m_measuredSinr;
+  TransmittedSignal* m_txSignalForRerferenceSymbols;
 
-	std::vector<int> m_channelsForTx;
-	std::vector<int> m_mcsIndexForTx;
+  std::vector<int> m_channelsForTx;
+  std::vector<int> m_mcsIndexForTx;
 
-	std::vector<int> m_channelsForRx;
-	std::vector<int> m_mcsIndexForRx;
+  std::vector<int> m_channelsForRx;
+  std::vector<int> m_mcsIndexForRx;
 };
 
 #endif /* UE_LTE_PHY_H_ */

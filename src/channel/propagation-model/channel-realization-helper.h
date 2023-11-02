@@ -19,41 +19,34 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef CHANNEL_REALIZATION_HELPER_H_
 #define CHANNEL_REALIZATION_HELPER_H_
 
+#include "femtocell-urban-area-channel-realization.h"
 #include "macrocell-urban-area-channel-realization.h"
 #include "winner-downlink-channel-realization.h"
-#include "femtocell-urban-area-channel-realization.h"
 
-static ChannelRealization* CreateChannelRealization (NetworkNode* src, NetworkNode* dst)
-{
-  if (src->GetNodeType()==NetworkNode::TYPE_ENODEB ||
-		  dst->GetNodeType()==NetworkNode::TYPE_ENODEB)
-    {
-	  MacroCellUrbanAreaChannelRealization* c =
-			new MacroCellUrbanAreaChannelRealization (src, dst);
-	  return c;
-    }
-  else if (src->GetNodeType()==NetworkNode::TYPE_HOME_BASE_STATION
-		  || dst->GetNodeType()==NetworkNode::TYPE_HOME_BASE_STATION)
-    {
+static ChannelRealization* CreateChannelRealization(NetworkNode* src,
+                                                    NetworkNode* dst) {
+  if (src->GetNodeType() == NetworkNode::TYPE_ENODEB ||
+      dst->GetNodeType() == NetworkNode::TYPE_ENODEB) {
+    MacroCellUrbanAreaChannelRealization* c =
+        new MacroCellUrbanAreaChannelRealization(src, dst);
+    return c;
+  } else if (src->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION ||
+             dst->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION) {
 
-	  //FemtoCellUrbanAreaChannelRealization* c =
-	  //		  new FemtoCellUrbanAreaChannelRealization (src, dst);
+    //FemtoCellUrbanAreaChannelRealization* c =
+    //		  new FemtoCellUrbanAreaChannelRealization (src, dst);
 
-	  WinnerDownlinkChannelRealization* c =
-	   		  new WinnerDownlinkChannelRealization (src, dst);
-	  return c;
-	}
-  else
-	{
-	  MacroCellUrbanAreaChannelRealization* c =
-			  new MacroCellUrbanAreaChannelRealization (src, dst);
-	  return c;
-	}
-
+    WinnerDownlinkChannelRealization* c =
+        new WinnerDownlinkChannelRealization(src, dst);
+    return c;
+  } else {
+    MacroCellUrbanAreaChannelRealization* c =
+        new MacroCellUrbanAreaChannelRealization(src, dst);
+    return c;
+  }
 }
 
 #endif /* CHANNEL_REALIZATION_HELPER_H_ */

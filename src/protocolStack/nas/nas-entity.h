@@ -19,22 +19,21 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef NASENTITY_H_
 #define NASENTITY_H_
 
 class NetworkNode;
 
 class NasEntity {
-public:
-	NasEntity();
-	virtual ~NasEntity();
+ public:
+  NasEntity();
+  virtual ~NasEntity();
 
-	void SetDevice (NetworkNode* d);
-	NetworkNode* GetDevice ();
+  void SetDevice(NetworkNode* d);
+  NetworkNode* GetDevice();
 
-private:
-	NetworkNode* m_device;
+ private:
+  NetworkNode* m_device;
 };
 
 #endif /* NASENTITY_H_ */

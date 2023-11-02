@@ -20,19 +20,17 @@
  */
 
 #include "simple-error-model.h"
+#include "../utility/RandomVariable.h"
 #include "BLERTrace/BLERvsSINR_15CQI_AWGN.h"
 #include "BLERTrace/BLERvsSINR_15CQI_TU.h"
-#include "../utility/RandomVariable.h"
 
-SimpleErrorModel::SimpleErrorModel()
-{}
+SimpleErrorModel::SimpleErrorModel() {}
 
-SimpleErrorModel::~SimpleErrorModel()
-{}
+SimpleErrorModel::~SimpleErrorModel() {}
 
-bool
-SimpleErrorModel::CheckForPhysicalError (std::vector<int> channels, std::vector<int> mcs, std::vector<double> sinr)
-{
+bool SimpleErrorModel::CheckForPhysicalError(std::vector<int> channels,
+                                             std::vector<int> mcs,
+                                             std::vector<double> sinr) {
   /*
    * The device determines if a packet has been received correctly.
    * To this aim, for each sub-channel, used to transmit that packet,
@@ -49,67 +47,55 @@ SimpleErrorModel::CheckForPhysicalError (std::vector<int> channels, std::vector<
 
   bool error = false;
 
-#ifdef  BLER_DEBUG
+#ifdef BLER_DEBUG
   std::cout << "\n--> CheckForPhysicalError \n\t\t Channels: ";
-  for (int i = 0; i < channels.size (); i++)
-	{
-	  std::cout << channels.at (i) << " ";
-	}
+  for (int i = 0; i < channels.size(); i++) {
+    std::cout << channels.at(i) << " ";
+  }
   std::cout << "\n\t\t MCS: ";
-    for (int i = 0; i < mcs.size (); i++)
-  	{
-  	  std::cout << mcs.at (i) << " ";
-  	}
-    std::cout << "\n\t\t SINR: ";
-  for (int i = 0; i < sinr.size (); i++)
-	{
-	  std::cout << sinr.at (i) << " ";
-	}
-  std::cout << "\n"<< std::endl;
+  for (int i = 0; i < mcs.size(); i++) {
+    std::cout << mcs.at(i) << " ";
+  }
+  std::cout << "\n\t\t SINR: ";
+  for (int i = 0; i < sinr.size(); i++) {
+    std::cout << sinr.at(i) << " ";
+  }
+  std::cout << "\n" << std::endl;
 #endif
 
+  double randomNumber = (rand() % 100) / 100.;
 
-  double randomNumber = (rand () %100 ) / 100.;
+  for (int i = 0; i < channels.size(); i++) {
+    int mcs_ = mcs.at(i);
+    double sinr_ = sinr.at(channels.at(i));
 
-  for (int i = 0; i < channels.size (); i++)
-    {
-	  int mcs_ = mcs.at (i);
-	  double sinr_ = sinr.at (channels.at (i));
-
-
-	  double bler;
-	  if (_channel_TU_)
-	    {
-		  bler = GetBLER_TU (sinr_, mcs_);
-	    }
-	  else
-	    {
-		  bler = GetBLER_AWGN (sinr_, mcs_);
-	    }
-
-#ifdef BLER_DEBUG
-	  std::cout <<"Get BLER for ch " << channels.at(i)<<
-			  " cqi " << mcs_ << " sinr "  << sinr_
-			  << " BLER = " << bler << std::endl;
-#endif
-
-      if (randomNumber < bler)
-	    {
-#ifdef BLER_DEBUG
-	    	std::cout << "ERROR RX ---- "
-	    			  << "effective SINR:" << sinr_
-	    			  << ", selected CQI: " << mcs_
-	    			  << ", random " << randomNumber
-	    			  << ", BLER: " << bler << std::endl;
-#endif
-		  error = true;
-		  if (_TEST_BLER_) std::cout << "BLER PDF " << sinr_ << " 1" << std::endl;
-		}
-	  else
-		{
-		  if (_TEST_BLER_) std::cout << "BLER PDF " << sinr_ << " 0" << std::endl;
-		}
+    double bler;
+    if (_channel_TU_) {
+      bler = GetBLER_TU(sinr_, mcs_);
+    } else {
+      bler = GetBLER_AWGN(sinr_, mcs_);
     }
+
+#ifdef BLER_DEBUG
+    std::cout << "Get BLER for ch " << channels.at(i) << " cqi " << mcs_
+              << " sinr " << sinr_ << " BLER = " << bler << std::endl;
+#endif
+
+    if (randomNumber < bler) {
+#ifdef BLER_DEBUG
+      std::cout << "ERROR RX ---- "
+                << "effective SINR:" << sinr_ << ", selected CQI: " << mcs_
+                << ", random " << randomNumber << ", BLER: " << bler
+                << std::endl;
+#endif
+      error = true;
+      if (_TEST_BLER_)
+        std::cout << "BLER PDF " << sinr_ << " 1" << std::endl;
+    } else {
+      if (_TEST_BLER_)
+        std::cout << "BLER PDF " << sinr_ << " 0" << std::endl;
+    }
+  }
 
   return error;
 }

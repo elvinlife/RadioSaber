@@ -19,20 +19,17 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef RANDOMWAYPOINT_H_
 #define RANDOMWAYPOINT_H_
 
 #include "Mobility.h"
 
-class RandomWaypoint :public Mobility{
-public:
-	RandomWaypoint();
-	virtual ~RandomWaypoint();
+class RandomWaypoint : public Mobility {
+ public:
+  RandomWaypoint();
+  virtual ~RandomWaypoint();
 
-	void
-    UpdatePosition (double time);
+  void UpdatePosition(double time);
 };
 
 #endif /* RANDOMWAYPOINT_H_ */

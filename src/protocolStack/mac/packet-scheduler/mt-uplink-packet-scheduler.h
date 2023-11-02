@@ -19,19 +19,20 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef MT_UPLINK_PACKET_SCHEDULER_H_
 #define MT_UPLINK_PACKET_SCHEDULER_H_
 
 #include "uplink-packet-scheduler.h"
 
 class MaximumThroughputUplinkPacketScheduler : public UplinkPacketScheduler {
-public:
-	MaximumThroughputUplinkPacketScheduler ();
-	virtual ~MaximumThroughputUplinkPacketScheduler();
+ public:
+  MaximumThroughputUplinkPacketScheduler();
+  virtual ~MaximumThroughputUplinkPacketScheduler();
 
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
-    virtual double ComputeSchedulingMetric (UserToSchedule* user, int subchannel);
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
+  virtual double ComputeSchedulingMetric(UserToSchedule* user, int subchannel);
 };
 
 #endif /* MT_UPLINK_PACKET_SCHEDULER_H_ */

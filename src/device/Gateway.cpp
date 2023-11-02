@@ -19,24 +19,21 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "Gateway.h"
 
-Gateway::Gateway()
-{
+Gateway::Gateway() {
   SetIDNetworkNode(-1);
   SetNodeType(NetworkNode::TYPE_GW);
 
-  SetMobilityModel (0);
-  SetPhy (0);
+  SetMobilityModel(0);
+  SetPhy(0);
 
-  ProtocolStack *stack = new ProtocolStack (this);
-  SetProtocolStack (stack);
+  ProtocolStack* stack = new ProtocolStack(this);
+  SetProtocolStack(stack);
 
-  SetCell (0);
+  SetCell(0);
 }
 
-Gateway::~Gateway()
-{
-  Destroy ();
+Gateway::~Gateway() {
+  Destroy();
 }

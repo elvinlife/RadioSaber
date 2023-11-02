@@ -19,80 +19,60 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
-
 #include "calendar.h"
 
 #include <iostream>
 
-Calendar::Calendar()
-{
+Calendar::Calendar() {
   m_events = new Events;
 }
 
-Calendar::~Calendar()
-{
+Calendar::~Calendar() {
   delete m_events;
 }
 
-Calendar::Events*
-Calendar::GetEvents (void)
-{
+Calendar::Events* Calendar::GetEvents(void) {
   return m_events;
 }
 
-void
-Calendar::InsertEvent (Event *newEvent)
-{
-  Events *events = GetEvents ();
-  Event *event;
+void Calendar::InsertEvent(Event* newEvent) {
+  Events* events = GetEvents();
+  Event* event;
   Events::iterator iter;
 
-  if (IsEmpty ())
-    {
-	  events->push_front(newEvent);
-	  return;
+  if (IsEmpty()) {
+    events->push_front(newEvent);
+    return;
+  }
+
+  for (iter = events->begin(); iter != events->end(); iter++) {
+    event = *iter;
+    if (newEvent->GetTimeStamp() < event->GetTimeStamp()) {
+      m_events->insert(iter, newEvent);
+      return;
     }
+  }
 
-  for (iter = events->begin(); iter != events->end(); iter++)
-	{
-	  event = *iter;
-	  if(newEvent->GetTimeStamp() < event->GetTimeStamp())
-	    {
-		  m_events->insert(iter, newEvent);
-		  return;
-	    }
-	}
-
-  m_events->push_back(newEvent);;
+  m_events->push_back(newEvent);
+  ;
 }
 
-bool
-Calendar::IsEmpty (void)
-{
-  return GetEvents ()->empty();
+bool Calendar::IsEmpty(void) {
+  return GetEvents()->empty();
 }
 
-Event*
-Calendar::GetEvent (void)
-{
-  if (IsEmpty ())
-	return NULL;
+Event* Calendar::GetEvent(void) {
+  if (IsEmpty())
+    return NULL;
 
-  Event *event = GetEvents ()->front ();
+  Event* event = GetEvents()->front();
   return event;
 }
 
-void
-Calendar::RemoveEvent (void)
-{
-  if (!IsEmpty ())
-    {
-	  Event *event = GetEvents ()->front();
-	  GetEvents ()->pop_front ();
-	  delete event;
-    }
+void Calendar::RemoveEvent(void) {
+  if (!IsEmpty()) {
+    Event* event = GetEvents()->front();
+    GetEvents()->pop_front();
+    delete event;
+  }
 }
-
-

@@ -21,10 +21,8 @@
 
 #include "henb-lte-phy.h"
 
-HenbLtePhy::HenbLtePhy()
-{
-  SetTxPower(20); //dBm
+HenbLtePhy::HenbLtePhy() {
+  SetTxPower(20);  //dBm
 }
 
-HenbLtePhy::~HenbLtePhy()
-{}
+HenbLtePhy::~HenbLtePhy() {}

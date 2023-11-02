@@ -22,34 +22,28 @@
 #ifndef HENBMACENTITY_H_
 #define HENBMACENTITY_H_
 
-#include "enb-mac-entity.h"
 #include <vector>
+#include "enb-mac-entity.h"
 /*
  * This class implements the MAC layer of the Home eNodeB device extending the one of the eNodeB
  */
 class UserEquipment;
 
-class HenbMacEntity : public EnbMacEntity
-{
-public:
-	HenbMacEntity (void);
-	HenbMacEntity (bool restrictedAccess);
-	virtual ~HenbMacEntity (void);
+class HenbMacEntity : public EnbMacEntity {
+ public:
+  HenbMacEntity(void);
+  HenbMacEntity(bool restrictedAccess);
+  virtual ~HenbMacEntity(void);
 
-	void
-	SetRestrictedAccessMode(bool restricted);
-	bool
-	GetRestrictedAccessMode (void);
+  void SetRestrictedAccessMode(bool restricted);
+  bool GetRestrictedAccessMode(void);
 
-	void
-	AddSubscribedUser (UserEquipment* user);
-	bool
-	CheckSubscribedUser (UserEquipment* user);
+  void AddSubscribedUser(UserEquipment* user);
+  bool CheckSubscribedUser(UserEquipment* user);
 
-private:
-
-	bool m_restrictedAccessMode;
-	std::vector<UserEquipment*>  *m_subscriberList;
+ private:
+  bool m_restrictedAccessMode;
+  std::vector<UserEquipment*>* m_subscriberList;
 };
 
 #endif /* HENBMACENTITY_H_ */

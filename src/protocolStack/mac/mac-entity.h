@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef MAC_ENTITY_H
 #define MAC_ENTITY_H
 
@@ -34,28 +33,25 @@ class HarqManager;
  * This class provides a basic implementation of the MAC
  * layer
  */
-class MacEntity
-{
-public:
+class MacEntity {
+ public:
+  MacEntity(void);
+  virtual ~MacEntity(void);
 
-  MacEntity (void);
-  virtual ~MacEntity (void);
+  void Destroy(void);
 
-  void Destroy (void);
+  void SetDevice(NetworkNode* d);
+  NetworkNode* GetDevice();
 
-  void SetDevice (NetworkNode* d);
-  NetworkNode* GetDevice ();
+  void SetAmcModule(AMCModule* amcModule);
+  AMCModule* GetAmcModule(void) const;
 
-  void SetAmcModule (AMCModule* amcModule);
-  AMCModule* GetAmcModule (void) const;
+  HarqManager* GetHarqManager(void);
 
-  HarqManager* GetHarqManager (void);
-
-private:
+ private:
   NetworkNode* m_device;
   AMCModule* m_amcModule;
   HarqManager* m_harqmanager;
 };
-
 
 #endif /* MAC_ENTITY_H */

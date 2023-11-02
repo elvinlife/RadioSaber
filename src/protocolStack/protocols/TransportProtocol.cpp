@@ -19,11 +19,8 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "TransportProtocol.h"
 
-TransportProtocol::TransportProtocol()
-{}
+TransportProtocol::TransportProtocol() {}
 
-TransportProtocol::~TransportProtocol()
-{}
+TransportProtocol::~TransportProtocol() {}

@@ -20,24 +20,22 @@
  */
 
 #include "radio-bearer-instance.h"
-#include "../device/NetworkNode.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
-#include "application/Application.h"
-#include "../protocolStack/packet/Packet.h"
-#include "../load-parameters.h"
+#include "../device/NetworkNode.h"
 #include "../flows/MacQueue.h"
-#include "../flows/QoS/QoSParameters.h"
 #include "../flows/QoS/QoSForEXP.h"
 #include "../flows/QoS/QoSForFLS.h"
 #include "../flows/QoS/QoSForM_LWDF.h"
+#include "../flows/QoS/QoSParameters.h"
+#include "../load-parameters.h"
+#include "../protocolStack/packet/Packet.h"
+#include "../protocolStack/rlc/am-rlc-entity.h"
 #include "../protocolStack/rlc/rlc-entity.h"
 #include "../protocolStack/rlc/tm-rlc-entity.h"
 #include "../protocolStack/rlc/um-rlc-entity.h"
-#include "../protocolStack/rlc/am-rlc-entity.h"
+#include "application/Application.h"
 
-
-RadioBearerInstance::RadioBearerInstance()
-{
+RadioBearerInstance::RadioBearerInstance() {
   m_src = NULL;
   m_dst = NULL;
   m_classifierParameters = NULL;
@@ -45,14 +43,11 @@ RadioBearerInstance::RadioBearerInstance()
   m_rlc = NULL;
 }
 
-RadioBearerInstance::~RadioBearerInstance()
-{
-  Destory ();
+RadioBearerInstance::~RadioBearerInstance() {
+  Destory();
 }
 
-void
-RadioBearerInstance::Destory (void)
-{
+void RadioBearerInstance::Destory(void) {
   m_src = NULL;
   m_dst = NULL;
   m_classifierParameters = NULL;
@@ -60,63 +55,42 @@ RadioBearerInstance::Destory (void)
   delete m_rlc;
 }
 
-void
-RadioBearerInstance::SetClassifierParameters (ClassifierParameters* cp)
-{
+void RadioBearerInstance::SetClassifierParameters(ClassifierParameters* cp) {
   m_classifierParameters = cp;
 }
 
-ClassifierParameters*
-RadioBearerInstance::GetClassifierParameters (void)
-{
+ClassifierParameters* RadioBearerInstance::GetClassifierParameters(void) {
   return m_classifierParameters;
 }
 
-void
-RadioBearerInstance::SetSource (NetworkNode* src)
-{
+void RadioBearerInstance::SetSource(NetworkNode* src) {
   m_src = src;
 }
 
-void
-RadioBearerInstance::SetDestination (NetworkNode* dst)
-{
+void RadioBearerInstance::SetDestination(NetworkNode* dst) {
   m_dst = dst;
 }
 
-NetworkNode*
-RadioBearerInstance::GetSource (void)
-{
+NetworkNode* RadioBearerInstance::GetSource(void) {
   return m_src;
 }
 
-NetworkNode*
-RadioBearerInstance::GetDestination (void)
-{
+NetworkNode* RadioBearerInstance::GetDestination(void) {
   return m_dst;
 }
 
-void
-RadioBearerInstance::SetQoSParameters (QoSParameters *parameters)
-{
+void RadioBearerInstance::SetQoSParameters(QoSParameters* parameters) {
   m_qosParameters = parameters;
 }
 
-QoSParameters*
-RadioBearerInstance::GetQoSParameters (void) const
-{
+QoSParameters* RadioBearerInstance::GetQoSParameters(void) const {
   return m_qosParameters;
 }
 
-void
-RadioBearerInstance::SetRlcEntity (RlcEntity *rlc)
-{
+void RadioBearerInstance::SetRlcEntity(RlcEntity* rlc) {
   m_rlc = rlc;
 }
 
-RlcEntity*
-RadioBearerInstance::GetRlcEntity (void)
-{
+RlcEntity* RadioBearerInstance::GetRlcEntity(void) {
   return m_rlc;
 }
-

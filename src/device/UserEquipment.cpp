@@ -19,258 +19,203 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "UserEquipment.h"
-#include "NetworkNode.h"
-#include "ENodeB.h"
-#include "HeNodeB.h"
-#include "Gateway.h"
-#include "../phy/ue-lte-phy.h"
-#include "CqiManager/cqi-manager.h"
-#include "../core/eventScheduler/simulator.h"
 #include "../componentManagers/NetworkManager.h"
+#include "../core/eventScheduler/simulator.h"
+#include "../phy/ue-lte-phy.h"
 #include "../protocolStack/rrc/ho/handover-entity.h"
 #include "../protocolStack/rrc/ho/ho-manager.h"
+#include "CqiManager/cqi-manager.h"
+#include "ENodeB.h"
+#include "Gateway.h"
+#include "HeNodeB.h"
+#include "NetworkNode.h"
 
+UserEquipment::UserEquipment() {}
 
-UserEquipment::UserEquipment ()
-{}
-
-UserEquipment::UserEquipment (int idElement,
-							  double posx,
-							  double posy,
-							  Cell *cell,
-							  NetworkNode* target,
-							  bool handover,
-							  Mobility::MobilityModel model)
-{
-  SetIDNetworkNode (idElement);
+UserEquipment::UserEquipment(int idElement, double posx, double posy,
+                             Cell* cell, NetworkNode* target, bool handover,
+                             Mobility::MobilityModel model) {
+  SetIDNetworkNode(idElement);
   SetNodeType(NetworkNode::TYPE_UE);
   SetCell(cell);
 
   m_targetNode = target;
 
-  ProtocolStack *stack = new ProtocolStack (this);
-  SetProtocolStack (stack);
+  ProtocolStack* stack = new ProtocolStack(this);
+  SetProtocolStack(stack);
 
-  Classifier *classifier = new Classifier ();
-  classifier->SetDevice (this);
-  SetClassifier (classifier);
+  Classifier* classifier = new Classifier();
+  classifier->SetDevice(this);
+  SetClassifier(classifier);
   SetNodeState(STATE_IDLE);
 
   //Setup Mobility Model
-  Mobility *m;
-  if (model == Mobility::RANDOM_DIRECTION)
-    {
-	  m = new RandomDirection ();
-    }
-  else if (model == Mobility::RANDOM_WALK)
-    {
-	  m = new RandomWalk ();
-    }
-  else if (model == Mobility::RANDOM_WAYPOINT)
-    {
-	  m = new RandomWaypoint ();
-    }
-  else if (model == Mobility::CONSTANT_POSITION)
-    {
-	  m = new ConstantPosition ();
-    }
-  else if (model == Mobility::MANHATTAN)
-    {
-	  m = new Manhattan ();
-    }
-  else
-    {
-	  std::cout << "ERROR: incorrect Mobility Model"<< std::endl;
-	  m = new RandomDirection ();
-    }
-  CartesianCoordinates *position = new CartesianCoordinates (posx, posy);
-  m->SetHandover (handover);
-  m->SetAbsolutePosition (position);
-  m->SetNodeID (idElement);
-  SetMobilityModel (m);
+  Mobility* m;
+  if (model == Mobility::RANDOM_DIRECTION) {
+    m = new RandomDirection();
+  } else if (model == Mobility::RANDOM_WALK) {
+    m = new RandomWalk();
+  } else if (model == Mobility::RANDOM_WAYPOINT) {
+    m = new RandomWaypoint();
+  } else if (model == Mobility::CONSTANT_POSITION) {
+    m = new ConstantPosition();
+  } else if (model == Mobility::MANHATTAN) {
+    m = new Manhattan();
+  } else {
+    std::cout << "ERROR: incorrect Mobility Model" << std::endl;
+    m = new RandomDirection();
+  }
+  CartesianCoordinates* position = new CartesianCoordinates(posx, posy);
+  m->SetHandover(handover);
+  m->SetAbsolutePosition(position);
+  m->SetNodeID(idElement);
+  SetMobilityModel(m);
 
   m_timePositionUpdate = 0.001;
   Simulator::Init()->Schedule(m_timePositionUpdate,
-		  &UserEquipment::UpdateUserPosition,
-		  this,
-		  Simulator::Init ()->Now());
+                              &UserEquipment::UpdateUserPosition, this,
+                              Simulator::Init()->Now());
 
   delete position;
 
-  UeLtePhy *phy = new UeLtePhy ();
+  UeLtePhy* phy = new UeLtePhy();
   phy->SetDevice(this);
-  phy->SetBandwidthManager (target->GetPhy ()->GetBandwidthManager ());
+  phy->SetBandwidthManager(target->GetPhy()->GetBandwidthManager());
   SetPhy(phy);
 
   m_cqiManager = NULL;
   m_isIndoor = false;
 }
 
-UserEquipment::UserEquipment (int idElement,
-							  double posx,
-							  double posy,
-							  int speed,
-							  double speedDirection,
-							  Cell *cell,
-							  NetworkNode* target,
-							  bool handover,
-							  Mobility::MobilityModel model)
-{
-  SetIDNetworkNode (idElement);
+UserEquipment::UserEquipment(int idElement, double posx, double posy, int speed,
+                             double speedDirection, Cell* cell,
+                             NetworkNode* target, bool handover,
+                             Mobility::MobilityModel model) {
+  SetIDNetworkNode(idElement);
   SetNodeType(NetworkNode::TYPE_UE);
   SetCell(cell);
 
   m_targetNode = target;
 
-  ProtocolStack *stack = new ProtocolStack (this);
-  SetProtocolStack (stack);
+  ProtocolStack* stack = new ProtocolStack(this);
+  SetProtocolStack(stack);
 
-  Classifier *classifier = new Classifier ();
-  classifier->SetDevice (this);
-  SetClassifier (classifier);
-  SetNodeState (STATE_IDLE);
+  Classifier* classifier = new Classifier();
+  classifier->SetDevice(this);
+  SetClassifier(classifier);
+  SetNodeState(STATE_IDLE);
   //Setup Mobility Model
-  Mobility *m;
-  if (model == Mobility::RANDOM_DIRECTION)
-    {
-	  m = new RandomDirection ();
-    }
-  else if (model == Mobility::RANDOM_WALK)
-    {
-	  m = new RandomWalk ();
-    }
-  else if (model == Mobility::RANDOM_WAYPOINT)
-    {
-	  m = new RandomWaypoint ();
-    }
-  else if (model == Mobility::CONSTANT_POSITION)
-    {
-	  m = new ConstantPosition ();
-    }
-  else if (model == Mobility::MANHATTAN)
-    {
-	  m = new Manhattan ();
-    }
-  else
-    {
-	  std::cout << "ERROR: incorrect Mobility Model"<< std::endl;
-	  m = new RandomDirection ();
-    }
-  CartesianCoordinates *position = new CartesianCoordinates(posx, posy);
+  Mobility* m;
+  if (model == Mobility::RANDOM_DIRECTION) {
+    m = new RandomDirection();
+  } else if (model == Mobility::RANDOM_WALK) {
+    m = new RandomWalk();
+  } else if (model == Mobility::RANDOM_WAYPOINT) {
+    m = new RandomWaypoint();
+  } else if (model == Mobility::CONSTANT_POSITION) {
+    m = new ConstantPosition();
+  } else if (model == Mobility::MANHATTAN) {
+    m = new Manhattan();
+  } else {
+    std::cout << "ERROR: incorrect Mobility Model" << std::endl;
+    m = new RandomDirection();
+  }
+  CartesianCoordinates* position = new CartesianCoordinates(posx, posy);
   m->SetHandover(handover);
   m->SetAbsolutePosition(position);
   m->SetNodeID(idElement);
   m->SetSpeed(speed);
   m->SetSpeedDirection(speedDirection);
-  SetMobilityModel (m);
+  SetMobilityModel(m);
 
   m_timePositionUpdate = 0.001;
   Simulator::Init()->Schedule(m_timePositionUpdate,
-		  &UserEquipment::UpdateUserPosition,
-		  this,
-		  Simulator::Init ()->Now());
+                              &UserEquipment::UpdateUserPosition, this,
+                              Simulator::Init()->Now());
 
   delete position;
 
-
-  UeLtePhy *phy = new UeLtePhy ();
+  UeLtePhy* phy = new UeLtePhy();
   phy->SetDevice(this);
-  phy->SetBandwidthManager (target->GetPhy ()->GetBandwidthManager ());
-  SetPhy (phy);
+  phy->SetBandwidthManager(target->GetPhy()->GetBandwidthManager());
+  SetPhy(phy);
 
   m_cqiManager = NULL;
   m_isIndoor = false;
-
 }
 
-UserEquipment::~UserEquipment()
-{
+UserEquipment::~UserEquipment() {
   m_targetNode = NULL;
   delete m_cqiManager;
-  Destroy ();
+  Destroy();
 }
 
-void
-UserEquipment::SetTargetNode (NetworkNode* n)
-{
+void UserEquipment::SetTargetNode(NetworkNode* n) {
   m_targetNode = n;
-  SetCell (n->GetCell ());
+  SetCell(n->GetCell());
 }
 
-NetworkNode*
-UserEquipment::GetTargetNode (void)
-{
+NetworkNode* UserEquipment::GetTargetNode(void) {
   return m_targetNode;
 }
 
+void UserEquipment::UpdateUserPosition(double time) {
+  GetMobilityModel()->UpdatePosition(time);
 
-void
-UserEquipment::UpdateUserPosition (double time)
-{
-  GetMobilityModel ()->UpdatePosition (time);
+  SetIndoorFlag(NetworkManager::Init()->CheckIndoorUsers(this));
 
-    SetIndoorFlag(NetworkManager::Init()->CheckIndoorUsers(this));
+  if (GetMobilityModel()->GetHandover() == true) {
+    NetworkNode* targetNode = GetTargetNode();
 
-    if (GetMobilityModel ()->GetHandover () == true)
-      {
-           NetworkNode* targetNode = GetTargetNode ();
+    if (targetNode->GetProtocolStack()
+            ->GetRrcEntity()
+            ->GetHandoverEntity()
+            ->CheckHandoverNeed(this)) {
+      NetworkNode* newTagertNode = targetNode->GetProtocolStack()
+                                       ->GetRrcEntity()
+                                       ->GetHandoverEntity()
+                                       ->GetHoManager()
+                                       ->m_target;
 
-        if (targetNode->GetProtocolStack ()->GetRrcEntity ()->
-                   GetHandoverEntity ()->CheckHandoverNeed (this))
-          {
-           NetworkNode* newTagertNode = targetNode->GetProtocolStack ()
-                           ->GetRrcEntity ()->GetHandoverEntity ()->GetHoManager ()->m_target;
+      NetworkManager::Init()->HandoverProcedure(time, this, targetNode,
+                                                newTagertNode);
+    }
+  }
 
-           NetworkManager::Init()->HandoverProcedure(time, this, targetNode, newTagertNode);
-          }
-      }
-
-
-    //schedule the new update after m_timePositionUpdate
-    Simulator::Init()->Schedule(m_timePositionUpdate,
-                                                           &UserEquipment::UpdateUserPosition,
-                                                           this,
-                                                           Simulator::Init ()->Now());
+  //schedule the new update after m_timePositionUpdate
+  Simulator::Init()->Schedule(m_timePositionUpdate,
+                              &UserEquipment::UpdateUserPosition, this,
+                              Simulator::Init()->Now());
 }
 
-
-void
-UserEquipment::SetCqiManager (CqiManager *cm)
-{
+void UserEquipment::SetCqiManager(CqiManager* cm) {
   m_cqiManager = cm;
 }
 
-CqiManager*
-UserEquipment::GetCqiManager (void)
-{
+CqiManager* UserEquipment::GetCqiManager(void) {
   return m_cqiManager;
 }
 
-void
-UserEquipment::SetIndoorFlag ( bool flag)
-{
+void UserEquipment::SetIndoorFlag(bool flag) {
   m_isIndoor = flag;
 }
 
-bool
-UserEquipment::IsIndoor (void)
-{
+bool UserEquipment::IsIndoor(void) {
   return m_isIndoor;
 }
 
 //Debug
-void
-UserEquipment::Print (void)
-{
+void UserEquipment::Print(void) {
   std::cout << " UserEquipment object:"
-      "\n\t m_idNetworkNode = " << GetIDNetworkNode () <<
-	  "\n\t idCell = " << GetCell ()->GetIdCell () <<
-	  "\n\t idtargetNode = " << GetTargetNode ()->GetIDNetworkNode () <<
-	  "\n\t m_AbsolutePosition_X = " <<  GetMobilityModel ()->GetAbsolutePosition()->GetCoordinateX()<<
-	  "\n\t m_AbsolutePosition_Y = " << GetMobilityModel ()->GetAbsolutePosition()->GetCoordinateY()<<
-      "\n\t m_speed = " << GetMobilityModel ()->GetSpeed () <<
-      "\n\t m_speedDirection = " << GetMobilityModel ()->GetSpeedDirection () <<
-      std::endl;
+               "\n\t m_idNetworkNode = "
+            << GetIDNetworkNode() << "\n\t idCell = " << GetCell()->GetIdCell()
+            << "\n\t idtargetNode = " << GetTargetNode()->GetIDNetworkNode()
+            << "\n\t m_AbsolutePosition_X = "
+            << GetMobilityModel()->GetAbsolutePosition()->GetCoordinateX()
+            << "\n\t m_AbsolutePosition_Y = "
+            << GetMobilityModel()->GetAbsolutePosition()->GetCoordinateY()
+            << "\n\t m_speed = " << GetMobilityModel()->GetSpeed()
+            << "\n\t m_speedDirection = "
+            << GetMobilityModel()->GetSpeedDirection() << std::endl;
 }

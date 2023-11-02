@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef RRC_ENTITY_H
 #define RRC_ENTITY_H
 
@@ -36,46 +35,38 @@ class HandoverEntity;
 /*
  * This class implements the RRC entity
  */
-class RrcEntity
-{
-public:
+class RrcEntity {
+ public:
+  RrcEntity(void);
+  virtual ~RrcEntity(void);
 
-  RrcEntity (void);
-  virtual ~RrcEntity (void);
+  void SetDevice(NetworkNode* d);
+  NetworkNode* GetDevice();
 
-  void SetDevice (NetworkNode* d);
-  NetworkNode* GetDevice ();
+  typedef std::vector<RadioBearer*> RadioBearersContainer;
+  typedef std::vector<RadioBearerSink*> RadioBearersSinkContainer;
 
-  typedef std::vector<RadioBearer* > RadioBearersContainer;
-  typedef std::vector<RadioBearerSink* > RadioBearersSinkContainer;
+  RadioBearersContainer* GetRadioBearerContainer(void);
+  RadioBearersSinkContainer* GetRadioBearerSinkContainer(void);
 
+  void AddRadioBearer(RadioBearer* bearer);
+  void DelRadioBearer(RadioBearer* bearer);
 
-  RadioBearersContainer* GetRadioBearerContainer (void);
-  RadioBearersSinkContainer* GetRadioBearerSinkContainer (void);
+  void AddRadioBearerSink(RadioBearerSink* bearer);
+  void DelRadioBearerSink(RadioBearerSink* bearer);
 
+  RadioBearer* GetRadioBearer(ClassifierParameters* ipc);
+  RadioBearerSink* GetRadioBearerSink(ClassifierParameters* ipc);
+  RadioBearerInstance* GetRadioBearer(int rlcIndex);
 
-  void AddRadioBearer (RadioBearer* bearer);
-  void DelRadioBearer (RadioBearer* bearer);
+  void SetHandoverEntity(HandoverEntity* h);
+  HandoverEntity* GetHandoverEntity(void);
 
-
-  void AddRadioBearerSink (RadioBearerSink* bearer);
-  void DelRadioBearerSink (RadioBearerSink* bearer);
-
-
-  RadioBearer* GetRadioBearer (ClassifierParameters* ipc);
-  RadioBearerSink* GetRadioBearerSink (ClassifierParameters* ipc);
-  RadioBearerInstance* GetRadioBearer (int rlcIndex);
-
-
-  void SetHandoverEntity (HandoverEntity* h);
-  HandoverEntity* GetHandoverEntity (void);
-
-private:
+ private:
   RadioBearersContainer* m_bearers;
   RadioBearersSinkContainer* m_sink;
   NetworkNode* m_device;
   HandoverEntity* m_handover;
 };
-
 
 #endif /* RRC_ENTITY_H */

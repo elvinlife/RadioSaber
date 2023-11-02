@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef UE_MAC_ENTITY_H
 #define UE_MAC_ENTITY_H
 
@@ -29,26 +28,21 @@
 /*
  * This class implements the MAC layer of the UE device
  */
-class UeMacEntity : public MacEntity
-{
-public:
+class UeMacEntity : public MacEntity {
+ public:
+  UeMacEntity(void);
+  virtual ~UeMacEntity(void);
 
-  UeMacEntity (void);
-  virtual ~UeMacEntity (void);
+  void SendSchedulingRequest(void);
+  void ScheduleUplinkTransmission(int nbPrb, int mcs);
 
-  void SendSchedulingRequest (void);
-  void ScheduleUplinkTransmission (int nbPrb, int mcs);
+  double GetSchedulingRequestInterval(void);
+  void SetSchedulingRequestInterval(double t);
 
-  double GetSchedulingRequestInterval (void);
-  void SetSchedulingRequestInterval (double t);
+  void ChechFroDropPackets(void);
 
-  void ChechFroDropPackets (void);
-
-private:
-  double m_schedulingRequestInterval; //seconds
-
+ private:
+  double m_schedulingRequestInterval;  //seconds
 };
-
-
 
 #endif /* UE_MAC_ENTITY_H */

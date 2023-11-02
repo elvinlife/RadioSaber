@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef ENODEB_H_
 #define ENODEB_H_
 
@@ -31,94 +30,91 @@ class Gateway;
 class PacketScheduler;
 
 class ENodeB : public NetworkNode {
-public:
-	struct UserEquipmentRecord
-	  {
-		UserEquipmentRecord ();
-		virtual ~UserEquipmentRecord ();
-		UserEquipmentRecord (UserEquipment *UE);
+ public:
+  struct UserEquipmentRecord {
+    UserEquipmentRecord();
+    virtual ~UserEquipmentRecord();
+    UserEquipmentRecord(UserEquipment* UE);
 
-		UserEquipment *m_UE;
-		void SetUE (UserEquipment *UE);
-        UserEquipment* GetUE (void) const;
+    UserEquipment* m_UE;
+    void SetUE(UserEquipment* UE);
+    UserEquipment* GetUE(void) const;
 
-        std::vector<int> m_cqiFeedback;
-		void SetCQI (std::vector<int> cqi);
-		std::vector<int> GetCQI (void) const;
+    std::vector<int> m_cqiFeedback;
+    void SetCQI(std::vector<int> cqi);
+    std::vector<int> GetCQI(void) const;
 
-		int m_schedulingRequest; // in bytes
-		void SetSchedulingRequest (int r);
-		int GetSchedulingRequest (void);
+    int m_schedulingRequest;  // in bytes
+    void SetSchedulingRequest(int r);
+    int GetSchedulingRequest(void);
 
-		int m_averageSchedulingGrants; // in bytes
-		void UpdateSchedulingGrants (int b);
-		int GetSchedulingGrants (void);
+    int m_averageSchedulingGrants;  // in bytes
+    void UpdateSchedulingGrants(int b);
+    int GetSchedulingGrants(void);
 
-		int m_ulMcs;
-		void SetUlMcs (int mcs);
-		int GetUlMcs (void);
+    int m_ulMcs;
+    void SetUlMcs(int mcs);
+    int GetUlMcs(void);
 
-		std::vector<double> m_uplinkChannelStatusIndicator;
-		void SetUplinkChannelStatusIndicator (std::vector<double> vet);
-		std::vector<double> GetUplinkChannelStatusIndicator (void) const;
+    std::vector<double> m_uplinkChannelStatusIndicator;
+    void SetUplinkChannelStatusIndicator(std::vector<double> vet);
+    std::vector<double> GetUplinkChannelStatusIndicator(void) const;
+  };
 
+  typedef std::vector<UserEquipmentRecord*> UserEquipmentRecords;
 
-	  };
+  enum DLSchedulerType {
+    DLScheduler_TYPE_MAXIMUM_THROUGHPUT,
+    DLScheduler_TYPE_PROPORTIONAL_FAIR,
+    DLScheduler_TYPE_FLS,
+    DLScheduler_TYPE_MLWDF,
+    DLScheduler_TYPE_EXP,
+    DLScheduler_LOG_RULE,
+    DLScheduler_EXP_RULE,
+    DLScheduler_NVS,
+    DLScheduler_NVS_NONGREEDY,
+    DLScheduler_SEQUENTIAL,
+    DLScheduler_SUBOPT,
+    DLScheduler_UpperBound,
+    DLScheduler_MAXCELL,
+    DLScheduler_VOGEL,
+    DLSScheduler_SEQUENTIAL_FAIRNESS,
+    DLSScheduler_SEQUENTIAL_MLWDF
+  };
+  enum ULSchedulerType {
+    ULScheduler_TYPE_MAXIMUM_THROUGHPUT,
+    ULScheduler_TYPE_FME,
+    ULScheduler_TYPE_ROUNDROBIN,
+  };
 
-	typedef std::vector<UserEquipmentRecord*> UserEquipmentRecords;
+  ENodeB();
+  ENodeB(int idElement, Cell* cell);
+  ENodeB(int idElement, Cell* cell, double posx, double posy);
 
-    enum DLSchedulerType {
-      DLScheduler_TYPE_MAXIMUM_THROUGHPUT,
-      DLScheduler_TYPE_PROPORTIONAL_FAIR,
-      DLScheduler_TYPE_FLS,
-      DLScheduler_TYPE_MLWDF,
-      DLScheduler_TYPE_EXP,
-      DLScheduler_LOG_RULE,
-      DLScheduler_EXP_RULE,
-      DLScheduler_NVS,
-      DLScheduler_NVS_NONGREEDY,
-      DLScheduler_SEQUENTIAL,
-      DLScheduler_SUBOPT,
-      DLScheduler_UpperBound,
-      DLScheduler_MAXCELL,
-      DLScheduler_VOGEL,
-      DLSScheduler_SEQUENTIAL_FAIRNESS,
-      DLSScheduler_SEQUENTIAL_MLWDF
-    };
-    enum ULSchedulerType {
-      ULScheduler_TYPE_MAXIMUM_THROUGHPUT,
-      ULScheduler_TYPE_FME,
-      ULScheduler_TYPE_ROUNDROBIN,
-    };
+  virtual ~ENodeB();
 
-	ENodeB ();
-	ENodeB (int idElement, Cell *cell);
-	ENodeB (int idElement, Cell *cell, double posx, double posy);
+  void RegisterUserEquipment(UserEquipment* UE);
+  void DeleteUserEquipment(UserEquipment* UE);
+  int GetNbOfUserEquipmentRecords(void);
+  void CreateUserEquipmentRecords(void);
+  void DeleteUserEquipmentRecords(void);
+  UserEquipmentRecords* GetUserEquipmentRecords(void);
+  UserEquipmentRecord* GetUserEquipmentRecord(int idUE);
 
-	virtual ~ENodeB();
+  void SetDLScheduler(DLSchedulerType type, string config_fname = "");
+  PacketScheduler* GetDLScheduler(void) const;
+  void SetULScheduler(ULSchedulerType type);
+  PacketScheduler* GetULScheduler(void) const;
 
-    void RegisterUserEquipment (UserEquipment *UE);
-    void DeleteUserEquipment (UserEquipment *UE);
-    int GetNbOfUserEquipmentRecords (void);
-    void CreateUserEquipmentRecords (void);
-    void DeleteUserEquipmentRecords (void);
-    UserEquipmentRecords* GetUserEquipmentRecords (void);
-    UserEquipmentRecord* GetUserEquipmentRecord (int idUE);
+  void ResourceBlocksAllocation();
+  void UplinkResourceBlockAllocation();
+  void DownlinkResourceBlokAllocation();
 
-    void SetDLScheduler (DLSchedulerType type, string config_fname="");
-    PacketScheduler* GetDLScheduler (void) const;
-    void SetULScheduler (ULSchedulerType type);
-    PacketScheduler* GetULScheduler (void) const;
+  //Debug
+  void Print(void);
 
-    void ResourceBlocksAllocation ();
-    void UplinkResourceBlockAllocation ();
-    void DownlinkResourceBlokAllocation ();
-
-	//Debug
-	void Print (void);
-
-private:
-	UserEquipmentRecords *m_userEquipmentRecords;
+ private:
+  UserEquipmentRecords* m_userEquipmentRecords;
 };
 
 #endif /* ENODEB_H_ */

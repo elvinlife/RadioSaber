@@ -20,46 +20,45 @@
  */
 
 #include "mt-uplink-packet-scheduler.h"
-#include "../mac-entity.h"
+#include "../../../core/idealMessages/ideal-control-messages.h"
+#include "../../../core/spectrum/bandwidth-manager.h"
+#include "../../../device/ENodeB.h"
+#include "../../../device/NetworkNode.h"
+#include "../../../flows/MacQueue.h"
+#include "../../../flows/QoS/QoSParameters.h"
+#include "../../../flows/application/Application.h"
+#include "../../../flows/radio-bearer.h"
+#include "../../../phy/lte-phy.h"
+#include "../../../protocolStack/mac/AMCModule.h"
+#include "../../../protocolStack/rrc/rrc-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
-#include "../../../device/NetworkNode.h"
-#include "../../../flows/radio-bearer.h"
-#include "../../../protocolStack/rrc/rrc-entity.h"
-#include "../../../flows/application/Application.h"
-#include "../../../device/ENodeB.h"
-#include "../../../protocolStack/mac/AMCModule.h"
-#include "../../../phy/lte-phy.h"
-#include "../../../core/spectrum/bandwidth-manager.h"
-#include "../../../core/idealMessages/ideal-control-messages.h"
-#include "../../../flows/QoS/QoSParameters.h"
-#include "../../../flows/MacQueue.h"
+#include "../mac-entity.h"
 
-MaximumThroughputUplinkPacketScheduler::MaximumThroughputUplinkPacketScheduler()
-{
-  SetMacEntity (0);
-  CreateUsersToSchedule ();
+MaximumThroughputUplinkPacketScheduler::
+    MaximumThroughputUplinkPacketScheduler() {
+  SetMacEntity(0);
+  CreateUsersToSchedule();
 }
 
-MaximumThroughputUplinkPacketScheduler::~MaximumThroughputUplinkPacketScheduler()
-{
-  Destroy ();
+MaximumThroughputUplinkPacketScheduler::
+    ~MaximumThroughputUplinkPacketScheduler() {
+  Destroy();
 }
 
-double
-MaximumThroughputUplinkPacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel)
-{
+double MaximumThroughputUplinkPacketScheduler::ComputeSchedulingMetric(
+    RadioBearer* bearer, double spectralEfficiency, int subChannel) {
   double metric;
   return metric;
 }
 
-double
-MaximumThroughputUplinkPacketScheduler::ComputeSchedulingMetric (UserToSchedule* user, int subchannel)
-{
+double MaximumThroughputUplinkPacketScheduler::ComputeSchedulingMetric(
+    UserToSchedule* user, int subchannel) {
   double metric;
 
-  int channelCondition = user->m_channelContition.at (subchannel);
-  double spectralEfficiency = GetMacEntity ()->GetAmcModule ()->GetSinrFromCQI (channelCondition);
+  int channelCondition = user->m_channelContition.at(subchannel);
+  double spectralEfficiency =
+      GetMacEntity()->GetAmcModule()->GetSinrFromCQI(channelCondition);
 
   metric = spectralEfficiency * 180000;
 

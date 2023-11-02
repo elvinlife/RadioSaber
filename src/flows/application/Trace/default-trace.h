@@ -19,18 +19,8 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
-
-
-
 #define NB_FRAME 10
 
-char frameType_Tab[10] =
-  { 'I', 'P', 'B', 'B', 'P', 'B', 'B', 'P', 'B', 'B' };
-unsigned int time_Tab[10] =
-  { 0, 40, 120, 80, 240, 160, 200, 360, 280, 320 };
-uint16_t size_Tab[10] =
-  { 534, 1542, 134, 390, 765, 407, 504, 903, 421, 587 };
-
-
+char frameType_Tab[10] = {'I', 'P', 'B', 'B', 'P', 'B', 'B', 'P', 'B', 'B'};
+unsigned int time_Tab[10] = {0, 40, 120, 80, 240, 160, 200, 360, 280, 320};
+uint16_t size_Tab[10] = {534, 1542, 134, 390, 765, 407, 504, 903, 421, 587};

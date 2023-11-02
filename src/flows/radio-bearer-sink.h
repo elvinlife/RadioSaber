@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef RADIOBEARERSINK_H_
 #define RADIOBEARERSINK_H_
 
@@ -32,17 +31,17 @@ class Packet;
 class RlcEntity;
 
 class RadioBearerSink : public RadioBearerInstance {
-public:
-	RadioBearerSink();
-	virtual ~RadioBearerSink();
+ public:
+  RadioBearerSink();
+  virtual ~RadioBearerSink();
 
-	void SetApplication (ApplicationSink* a);
-	ApplicationSink* GetApplication (void);
+  void SetApplication(ApplicationSink* a);
+  ApplicationSink* GetApplication(void);
 
-	void Receive (Packet* p);
+  void Receive(Packet* p);
 
-private:
-	ApplicationSink* m_application;
+ private:
+  ApplicationSink* m_application;
 };
 
 #endif /* RADIOBEARERSINK_H_ */

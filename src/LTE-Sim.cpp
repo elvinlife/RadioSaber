@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 /*
  * LTE-Sim is the main program of the LTE-Sim simulator.
  * To run simulations you can
@@ -32,65 +31,56 @@
  *  g.piro@poliba.it
  */
 
-
 #include "TEST/test.h"
 
-#include "scenarios/simple.h"
-#include "scenarios/single-cell-without-interference.h"
-#include "scenarios/single-cell-with-interference.h"
-#include "scenarios/single-cell-with-femto.h"
-#include "scenarios/multi-cell.h"
-#include "scenarios/single-cell-with-streets.h"
-#include "scenarios/multi-cell-sinrplot.h"
-#include "scenarios/single-cell-customize.h"
 #include "TEST/scalability-test-macro-with-femto.h"
 #include "TEST/test-sinr-femto.h"
-#include "TEST/test-throughput-macro-with-femto.h"
 #include "TEST/test-sinr-urban.h"
-#include "TEST/test-throughput-urban.h"
 #include "TEST/test-throughput-building.h"
-#include "TEST/test-uplink-fme.h"
+#include "TEST/test-throughput-macro-with-femto.h"
+#include "TEST/test-throughput-urban.h"
 #include "TEST/test-uplink-channel-quality.h"
+#include "TEST/test-uplink-fme.h"
+#include "scenarios/multi-cell-sinrplot.h"
+#include "scenarios/multi-cell.h"
+#include "scenarios/simple.h"
+#include "scenarios/single-cell-customize.h"
+#include "scenarios/single-cell-with-femto.h"
+#include "scenarios/single-cell-with-interference.h"
+#include "scenarios/single-cell-with-streets.h"
+#include "scenarios/single-cell-without-interference.h"
 
-
-#include "utility/help.h"
-#include <iostream>
-#include <queue>
-#include <fstream>
 #include <stdlib.h>
 #include <cstring>
+#include <fstream>
+#include <iostream>
+#include <queue>
+#include "utility/help.h"
 
-  int
-main (int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
 
-  if (argc > 1)
-  {
+  if (argc > 1) {
 
     /* Help */
-    if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "-H") || !strcmp(argv[1],
-          "--help") || !strcmp(argv[1], "--Help"))
-    {
-      Help ();
+    if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "-H") ||
+        !strcmp(argv[1], "--help") || !strcmp(argv[1], "--Help")) {
+      Help();
       return 0;
     }
 
     /* run tests */
-    if(strcmp(argv[1], "test")==0)
-    {
+    if (strcmp(argv[1], "test") == 0) {
       /* To enable a test, please modify the file LTE-Sim/src/TESTS/test.h */
-      Test ();
+      Test();
     }
 
     /* Run simple scenario */
-    if (strcmp(argv[1], "Simple")==0)
-    {
-      Simple ();
+    if (strcmp(argv[1], "Simple") == 0) {
+      Simple();
     }
 
     /* Run more complex scenarios */
-    if (strcmp(argv[1], "SingleCell")==0)
-    {
+    if (strcmp(argv[1], "SingleCell") == 0) {
       double radius = atof(argv[2]);
       int nbUE = atoi(argv[3]);
       int nbVoIP = atoi(argv[4]);
@@ -103,12 +93,15 @@ main (int argc, char *argv[])
       double maxDelay = atof(argv[11]);
       int video_bit_rate = atoi(argv[12]);
       int seed;
-      if (argc==14) seed = atoi(argv[13]);
-      else seed = -1;
-      SingleCellWithoutInterference (radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed);
+      if (argc == 14)
+        seed = atoi(argv[13]);
+      else
+        seed = -1;
+      SingleCellWithoutInterference(radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR,
+                                    sched_type, frame_struct, speed, maxDelay,
+                                    video_bit_rate, seed);
     }
-    if (strcmp(argv[1], "SingleCellWithI")==0)
-    {
+    if (strcmp(argv[1], "SingleCellWithI") == 0) {
       double radius = atof(argv[2]);
       int sched_type = atoi(argv[3]);
       int frame_struct = atoi(argv[4]);
@@ -116,14 +109,10 @@ main (int argc, char *argv[])
       int seed = atoi(argv[6]);
       double duration = atof(argv[7]);
       string config_fname = string(argv[8]);
-      SingleCellWithInterference(
-        radius, sched_type,
-        frame_struct, speed,
-        seed, duration,
-        config_fname);
+      SingleCellWithInterference(radius, sched_type, frame_struct, speed, seed,
+                                 duration, config_fname);
     }
-    if (strcmp(argv[1], "SingleCellCustomize") == 0)
-    {
+    if (strcmp(argv[1], "SingleCellCustomize") == 0) {
       double radius = atof(argv[2]);
       int sched_type = atoi(argv[3]);
       int frame_struct = atoi(argv[4]);
@@ -133,12 +122,10 @@ main (int argc, char *argv[])
       double internetFlowRate = atof(argv[8]);
       int seed = atoi(argv[9]);
       string config_fname = string(argv[10]);
-      SingleCellCustomize(
-        radius, sched_type, frame_struct, speed, maxDelay,
-        videoBitRate, internetFlowRate, seed, config_fname);
+      SingleCellCustomize(radius, sched_type, frame_struct, speed, maxDelay,
+                          videoBitRate, internetFlowRate, seed, config_fname);
     }
-    if (strcmp(argv[1], "MultiCell")==0)
-    {
+    if (strcmp(argv[1], "MultiCell") == 0) {
       int nbCells = atoi(argv[2]);
       double radius = atof(argv[3]);
       int nbUE = atoi(argv[4]);
@@ -152,13 +139,15 @@ main (int argc, char *argv[])
       double maxDelay = atof(argv[12]);
       int video_bit_rate = atoi(argv[13]);
       int seed;
-      if (argc==15) seed = atoi(argv[14]);
-      else seed = -1;
-      MultiCell (nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed);
+      if (argc == 15)
+        seed = atoi(argv[14]);
+      else
+        seed = -1;
+      MultiCell(nbCells, radius, nbUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type,
+                frame_struct, speed, maxDelay, video_bit_rate, seed);
     }
 
-    if (strcmp(argv[1], "SingleCellWithFemto")==0)
-    {
+    if (strcmp(argv[1], "SingleCellWithFemto") == 0) {
       double radius = atof(argv[2]);
       int nbBuilding = atoi(argv[3]);
       int buildingType = atoi(argv[4]);
@@ -176,12 +165,16 @@ main (int argc, char *argv[])
       double maxDelay = atof(argv[16]);
       int video_bit_rate = atoi(argv[17]);
       int seed;
-      if (argc==19) seed = atoi(argv[18]);
-      else seed = -1;
-      SingleCellWithFemto(radius, nbBuilding, buildingType, activityRatio, nbUE, nbFemtoUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, accessPolicy, maxDelay, video_bit_rate, seed);
+      if (argc == 19)
+        seed = atoi(argv[18]);
+      else
+        seed = -1;
+      SingleCellWithFemto(radius, nbBuilding, buildingType, activityRatio, nbUE,
+                          nbFemtoUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type,
+                          frame_struct, speed, accessPolicy, maxDelay,
+                          video_bit_rate, seed);
     }
-    if (strcmp(argv[1], "SingleCellWithStreets")==0)
-    {
+    if (strcmp(argv[1], "SingleCellWithStreets") == 0) {
       int nbStreets = atoi(argv[2]);
       double radius = atof(argv[3]);
       int nbUE = atoi(argv[4]);
@@ -196,24 +189,26 @@ main (int argc, char *argv[])
       double maxDelay = atof(argv[13]);
       int video_bit_rate = atoi(argv[14]);
       int seed;
-      if (argc==16) seed = atoi(argv[15]);
-      else seed = -1;
-      SingleCellWithStreets ( radius, nbStreets, nbUE, nbFemtoUE, nbVoIP, nbVideo, nbBE, nbCBR, sched_type, frame_struct, speed, maxDelay, video_bit_rate, seed);
+      if (argc == 16)
+        seed = atoi(argv[15]);
+      else
+        seed = -1;
+      SingleCellWithStreets(radius, nbStreets, nbUE, nbFemtoUE, nbVoIP, nbVideo,
+                            nbBE, nbCBR, sched_type, frame_struct, speed,
+                            maxDelay, video_bit_rate, seed);
     }
 
     /* other dedicated simulations */
-    if (strcmp(argv[1], "test-amc-mapping")==0)
-    {
+    if (strcmp(argv[1], "test-amc-mapping") == 0) {
       int cells = atoi(argv[2]);
       double radius = atof(argv[3]);
       int speed = atoi(argv[4]);
       int bandwidth = atoi(argv[5]);
       int cluster = atoi(argv[6]);
 
-      TestAmcMapping (cells, radius, speed, bandwidth, cluster);
+      TestAmcMapping(cells, radius, speed, bandwidth, cluster);
     }
-    if (strcmp(argv[1], "test-mobility-model")==0)
-    {
+    if (strcmp(argv[1], "test-mobility-model") == 0) {
       double radius = atof(argv[2]);
       int nbUE = atoi(argv[3]);
       int model = atoi(argv[4]);
@@ -221,53 +216,46 @@ main (int argc, char *argv[])
       double duration = atoi(argv[6]);
       TestMobilityModels(radius, nbUE, model, speed, duration);
     }
-    if (strcmp(argv[1], "scalability-test-macro-with-femto")==0)
-    {
+    if (strcmp(argv[1], "scalability-test-macro-with-femto") == 0) {
       double radius = atof(argv[2]);
       int nbBuildings = atoi(argv[3]);
       int nbUE = atoi(argv[4]);
-      ScalabilityTestMacroWithFemto (radius, nbBuildings, nbUE);
+      ScalabilityTestMacroWithFemto(radius, nbBuildings, nbUE);
     }
 
-    if (strcmp(argv[1], "test-sinr-urban")==0)
-    {
+    if (strcmp(argv[1], "test-sinr-urban") == 0) {
       int streets = atoi(argv[2]);
       int henb = atoi(argv[3]);
       int reuse = atoi(argv[4]);
-      TestSinrUrban (streets, henb, reuse);
+      TestSinrUrban(streets, henb, reuse);
     }
-    if (strcmp(argv[1], "test-throughput-urban")==0)
-    {
+    if (strcmp(argv[1], "test-throughput-urban") == 0) {
       int streets = atoi(argv[2]);
       int henb = atoi(argv[3]);
       int reuse = atoi(argv[4]);
       int nbUEs = atoi(argv[5]);
       double activityFactor = atoi(argv[6]);
-      TestThroughputUrban (streets, henb, reuse, nbUEs, activityFactor);
+      TestThroughputUrban(streets, henb, reuse, nbUEs, activityFactor);
     }
-    if (strcmp(argv[1], "test-throughput-macro-with-femto")==0)
-    {
+    if (strcmp(argv[1], "test-throughput-macro-with-femto") == 0) {
       double radius = atof(argv[2]);
       int nbBuildings = atoi(argv[3]);
       int nbUE_macro = atoi(argv[4]);
-      TestThroughputMacroWithFemto (radius, nbBuildings, nbUE_macro);
+      TestThroughputMacroWithFemto(radius, nbBuildings, nbUE_macro);
     }
-    if (strcmp(argv[1], "test-sinr-femto")==0)
-    {
+    if (strcmp(argv[1], "test-sinr-femto") == 0) {
       double riuso = atof(argv[2]);
       double activityFactor = atof(argv[3]);
-      TestSinrFemto (riuso, activityFactor);
+      TestSinrFemto(riuso, activityFactor);
     }
 
-    if (strcmp(argv[1], "test-throughput-building")==0)
-    {
+    if (strcmp(argv[1], "test-throughput-building") == 0) {
       double riuso = atof(argv[2]);
       double activityFactor = atof(argv[3]);
       int nbUE_femto = atof(argv[4]);
-      TestThroughputBuilding (riuso, activityFactor, nbUE_femto);
+      TestThroughputBuilding(riuso, activityFactor, nbUE_femto);
     }
-    if (strcmp(argv[1], "MultiCellSinrPlot")==0)
-    {
+    if (strcmp(argv[1], "MultiCellSinrPlot") == 0) {
       int nbCells = atoi(argv[2]);
       double radius = atof(argv[3]);
       int nbUE = atoi(argv[4]);
@@ -276,21 +264,21 @@ main (int argc, char *argv[])
       int speed = atoi(argv[7]);
       int model = atoi(argv[8]);
       int seed;
-      if (argc==10) seed = atoi(argv[9]);
-      else seed = -1;
-      MultiCellSinrPlot (nbCells, radius, nbUE, sched_type, frame_struct, speed, model, seed);
+      if (argc == 10)
+        seed = atoi(argv[9]);
+      else
+        seed = -1;
+      MultiCellSinrPlot(nbCells, radius, nbUE, sched_type, frame_struct, speed,
+                        model, seed);
     }
-    if (strcmp(argv[1], "testfme")==0)
-    {
-      TestUplinkFME ();
+    if (strcmp(argv[1], "testfme") == 0) {
+      TestUplinkFME();
     }
-    if (strcmp(argv[1], "test-ul-mt")==0)
-    {
-      TestUplinkMaximumThroughput ();
+    if (strcmp(argv[1], "test-ul-mt") == 0) {
+      TestUplinkMaximumThroughput();
     }
-    if (strcmp(argv[1], "test-ul-channel")==0)
-    {
-      TestUplinkChannelQuality ();
+    if (strcmp(argv[1], "test-ul-channel") == 0) {
+      TestUplinkChannelQuality();
     }
   }
 }

@@ -19,18 +19,17 @@
  * Author: Francesco Capozzi <f.capozzi@poliba.it>
  */
 
-
 #ifndef POWERBASEDHOMANAGER_H_
 #define POWERBASEDHOMANAGER_H_
 
 #include "ho-manager.h"
 
-class PowerBasedHoManager: public HoManager {
-public:
-	PowerBasedHoManager();
-	virtual ~PowerBasedHoManager();
+class PowerBasedHoManager : public HoManager {
+ public:
+  PowerBasedHoManager();
+  virtual ~PowerBasedHoManager();
 
-	virtual bool CheckHandoverNeed (UserEquipment* ue);
+  virtual bool CheckHandoverNeed(UserEquipment* ue);
 };
 
 #endif /* POWERBASEDHOMANAGER_H_ */

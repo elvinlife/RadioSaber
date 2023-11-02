@@ -21,17 +21,13 @@
 
 #include "ConstantPosition.h"
 
-ConstantPosition::ConstantPosition()
-{
-  SetMobilityModel (Mobility::CONSTANT_POSITION);
-  SetAbsolutePosition (NULL);
+ConstantPosition::ConstantPosition() {
+  SetMobilityModel(Mobility::CONSTANT_POSITION);
+  SetAbsolutePosition(NULL);
 }
 
-ConstantPosition::~ConstantPosition()
-{
-  DeleteAbsolutePosition ();
+ConstantPosition::~ConstantPosition() {
+  DeleteAbsolutePosition();
 }
 
-void
-ConstantPosition::UpdatePosition (double time)
-{}
+void ConstantPosition::UpdatePosition(double time) {}

@@ -19,23 +19,20 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #include "Application.h"
-#include "../radio-bearer.h"
-#include "../../device/NetworkNode.h"
-#include "../QoS/QoSParameters.h"
-#include "../../componentManagers/NetworkManager.h"
-#include "../radio-bearer-sink.h"
-#include "application-sink.h"
-#include "../../phy/lte-phy.h"
 #include "../../channel/LteChannel.h"
-#include "../../device/UserEquipment.h"
+#include "../../componentManagers/NetworkManager.h"
 #include "../../device/ENodeB.h"
+#include "../../device/NetworkNode.h"
+#include "../../device/UserEquipment.h"
 #include "../../load-parameters.h"
+#include "../../phy/lte-phy.h"
+#include "../QoS/QoSParameters.h"
+#include "../radio-bearer-sink.h"
+#include "../radio-bearer.h"
+#include "application-sink.h"
 
-Application::Application()
-{
+Application::Application() {
   m_classifierParameters = NULL;
   m_qosParameters = NULL;
   m_source = NULL;
@@ -46,9 +43,7 @@ Application::Application()
   m_priority = 0;
 }
 
-void
-Application::Destroy (void)
-{
+void Application::Destroy(void) {
   m_classifierParameters = NULL;
   m_qosParameters = NULL;
   m_source = NULL;
@@ -58,110 +53,103 @@ Application::Destroy (void)
   m_applicationSink = NULL;
 }
 
-Application::Application(ApplicationType applicationType)
-{
+Application::Application(ApplicationType applicationType) {
   m_applicationType = applicationType;
 }
 
-Application::~Application()
-{
-  Destroy ();
+Application::~Application() {
+  Destroy();
 }
 
-void
-Application::Start ()
-{
+void Application::Start() {
 #ifdef TEST_START_APPLICATION
-  std::cout << "Start Application: src: " << GetSource ()->GetIDNetworkNode ()
-		  << " dst: " << GetDestination ()->GetIDNetworkNode () << std::endl;
+  std::cout << "Start Application: src: " << GetSource()->GetIDNetworkNode()
+            << " dst: " << GetDestination()->GetIDNetworkNode() << std::endl;
 #endif
 
   // 1 - create radio bearer
-  m_radioBearer = new RadioBearer ();
-  m_radioBearer->GetRlcEntity ()->SetRlcEntityIndex (GetApplicationID ());
+  m_radioBearer = new RadioBearer();
+  m_radioBearer->GetRlcEntity()->SetRlcEntityIndex(GetApplicationID());
 
-
-  if (GetSource ()->GetNodeType() == NetworkNode::TYPE_UE)
-    {
-	  //create an UL radio bearer between UE and targetENB
-	  UserEquipment* ue = (UserEquipment*) GetSource ();
-	  ue->SetNodeState (NetworkNode::STATE_ACTIVE);
+  if (GetSource()->GetNodeType() == NetworkNode::TYPE_UE) {
+    //create an UL radio bearer between UE and targetENB
+    UserEquipment* ue = (UserEquipment*)GetSource();
+    ue->SetNodeState(NetworkNode::STATE_ACTIVE);
 
 #ifdef TEST_START_APPLICATION
-      std::cout << "Create UL radio bearer bewtween: " << GetSource ()->GetIDNetworkNode ()
-		  << " and " << ue->GetTargetNode ()->GetIDNetworkNode () << std::endl;
+    std::cout << "Create UL radio bearer bewtween: "
+              << GetSource()->GetIDNetworkNode() << " and "
+              << ue->GetTargetNode()->GetIDNetworkNode() << std::endl;
 #endif
 
-	  m_radioBearer->SetSource (ue);
-	  m_radioBearer->SetDestination (ue->GetTargetNode ());
-	  m_radioBearer->SetClassifierParameters (GetClassifierParameters ());
-	  m_radioBearer->SetApplication (this);
-	  m_radioBearer->SetQoSParameters (GetQoSParameters ());
-    }
-  else if (GetSource ()->GetNodeType() == NetworkNode::TYPE_GW
-		  ||
-		  GetSource ()->GetNodeType() == NetworkNode::TYPE_ENODEB
-		  ||
-		  GetSource ()->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION)
-    {
-	  //create an DL radio bearer between targetENB and UE
-	  UserEquipment* ue = (UserEquipment*) GetDestination ();
-	  ue->SetNodeState (NetworkNode::STATE_ACTIVE);
+    m_radioBearer->SetSource(ue);
+    m_radioBearer->SetDestination(ue->GetTargetNode());
+    m_radioBearer->SetClassifierParameters(GetClassifierParameters());
+    m_radioBearer->SetApplication(this);
+    m_radioBearer->SetQoSParameters(GetQoSParameters());
+  } else if (GetSource()->GetNodeType() == NetworkNode::TYPE_GW ||
+             GetSource()->GetNodeType() == NetworkNode::TYPE_ENODEB ||
+             GetSource()->GetNodeType() ==
+                 NetworkNode::TYPE_HOME_BASE_STATION) {
+    //create an DL radio bearer between targetENB and UE
+    UserEquipment* ue = (UserEquipment*)GetDestination();
+    ue->SetNodeState(NetworkNode::STATE_ACTIVE);
 
 #ifdef TEST_START_APPLICATION
-      std::cout << "Create DL radio bearer bewtween: " << ue->GetTargetNode ()->GetIDNetworkNode ()
-    		  << " and " << ue->GetIDNetworkNode ()  << std::endl;
+    std::cout << "Create DL radio bearer bewtween: "
+              << ue->GetTargetNode()->GetIDNetworkNode() << " and "
+              << ue->GetIDNetworkNode() << std::endl;
 #endif
 
-	  m_radioBearer->SetSource (ue->GetTargetNode ());
-	  m_radioBearer->SetDestination (ue);
-	  m_radioBearer->SetClassifierParameters (GetClassifierParameters ());
-	  m_radioBearer->SetApplication (this);
-	  m_radioBearer->SetQoSParameters (GetQoSParameters ());
-    }
+    m_radioBearer->SetSource(ue->GetTargetNode());
+    m_radioBearer->SetDestination(ue);
+    m_radioBearer->SetClassifierParameters(GetClassifierParameters());
+    m_radioBearer->SetApplication(this);
+    m_radioBearer->SetQoSParameters(GetQoSParameters());
+  }
 
-  m_radioBearer->GetSource ()->GetProtocolStack ()->GetRrcEntity ()->AddRadioBearer (m_radioBearer);
-
+  m_radioBearer->GetSource()
+      ->GetProtocolStack()
+      ->GetRrcEntity()
+      ->AddRadioBearer(m_radioBearer);
 
   // 2 - create application sink
-  m_applicationSink = new ApplicationSink ();
-  m_applicationSink->SetClassifierParameters (GetClassifierParameters ());
-  m_applicationSink->SetSourceApplication (this);
-
+  m_applicationSink = new ApplicationSink();
+  m_applicationSink->SetClassifierParameters(GetClassifierParameters());
+  m_applicationSink->SetSourceApplication(this);
 
   // 3 - create radio bearer sink
-  m_bearerSink = new RadioBearerSink ();
-  m_bearerSink->GetRlcEntity ()->SetRlcEntityIndex (GetApplicationID ());
-  m_bearerSink->SetApplication (m_applicationSink);
-  m_bearerSink->SetClassifierParameters (GetClassifierParameters ());
-  m_bearerSink->SetQoSParameters (GetQoSParameters ());
-  if (GetSource ()->GetNodeType() == NetworkNode::TYPE_UE)
-    {
-	  UserEquipment* ue = (UserEquipment*) GetSource ();
-	  ue->SetNodeState (NetworkNode::STATE_ACTIVE);
-	  m_bearerSink->SetSource (ue);
-	  m_bearerSink->SetDestination (ue->GetTargetNode ());
-    }
-  else if (GetSource ()->GetNodeType() == NetworkNode::TYPE_GW || GetSource ()->GetNodeType() == NetworkNode::TYPE_ENODEB
-		  || GetSource ()->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION)
-    {
-	  UserEquipment* ue = (UserEquipment*) GetDestination ();
-	  ue->SetNodeState (NetworkNode::STATE_ACTIVE);
-	  m_bearerSink->SetSource (ue->GetTargetNode ());
-	  m_bearerSink->SetDestination (ue);
-    }
-
+  m_bearerSink = new RadioBearerSink();
+  m_bearerSink->GetRlcEntity()->SetRlcEntityIndex(GetApplicationID());
+  m_bearerSink->SetApplication(m_applicationSink);
+  m_bearerSink->SetClassifierParameters(GetClassifierParameters());
+  m_bearerSink->SetQoSParameters(GetQoSParameters());
+  if (GetSource()->GetNodeType() == NetworkNode::TYPE_UE) {
+    UserEquipment* ue = (UserEquipment*)GetSource();
+    ue->SetNodeState(NetworkNode::STATE_ACTIVE);
+    m_bearerSink->SetSource(ue);
+    m_bearerSink->SetDestination(ue->GetTargetNode());
+  } else if (GetSource()->GetNodeType() == NetworkNode::TYPE_GW ||
+             GetSource()->GetNodeType() == NetworkNode::TYPE_ENODEB ||
+             GetSource()->GetNodeType() ==
+                 NetworkNode::TYPE_HOME_BASE_STATION) {
+    UserEquipment* ue = (UserEquipment*)GetDestination();
+    ue->SetNodeState(NetworkNode::STATE_ACTIVE);
+    m_bearerSink->SetSource(ue->GetTargetNode());
+    m_bearerSink->SetDestination(ue);
+  }
 
   // 4 - add in radio bearer a pointer to the radio bearer sink
-  m_radioBearer->GetDestination() ->GetProtocolStack ()->GetRrcEntity ()->AddRadioBearerSink(m_bearerSink);
-  m_applicationSink->SetRadioBearerSink (m_bearerSink);
-
+  m_radioBearer->GetDestination()
+      ->GetProtocolStack()
+      ->GetRrcEntity()
+      ->AddRadioBearerSink(m_bearerSink);
+  m_applicationSink->SetRadioBearerSink(m_bearerSink);
 
   // 4 attach UE on the UL or DL channel
-  if (GetSource ()->GetNodeType() == NetworkNode::TYPE_UE)
-    {
-	  UserEquipment* ue = (UserEquipment*) GetSource ();
-	  /*
+  if (GetSource()->GetNodeType() == NetworkNode::TYPE_UE) {
+    UserEquipment* ue = (UserEquipment*)GetSource();
+    /*
 	  LteChannel *ch = ue->GetTargetNode ()->GetPhy ()->GetUlChannel ();
 
 	  if (!ch->IsAttached (ue))
@@ -170,262 +158,188 @@ Application::Start ()
 	    }
 	  */
 
-	  ue->MakeActive ();
-    }
-  else if (GetSource ()->GetNodeType() == NetworkNode::TYPE_GW || GetSource ()->GetNodeType() == NetworkNode::TYPE_ENODEB
-		  || GetSource ()->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION)
-    {
-	  UserEquipment* ue = (UserEquipment*) GetDestination ();
-	  LteChannel *ch = ue->GetTargetNode ()->GetPhy ()->GetDlChannel ();
+    ue->MakeActive();
+  } else if (GetSource()->GetNodeType() == NetworkNode::TYPE_GW ||
+             GetSource()->GetNodeType() == NetworkNode::TYPE_ENODEB ||
+             GetSource()->GetNodeType() ==
+                 NetworkNode::TYPE_HOME_BASE_STATION) {
+    UserEquipment* ue = (UserEquipment*)GetDestination();
+    LteChannel* ch = ue->GetTargetNode()->GetPhy()->GetDlChannel();
 
-	  if (!ch->IsAttached (ue))
-	    {
-		  ch->AddDevice (ue);
-	    }
-
-	  ue->MakeActive ();
+    if (!ch->IsAttached(ue)) {
+      ch->AddDevice(ue);
     }
+
+    ue->MakeActive();
+  }
 
 #ifdef TEST_START_APPLICATION
-  std::cout << "CREATED RADIO BEARER " << m_radioBearer->GetApplication ()->GetApplicationID ()
-		  << " BETWEEN "
-		  << m_radioBearer->GetSource ()->GetIDNetworkNode () << " and "
-		  << m_radioBearer->GetDestination () ->GetIDNetworkNode ()<< std::endl;
+  std::cout << "CREATED RADIO BEARER "
+            << m_radioBearer->GetApplication()->GetApplicationID()
+            << " BETWEEN " << m_radioBearer->GetSource()->GetIDNetworkNode()
+            << " and " << m_radioBearer->GetDestination()->GetIDNetworkNode()
+            << std::endl;
 #endif
 
-  DoStart ();
+  DoStart();
 }
 
-void
-Application::Stop ()
-{}
+void Application::Stop() {}
 
-
-RadioBearer*
-Application::GetRadioBearer (void)
-{
+RadioBearer* Application::GetRadioBearer(void) {
   return m_radioBearer;
 }
 
-void
-Application::SetApplicationID (int id)
-{
+void Application::SetApplicationID(int id) {
   m_applicationID = id;
 }
 
-int
-Application::GetApplicationID (void)
-{
+int Application::GetApplicationID(void) {
   return m_applicationID;
 }
 
-
-void
-Application::SetApplicationType (ApplicationType applicationType)
-{
+void Application::SetApplicationType(ApplicationType applicationType) {
   m_applicationType = applicationType;
 }
 
-Application::ApplicationType
-Application::GetApplicationType (void) const
-{
+Application::ApplicationType Application::GetApplicationType(void) const {
   return m_applicationType;
 }
 
-void
-Application::SetClassifierParameters (ClassifierParameters* cp)
-{
+void Application::SetClassifierParameters(ClassifierParameters* cp) {
   m_classifierParameters = cp;
 }
 
-ClassifierParameters*
-Application::GetClassifierParameters (void)
-{
+ClassifierParameters* Application::GetClassifierParameters(void) {
   return m_classifierParameters;
 }
 
-void
-Application::SetQoSParameters (QoSParameters* qos)
-{
+void Application::SetQoSParameters(QoSParameters* qos) {
   m_qosParameters = qos;
 }
 
-QoSParameters*
-Application::GetQoSParameters (void)
-{
+QoSParameters* Application::GetQoSParameters(void) {
   return m_qosParameters;
 }
 
-NetworkNode*
-Application::GetSource (void)
-{
+NetworkNode* Application::GetSource(void) {
   return m_source;
 }
 
-NetworkNode*
-Application::GetDestination (void)
-{
+NetworkNode* Application::GetDestination(void) {
   return m_destination;
 }
 
-int
-Application::GetSourcePort (void) const
-{
+int Application::GetSourcePort(void) const {
   return m_sourcePort;
 }
 
-int
-Application::GetDestinationPort (void) const
-{
+int Application::GetDestinationPort(void) const {
   return m_destinationPort;
 }
 
-void
-Application::SetSource (NetworkNode *source)
-{
+void Application::SetSource(NetworkNode* source) {
   m_source = source;
 }
 
-void
-Application::SetDestination (NetworkNode *destination)
-{
+void Application::SetDestination(NetworkNode* destination) {
   m_destination = destination;
 }
 
-void
-Application::SetSourcePort (int port)
-{
+void Application::SetSourcePort(int port) {
   m_sourcePort = port;
 }
 
-void
-Application::SetDestinationPort (int port)
-{
+void Application::SetDestinationPort(int port) {
   m_destinationPort = port;
 }
 
-TransportProtocol::TransportProtocolType
-Application::GetTransportProtocol (void) const
-{
+TransportProtocol::TransportProtocolType Application::GetTransportProtocol(
+    void) const {
   return m_transportProtocol;
 }
 
-void
-Application::SetTransportProtocol (TransportProtocol::TransportProtocolType protocol)
-{
+void Application::SetTransportProtocol(
+    TransportProtocol::TransportProtocolType protocol) {
   m_transportProtocol = protocol;
 }
 
-
-void
-Application::SetStartTime (double time)
-{
+void Application::SetStartTime(double time) {
   m_startTime = time;
-  Simulator::Init()->Schedule(time,
-							  &Application::Start,
-							  this);
+  Simulator::Init()->Schedule(time, &Application::Start, this);
 }
 
-double
-Application::GetStartTime (void) const
-{
+double Application::GetStartTime(void) const {
   return m_startTime;
 }
 
-void
-Application::SetStopTime (double time)
-{
+void Application::SetStopTime(double time) {
   m_stopTime = time;
-  Simulator::Init()->Schedule(time + 0.1,
-							  &Application::Stop,
-							  this);
+  Simulator::Init()->Schedule(time + 0.1, &Application::Stop, this);
 }
 
-double
-Application::GetStopTime (void) const
-{
+double Application::GetStopTime(void) const {
   return m_stopTime;
 }
 
-void
-Application::Trace (Packet* p)
-{
+void Application::Trace(Packet* p) {
 
- if (!_APP_TRACING_) return;
+  if (!_APP_TRACING_)
+    return;
 
- /*
+  /*
   * Trace format:
   *
   * TX   APPLICATION_TYPE   BEARER_ID  SIZE   SRC_ID   DST_ID   TIME
   */
   std::cout << "TX";
-  switch (m_applicationType)
-    {
-      case Application::APPLICATION_TYPE_VOIP:
-        {
-    	  std::cout << " VOIP";
-    	  break;
-        }
-      case Application::APPLICATION_TYPE_TRACE_BASED:
-        {
-          std::cout << " VIDEO";
-    	  break;
-        }
-      case Application::APPLICATION_TYPE_CBR:
-        {
-    	  std::cout << " CBR";
-    	  break;
-        }
-      case Application::APPLICATION_TYPE_INFINITE_BUFFER:
-        {
-    	  std::cout << " INF_BUF";
-    	  break;
-        }
-      default:
-        {
-    	  std::cout << " UNDEFINED";
-    	  break;
-        }
+  switch (m_applicationType) {
+    case Application::APPLICATION_TYPE_VOIP: {
+      std::cout << " VOIP";
+      break;
     }
+    case Application::APPLICATION_TYPE_TRACE_BASED: {
+      std::cout << " VIDEO";
+      break;
+    }
+    case Application::APPLICATION_TYPE_CBR: {
+      std::cout << " CBR";
+      break;
+    }
+    case Application::APPLICATION_TYPE_INFINITE_BUFFER: {
+      std::cout << " INF_BUF";
+      break;
+    }
+    default: {
+      std::cout << " UNDEFINED";
+      break;
+    }
+  }
 
-  if (GetDestination ()->GetNodeType() == NetworkNode::TYPE_UE)
-    {
-      UserEquipment* ue = (UserEquipment*) GetDestination ();
-      std::cout << " ID " << p->GetID ()
-		    << " B " << GetApplicationID ()
-			<< " SIZE " << p->GetSize ()
-			<< " SRC " << GetSource ()->GetIDNetworkNode ()
-			<< " DST " << GetDestination ()->GetIDNetworkNode ()
-			<< " T " << Simulator::Init()->Now()
-	        << " " << ue->IsIndoor () << std::endl;
-    }
-  else
-    {
-	  std::cout << " ID " << p->GetID ()
-		<< " B " << GetApplicationID ()
-		<< " SIZE " << p->GetSize ()
-		<< " SRC " << GetSource ()->GetIDNetworkNode ()
-		<< " DST " << GetDestination ()->GetIDNetworkNode ()
-		<< " T " << Simulator::Init()->Now() << std::endl;
-    }
+  if (GetDestination()->GetNodeType() == NetworkNode::TYPE_UE) {
+    UserEquipment* ue = (UserEquipment*)GetDestination();
+    std::cout << " ID " << p->GetID() << " B " << GetApplicationID() << " SIZE "
+              << p->GetSize() << " SRC " << GetSource()->GetIDNetworkNode()
+              << " DST " << GetDestination()->GetIDNetworkNode() << " T "
+              << Simulator::Init()->Now() << " " << ue->IsIndoor() << std::endl;
+  } else {
+    std::cout << " ID " << p->GetID() << " B " << GetApplicationID() << " SIZE "
+              << p->GetSize() << " SRC " << GetSource()->GetIDNetworkNode()
+              << " DST " << GetDestination()->GetIDNetworkNode() << " T "
+              << Simulator::Init()->Now() << std::endl;
+  }
 }
 
-void
-Application::Print (void)
-{
+void Application::Print(void) {
   cout << " Application object: "
-      "\n\t m_applicationType = " << m_applicationType <<
-      endl;
+          "\n\t m_applicationType = "
+       << m_applicationType << endl;
 }
 
-int
-Application::GetPriority() const
-{
+int Application::GetPriority() const {
   return m_priority;
 }
 
-void
-Application::SetPriority(int priority)
-{
+void Application::SetPriority(int priority) {
   m_priority = priority;
 }

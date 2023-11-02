@@ -23,101 +23,70 @@
 #include "../../core/eventScheduler/simulator.h"
 #include "../NetworkNode.h"
 
-CqiManager::CqiManager()
-{
-  m_device  = 0;
-}
-
-CqiManager::~CqiManager()
-{
+CqiManager::CqiManager() {
   m_device = 0;
 }
 
-void
-CqiManager::SetDevice (NetworkNode* d)
-{
+CqiManager::~CqiManager() {
+  m_device = 0;
+}
+
+void CqiManager::SetDevice(NetworkNode* d) {
   m_device = d;
 }
 
-NetworkNode*
-CqiManager::GetDevice (void)
-{
+NetworkNode* CqiManager::GetDevice(void) {
   return m_device;
 }
 
-void
-CqiManager::SetCqiReportingMode (CqiManager::CQIReportingMode m)
-{
+void CqiManager::SetCqiReportingMode(CqiManager::CQIReportingMode m) {
   m_reportingMode = m;
-  if (m_reportingMode == CqiManager::APERIODIC)
-    {
-	  m_sendCqi = false;
-    }
-  else
-    {
-	  m_sendCqi = true;
-    }
+  if (m_reportingMode == CqiManager::APERIODIC) {
+    m_sendCqi = false;
+  } else {
+    m_sendCqi = true;
+  }
 }
 
-CqiManager::CQIReportingMode
-CqiManager::GetCqiReportingMode (void)
-{
+CqiManager::CQIReportingMode CqiManager::GetCqiReportingMode(void) {
   return m_reportingMode;
 }
 
-void
-CqiManager::SetSendCqi (bool b)
-{
+void CqiManager::SetSendCqi(bool b) {
   m_sendCqi = b;
 }
 
-bool
-CqiManager::GetSendCqi (void)
-{
+bool CqiManager::GetSendCqi(void) {
   return m_sendCqi;
 }
 
-
-void
-CqiManager::SetReportingInterval (int i)
-{
+void CqiManager::SetReportingInterval(int i) {
   m_reportingInterval = i;
 }
 
-int
-CqiManager::GetReportingInterval (void)
-{
+int CqiManager::GetReportingInterval(void) {
   return m_reportingInterval;
 }
 
-void
-CqiManager::SetLastSent ()
-{
-  m_lastSent = Simulator::Init ()->Now () * 1000; //TTI
+void CqiManager::SetLastSent() {
+  m_lastSent = Simulator::Init()->Now() * 1000;  //TTI
 }
 
-long int
-CqiManager::GetLastSent (void)
-{
+long int CqiManager::GetLastSent(void) {
   return m_lastSent;
 }
 
-bool
-CqiManager::NeedToSendFeedbacks (void)
-{
-//  std::cout <<"NeedToSendFeedbacks " << (Simulator::Init ()->Now ()*1000) << GetReportingInterval () << std::endl;
+bool CqiManager::NeedToSendFeedbacks(void) {
+  //  std::cout <<"NeedToSendFeedbacks " << (Simulator::Init ()->Now ()*1000) << GetReportingInterval () << std::endl;
 
-  if (GetSendCqi () && GetReportingInterval () == 1 )
-    {
-	  return true;
-    }
+  if (GetSendCqi() && GetReportingInterval() == 1) {
+    return true;
+  }
 
-  else if (GetSendCqi () && ((int)(Simulator::Init ()->Now ()*1000) - GetLastSent ()) >= GetReportingInterval ())
-    {
-      return true;
-    }
-  else
-    {
-	  return false;
-    }
+  else if (GetSendCqi() && ((int)(Simulator::Init()->Now() * 1000) -
+                            GetLastSent()) >= GetReportingInterval()) {
+    return true;
+  } else {
+    return false;
+  }
 }

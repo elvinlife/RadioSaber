@@ -25,13 +25,15 @@
 #include "downlink-packet-scheduler.h"
 
 class DL_MLWDF_PacketScheduler : public DownlinkPacketScheduler {
-public:
-	DL_MLWDF_PacketScheduler();
-	virtual ~DL_MLWDF_PacketScheduler();
+ public:
+  DL_MLWDF_PacketScheduler();
+  virtual ~DL_MLWDF_PacketScheduler();
 
-	virtual void DoSchedule (void);
+  virtual void DoSchedule(void);
 
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
 };
 
 #endif /* DL_MLWDF_PACKET_SCHEDULER_H_ */

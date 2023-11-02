@@ -19,55 +19,53 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef COMPUTE_PATH_LOSS_H_
 #define COMPUTE_PATH_LOSS_H_
 
-#include "../device/NetworkNode.h"
-#include <stdint.h>
-#include "stdlib.h"
 #include <math.h>
+#include <stdint.h>
+#include "../device/NetworkNode.h"
 #include "IndoorScenarios.h"
+#include "stdlib.h"
 
-
-static double
-ComputePathLossForInterference (NetworkNode* src, NetworkNode* dst)
-{
-	/*
+static double ComputePathLossForInterference(NetworkNode* src,
+                                             NetworkNode* dst) {
+  /*
 	 * Path loss Models from sect. 5.2 in
 	 * 3GPP TSG RAN WG4 R4-092042
 	 */
   double externalWallAttenuation = 20;
   double pathLoss = 0.0;
 
-  if (src->GetNodeType() == NetworkNode::TYPE_ENODEB && dst->GetNodeType () == NetworkNode::TYPE_UE)
-    {
-	  //Path Loss Model For Urban Environment
-	  double distance = src->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (
-			  dst->GetMobilityModel ()->GetAbsolutePosition ());
+  if (src->GetNodeType() == NetworkNode::TYPE_ENODEB &&
+      dst->GetNodeType() == NetworkNode::TYPE_UE) {
+    //Path Loss Model For Urban Environment
+    double distance =
+        src->GetMobilityModel()->GetAbsolutePosition()->GetDistance(
+            dst->GetMobilityModel()->GetAbsolutePosition());
 
-	  // Urban Area
-	  pathLoss = 128.1 + (37.6 * log10 (distance * 0.001));
-	  // Sub-Urban area
-	  // pathLoss = 128.1 + (37.6 * log10 (distance * 0.001));
-	  // Rural Area
-	  // pathLoss = 100.54 + (34.1 * log10 (distance * 0.001));
+    // Urban Area
+    pathLoss = 128.1 + (37.6 * log10(distance * 0.001));
+    // Sub-Urban area
+    // pathLoss = 128.1 + (37.6 * log10 (distance * 0.001));
+    // Rural Area
+    // pathLoss = 100.54 + (34.1 * log10 (distance * 0.001));
 
-	  if ( ((UserEquipment*) dst)->IsIndoor() )
-	  {
-		  pathLoss = pathLoss + externalWallAttenuation;
-	  }
-
-	  return pathLoss;
+    if (((UserEquipment*)dst)->IsIndoor()) {
+      pathLoss = pathLoss + externalWallAttenuation;
     }
 
-  if (src->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION && dst->GetNodeType () == NetworkNode::TYPE_UE)
-    {
-	  double minimumCouplingLoss = 45; //[dB] - see 3GPP TSG RAN WG4 #42bis (R4-070456)
-	  double floorPenetration = 0.0;
+    return pathLoss;
+  }
 
-	  //Path Loss Model For Urban Environment (Indoor Case)
-      /*
+  if (src->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION &&
+      dst->GetNodeType() == NetworkNode::TYPE_UE) {
+    double minimumCouplingLoss =
+        45;  //[dB] - see 3GPP TSG RAN WG4 #42bis (R4-070456)
+    double floorPenetration = 0.0;
+
+    //Path Loss Model For Urban Environment (Indoor Case)
+    /*
 	  double distance = src->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (
 			  dst->GetMobilityModel ()->GetAbsolutePosition ());
 
@@ -83,50 +81,39 @@ ComputePathLossForInterference (NetworkNode* src, NetworkNode* dst)
 	  return pathLoss;
 	  */
 
+    //Path Loss Model For WinnerII
 
-	  //Path Loss Model For WinnerII
+    double distance =
+        src->GetMobilityModel()->GetAbsolutePosition()->GetDistance(
+            dst->GetMobilityModel()->GetAbsolutePosition());
+    int* nbWalls = GetWalls((Femtocell*)(src->GetCell()), (UserEquipment*)dst);
 
-	  double distance = src->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (
-	  			  dst->GetMobilityModel ()->GetAbsolutePosition ());
-	  int* nbWalls = GetWalls( (Femtocell*) (src->GetCell()), (UserEquipment*) dst);
+    double A, B, C;
+    double ExternalWallsAttenuation = 20.0;
+    double InternalWallsAttenuation = 10.0;
 
-	    double A, B, C;
-	    double ExternalWallsAttenuation = 20.0;
-	    double InternalWallsAttenuation = 10.0;
-
-	    if (nbWalls[0] == 0 && nbWalls[1] == 0)
-	      { //LOS
-	        A = 18.7;
-	        B = 46.8;
-	        C = 20.0;
-	      }
-	    else
-	      { //NLOS
-	        A = 20.0;
-	        B = 46.4;
-	        C = 20.0;
-	      }
-
-	    pathLoss = A * log10( distance ) +
-	                         B +
-	                         C * log10(2. / 5.0) +
-	                         InternalWallsAttenuation * nbWalls[1] +
-	                         ExternalWallsAttenuation * nbWalls[0];
-
-	    delete [] nbWalls;
-
-
-
-
-	  return max(minimumCouplingLoss, pathLoss);
-
+    if (nbWalls[0] == 0 && nbWalls[1] == 0) {  //LOS
+      A = 18.7;
+      B = 46.8;
+      C = 20.0;
+    } else {  //NLOS
+      A = 20.0;
+      B = 46.4;
+      C = 20.0;
     }
+
+    pathLoss = A * log10(distance) + B + C * log10(2. / 5.0) +
+               InternalWallsAttenuation * nbWalls[1] +
+               ExternalWallsAttenuation * nbWalls[0];
+
+    delete[] nbWalls;
+
+    return max(minimumCouplingLoss, pathLoss);
+  }
 
   return pathLoss;
 
   //XXX: add other path loss models.
 }
-
-
 
 #endif /* COMPUTE_PATH_LOSS_H_ */

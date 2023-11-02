@@ -26,11 +26,13 @@
 #include "error-model.h"
 
 class WidebandCqiEesmErrorModel : public ErrorModel {
-public:
-	WidebandCqiEesmErrorModel();
-	virtual ~WidebandCqiEesmErrorModel();
+ public:
+  WidebandCqiEesmErrorModel();
+  virtual ~WidebandCqiEesmErrorModel();
 
-	virtual bool CheckForPhysicalError (std::vector<int> channels, std::vector<int> mcs, std::vector<double> m_sinr);
+  virtual bool CheckForPhysicalError(std::vector<int> channels,
+                                     std::vector<int> mcs,
+                                     std::vector<double> m_sinr);
 };
 
 #endif /* WIDEBAND_CQI_EESM_ERROR_MODEL_H_ */

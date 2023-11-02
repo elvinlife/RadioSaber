@@ -24,13 +24,13 @@
 
 #include "cqi-manager.h"
 
-class FullbandCqiManager: public CqiManager {
-public:
-	FullbandCqiManager();
-	virtual ~FullbandCqiManager();
+class FullbandCqiManager : public CqiManager {
+ public:
+  FullbandCqiManager();
+  virtual ~FullbandCqiManager();
 
-	virtual std::vector<double> GenSubbandSINR (std::vector<double> sinr);
-	virtual void CreateCqiFeedbacks (std::vector<double> sinr);
+  virtual std::vector<double> GenSubbandSINR(std::vector<double> sinr);
+  virtual void CreateCqiFeedbacks(std::vector<double> sinr);
 };
 
 #endif /* FULLBANDCQIMANAGER_H_ */

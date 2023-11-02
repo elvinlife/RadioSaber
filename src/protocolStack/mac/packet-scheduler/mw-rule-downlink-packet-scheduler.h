@@ -19,18 +19,19 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef MW_RULE_DOWNLINK_PACKET_SCHEDULER_H_
 #define MW_RULE_DOWNLINK_PACKET_SCHEDULER_H_
 
 #include "downlink-packet-scheduler.h"
 
 class MwRulePacketScheduler : public DownlinkPacketScheduler {
-public:
-	MwRulePacketScheduler();
-	virtual ~MwRulePacketScheduler();
+ public:
+  MwRulePacketScheduler();
+  virtual ~MwRulePacketScheduler();
 
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
 };
 
 #endif /* MW_RULE_DOWNLINK_PACKET_SCHEDULER_H_ */

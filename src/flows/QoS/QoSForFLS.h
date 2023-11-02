@@ -19,63 +19,45 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef QOSFORFLS_H_
 #define QOSFORFLS_H_
 
 #include "QoSParameters.h"
 
-class QoSForFLS :public QoSParameters {
-public:
-	QoSForFLS();
-	virtual ~QoSForFLS();
+class QoSForFLS : public QoSParameters {
+ public:
+  QoSForFLS();
+  virtual ~QoSForFLS();
 
-    void
-    SetNbOfCoefficients(int M);
-    int
-    GetNbOfCoefficients (void) const;
+  void SetNbOfCoefficients(int M);
+  int GetNbOfCoefficients(void) const;
 
-    void
-    CreateQ (void);
-    void
-    CreateU (void);
-    void
-    CreateFilterCoefficients (void);
+  void CreateQ(void);
+  void CreateU(void);
+  void CreateFilterCoefficients(void);
 
-    int*
-    GetQ (void);
-    int*
-    GetU (void);
-    double*
-    GetFilterCoefficients (void) const;
+  int* GetQ(void);
+  int* GetU(void);
+  double* GetFilterCoefficients(void) const;
 
-    void
-    UpdateQ (int q_);
-    void
-    UpdateU (int u_);
+  void UpdateQ(int q_);
+  void UpdateU(int u_);
 
+  void SetDataToTransmit(int data);
+  int GetDataToTransmit(void) const;
+  void UpdateDataToTransmit(int data);
 
-    void
-    SetDataToTransmit (int data);
-    int
-    GetDataToTransmit (void) const;
-    void
-    UpdateDataToTransmit (int data);
+  //Debug:
+  void Print(void);
 
+ private:
+  int m_nbOfCoefficients;
 
-    //Debug:
-    void
-    Print (void);
+  int* m_q;
+  int* m_u;
+  double* m_filterCoefficients;
 
-private:
-	int m_nbOfCoefficients;
-
-	int *m_q;
-	int *m_u;
-	double *m_filterCoefficients;
-
-	int m_dataToTransmit;
-
+  int m_dataToTransmit;
 };
 
 #endif /* QOSFORFLS_H_ */

@@ -19,20 +19,21 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef LOG_RULE_DOWNLINK_PACKET_SCHEDULER_H_
 #define LOG_RULE_DOWNLINK_PACKET_SCHEDULER_H_
 
 #include "downlink-packet-scheduler.h"
 
 class LogRuleDownlinkPacketScheduler : public DownlinkPacketScheduler {
-public:
-	LogRuleDownlinkPacketScheduler();
-	virtual ~LogRuleDownlinkPacketScheduler();
+ public:
+  LogRuleDownlinkPacketScheduler();
+  virtual ~LogRuleDownlinkPacketScheduler();
 
-	virtual void DoSchedule (void);
+  virtual void DoSchedule(void);
 
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
 };
 
 #endif /* LOG_RULE_DOWNLINK_PACKET_SCHEDULER_H_ */

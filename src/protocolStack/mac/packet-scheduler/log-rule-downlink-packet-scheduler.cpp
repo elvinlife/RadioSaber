@@ -20,85 +20,72 @@
  */
 
 #include "log-rule-downlink-packet-scheduler.h"
-#include "../mac-entity.h"
+#include "../../../core/idealMessages/ideal-control-messages.h"
+#include "../../../core/spectrum/bandwidth-manager.h"
+#include "../../../device/ENodeB.h"
+#include "../../../device/NetworkNode.h"
+#include "../../../flows/MacQueue.h"
+#include "../../../flows/QoS/QoSParameters.h"
+#include "../../../flows/application/Application.h"
+#include "../../../flows/radio-bearer.h"
+#include "../../../phy/lte-phy.h"
+#include "../../../protocolStack/mac/AMCModule.h"
+#include "../../../protocolStack/rrc/rrc-entity.h"
 #include "../../packet/Packet.h"
 #include "../../packet/packet-burst.h"
-#include "../../../device/NetworkNode.h"
-#include "../../../flows/radio-bearer.h"
-#include "../../../protocolStack/rrc/rrc-entity.h"
-#include "../../../flows/application/Application.h"
-#include "../../../device/ENodeB.h"
-#include "../../../protocolStack/mac/AMCModule.h"
-#include "../../../phy/lte-phy.h"
-#include "../../../core/spectrum/bandwidth-manager.h"
-#include "../../../core/idealMessages/ideal-control-messages.h"
-#include "../../../flows/QoS/QoSParameters.h"
-#include "../../../flows/MacQueue.h"
+#include "../mac-entity.h"
 
-LogRuleDownlinkPacketScheduler::LogRuleDownlinkPacketScheduler()
-{
-  SetMacEntity (0);
-  CreateFlowsToSchedule ();
+LogRuleDownlinkPacketScheduler::LogRuleDownlinkPacketScheduler() {
+  SetMacEntity(0);
+  CreateFlowsToSchedule();
 }
 
-LogRuleDownlinkPacketScheduler::~LogRuleDownlinkPacketScheduler()
-{
-  Destroy ();
+LogRuleDownlinkPacketScheduler::~LogRuleDownlinkPacketScheduler() {
+  Destroy();
 }
 
-void
-LogRuleDownlinkPacketScheduler::DoSchedule ()
-{
+void LogRuleDownlinkPacketScheduler::DoSchedule() {
 #ifdef SCHEDULER_DEBUG
-	std::cout << "Start LOG RULE packet scheduler for node "
-			<< GetMacEntity ()->GetDevice ()->GetIDNetworkNode()<< std::endl;
+  std::cout << "Start LOG RULE packet scheduler for node "
+            << GetMacEntity()->GetDevice()->GetIDNetworkNode() << std::endl;
 #endif
 
-  UpdateAverageTransmissionRate ();
+  UpdateAverageTransmissionRate();
 
-  CheckForDLDropPackets ();
+  CheckForDLDropPackets();
 
-  SelectFlowsToSchedule ();
+  SelectFlowsToSchedule();
 
-  if (GetFlowsToSchedule ()->size() == 0)
-	{}
-  else
-	{
-	  RBsAllocation ();
-	}
+  if (GetFlowsToSchedule()->size() == 0) {
+  } else {
+    RBsAllocation();
+  }
 
-  StopSchedule ();
+  StopSchedule();
 }
 
-
-double
-LogRuleDownlinkPacketScheduler::ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel)
-{
+double LogRuleDownlinkPacketScheduler::ComputeSchedulingMetric(
+    RadioBearer* bearer, double spectralEfficiency, int subChannel) {
   double metric;
 
-  if ((bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-	  ||
-	  (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_CBR))
-	{
-	  metric = (spectralEfficiency * 180000.)
-				/
-				bearer->GetAverageTransmissionRate();
-	}
-  else
-	{
-	   QoSParameters *qos = bearer->GetQoSParameters ();
-	   double HOL = bearer->GetHeadOfLinePacketDelay ();
-	   double targetDelay = qos->GetMaxDelay ();
+  if ((bearer->GetApplication()->GetApplicationType() ==
+       Application::APPLICATION_TYPE_INFINITE_BUFFER) ||
+      (bearer->GetApplication()->GetApplicationType() ==
+       Application::APPLICATION_TYPE_CBR)) {
+    metric =
+        (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
+  } else {
+    QoSParameters* qos = bearer->GetQoSParameters();
+    double HOL = bearer->GetHeadOfLinePacketDelay();
+    double targetDelay = qos->GetMaxDelay();
 
-	   //COMPUTE METRIC USING EXP RULE:
-	   double logTerm = log (1.1 + ( (5 * HOL) / targetDelay ));
-	   double weight = (spectralEfficiency * 180000.)
-		  		       /
-	    	           bearer->GetAverageTransmissionRate();
+    //COMPUTE METRIC USING EXP RULE:
+    double logTerm = log(1.1 + ((5 * HOL) / targetDelay));
+    double weight =
+        (spectralEfficiency * 180000.) / bearer->GetAverageTransmissionRate();
 
-  	   metric = logTerm * weight;
-	}
+    metric = logTerm * weight;
+  }
 
   return metric;
 }
-

@@ -20,12 +20,10 @@
  */
 
 #include "error-model.h"
+#include "../utility/RandomVariable.h"
 #include "BLERTrace/BLERvsSINR_15CQI_AWGN.h"
 #include "BLERTrace/BLERvsSINR_15CQI_TU.h"
-#include "../utility/RandomVariable.h"
 
-ErrorModel::ErrorModel()
-{}
+ErrorModel::ErrorModel() {}
 
-ErrorModel::~ErrorModel()
-{}
+ErrorModel::~ErrorModel() {}

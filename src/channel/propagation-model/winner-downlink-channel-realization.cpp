@@ -19,71 +19,61 @@
  * Author: Francesco Capozzi <f.capozzi@poliba.it>
  */
 
-
 #include "winner-downlink-channel-realization.h"
-#include "../../device/UserEquipment.h"
+#include <assert.h>
+#include "../../core/eventScheduler/simulator.h"
+#include "../../core/spectrum/bandwidth-manager.h"
 #include "../../device/ENodeB.h"
 #include "../../device/HeNodeB.h"
-#include "../../utility/RandomVariable.h"
-#include "../../utility/IndoorScenarios.h"
-#include "shadowing-trace.h"
-#include "../../core/spectrum/bandwidth-manager.h"
-#include "../../phy/lte-phy.h"
-#include "../../core/eventScheduler/simulator.h"
+#include "../../device/UserEquipment.h"
 #include "../../load-parameters.h"
-#include <assert.h>
+#include "../../phy/lte-phy.h"
+#include "../../utility/IndoorScenarios.h"
+#include "../../utility/RandomVariable.h"
+#include "shadowing-trace.h"
 
-
-WinnerDownlinkChannelRealization::WinnerDownlinkChannelRealization (NetworkNode* src, NetworkNode* dst)
-{
-  SetSamplingPeriod (0.5);
+WinnerDownlinkChannelRealization::WinnerDownlinkChannelRealization(
+    NetworkNode* src, NetworkNode* dst) {
+  SetSamplingPeriod(0.5);
 
   m_penetrationLoss = 0;
   m_shadowing = 0;
   m_pathLoss = 0;
-  SetFastFading (new FastFading ());
+  SetFastFading(new FastFading());
 
-  SetSourceNode (src);
-  SetDestinationNode (dst);
+  SetSourceNode(src);
+  SetDestinationNode(dst);
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
-  std::cout << "Created Channe Realization between "
-		  << src->GetIDNetworkNode () << " and " << dst->GetIDNetworkNode () << std::endl;
+  std::cout << "Created Channe Realization between " << src->GetIDNetworkNode()
+            << " and " << dst->GetIDNetworkNode() << std::endl;
 #endif
 
   if (_simple_jakes_model_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_JAKES);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_JAKES);
   if (_PED_A_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_PED_A);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_PED_A);
   if (_PED_B_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_PED_B);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_PED_B);
   if (_VEH_A_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_VEH_A);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_VEH_A);
   if (_VEH_B_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_VEH_B);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_VEH_B);
 
-  UpdateModels ();
-
+  UpdateModels();
 }
 
-WinnerDownlinkChannelRealization::~WinnerDownlinkChannelRealization()
-{
-}
+WinnerDownlinkChannelRealization::~WinnerDownlinkChannelRealization() {}
 
-void
-WinnerDownlinkChannelRealization::SetPenetrationLoss (double pnl)
-{
+void WinnerDownlinkChannelRealization::SetPenetrationLoss(double pnl) {
   m_penetrationLoss = pnl;
 }
 
-double WinnerDownlinkChannelRealization::GetPenetrationLoss (void)
-{
+double WinnerDownlinkChannelRealization::GetPenetrationLoss(void) {
   return m_penetrationLoss;
 }
 
-double
-WinnerDownlinkChannelRealization::GetPathLoss (void)
-{
+double WinnerDownlinkChannelRealization::GetPathLoss(void) {
   /*
    * Path Loss Model For Indoor Environment.
    * "WINNER II channel models, ver 1.1, Tech Report"
@@ -97,135 +87,118 @@ WinnerDownlinkChannelRealization::GetPathLoss (void)
   UserEquipment* ue;
   ENodeB* enb;
 
-  assert (GetDestinationNode ()->GetNodeType () == NetworkNode::TYPE_HOME_BASE_STATION  || GetSourceNode ()->GetNodeType () == NetworkNode::TYPE_HOME_BASE_STATION);
+  assert(GetDestinationNode()->GetNodeType() ==
+             NetworkNode::TYPE_HOME_BASE_STATION ||
+         GetSourceNode()->GetNodeType() == NetworkNode::TYPE_HOME_BASE_STATION);
 
-  if (GetSourceNode ()->GetNodeType () == NetworkNode::TYPE_UE
-		  && GetDestinationNode ()->GetNodeType () == NetworkNode::TYPE_HOME_BASE_STATION )
-    {
-	  ue = (UserEquipment*) GetSourceNode ();
-	  enb = (ENodeB*) GetDestinationNode ();
+  if (GetSourceNode()->GetNodeType() == NetworkNode::TYPE_UE &&
+      GetDestinationNode()->GetNodeType() ==
+          NetworkNode::TYPE_HOME_BASE_STATION) {
+    ue = (UserEquipment*)GetSourceNode();
+    enb = (ENodeB*)GetDestinationNode();
 
-	  distance =  ue->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (enb->GetMobilityModel ()->GetAbsolutePosition ());
-    }
+    distance = ue->GetMobilityModel()->GetAbsolutePosition()->GetDistance(
+        enb->GetMobilityModel()->GetAbsolutePosition());
+  }
 
-  else if (GetDestinationNode ()->GetNodeType () == NetworkNode::TYPE_UE
-		  && GetSourceNode ()->GetNodeType () == NetworkNode::TYPE_HOME_BASE_STATION )
-    {
-	  ue = (UserEquipment*) GetDestinationNode ();
-	  enb = (ENodeB*) GetSourceNode ();
+  else if (GetDestinationNode()->GetNodeType() == NetworkNode::TYPE_UE &&
+           GetSourceNode()->GetNodeType() ==
+               NetworkNode::TYPE_HOME_BASE_STATION) {
+    ue = (UserEquipment*)GetDestinationNode();
+    enb = (ENodeB*)GetSourceNode();
 
-	  distance =  ue->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (enb->GetMobilityModel ()->GetAbsolutePosition ());
-    }
+    distance = ue->GetMobilityModel()->GetAbsolutePosition()->GetDistance(
+        enb->GetMobilityModel()->GetAbsolutePosition());
+  }
 
-  int* nbWalls = GetWalls( (Femtocell*) (enb->GetCell()), ue);
+  int* nbWalls = GetWalls((Femtocell*)(enb->GetCell()), ue);
 
   double A, B, C;
   double ExternalWallsAttenuation = 20.0;
   double InternalWallsAttenuation = 10.0;
 
-  if (nbWalls[0] == 0 && nbWalls[1] == 0)
-    { //LOS
-      A = 18.7;
-      B = 46.8;
-      C = 20.0;
-    }
-  else
-    { //NLOS
-      A = 20.0;
-      B = 46.4;
-      C = 20.0;
-    }
+  if (nbWalls[0] == 0 && nbWalls[1] == 0) {  //LOS
+    A = 18.7;
+    B = 46.8;
+    C = 20.0;
+  } else {  //NLOS
+    A = 20.0;
+    B = 46.4;
+    C = 20.0;
+  }
 
-  m_pathLoss = A * log10( distance ) +
-                       B +
-                       C * log10(2. / 5.0) +
-                       InternalWallsAttenuation * nbWalls[1] +
-                       ExternalWallsAttenuation * nbWalls[0];
+  m_pathLoss = A * log10(distance) + B + C * log10(2. / 5.0) +
+               InternalWallsAttenuation * nbWalls[1] +
+               ExternalWallsAttenuation * nbWalls[0];
 
-  delete [] nbWalls;
+  delete[] nbWalls;
   return m_pathLoss;
 }
 
-
-void
-WinnerDownlinkChannelRealization::SetShadowing (double sh)
-{
+void WinnerDownlinkChannelRealization::SetShadowing(double sh) {
   m_shadowing = sh;
 }
 
-double
-WinnerDownlinkChannelRealization::GetShadowing (void)
-{
+double WinnerDownlinkChannelRealization::GetShadowing(void) {
   return m_shadowing;
 }
 
-
-void
-WinnerDownlinkChannelRealization::UpdateModels ()
-{
+void WinnerDownlinkChannelRealization::UpdateModels() {
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
   std::cout << "\t --> UpdateModels" << std::endl;
 #endif
 
-
   //update shadowing
   m_shadowing = 0;
-  double probability = GetRandomVariable (101) / 100.0;
-  for (int i = 0; i < 201; i++)
-    {
-	  if (probability <= shadowing_probability[i])
-	    {
-		  m_shadowing = shadowing_value[i];
-          break;
-	    }
+  double probability = GetRandomVariable(101) / 100.0;
+  for (int i = 0; i < 201; i++) {
+    if (probability <= shadowing_probability[i]) {
+      m_shadowing = shadowing_value[i];
+      break;
     }
+  }
 
-  UpdateFastFading ();
+  UpdateFastFading();
 
-  SetLastUpdate ();
+  SetLastUpdate();
 }
 
-
-std::vector<double>
-WinnerDownlinkChannelRealization::GetLoss ()
-{
+std::vector<double> WinnerDownlinkChannelRealization::GetLoss() {
 #ifdef TEST_PROPAGATION_LOSS_MODEL
   std::cout << "\t  --> compute loss between "
-		  << GetSourceNode ()->GetIDNetworkNode () << " and "
-		  << GetDestinationNode ()->GetIDNetworkNode () << std::endl;
+            << GetSourceNode()->GetIDNetworkNode() << " and "
+            << GetDestinationNode()->GetIDNetworkNode() << std::endl;
 #endif
 
-  if (NeedForUpdate ())
-    {
-	   UpdateModels ();
-    }
+  if (NeedForUpdate()) {
+    UpdateModels();
+  }
 
   std::vector<double> loss;
 
-
-  int now_ms = Simulator::Init()->Now () * 1000;
-  int lastUpdate_ms = GetLastUpdate () * 1000;
+  int now_ms = Simulator::Init()->Now() * 1000;
+  int lastUpdate_ms = GetLastUpdate() * 1000;
   int index = now_ms - lastUpdate_ms;
 
-  int nbOfSubChannels = GetSourceNode ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int nbOfSubChannels = GetSourceNode()
+                            ->GetPhy()
+                            ->GetBandwidthManager()
+                            ->GetDlSubChannels()
+                            .size();
 
-  for (int i = 0; i < nbOfSubChannels; i++)
-    {
-	  //ATTENZIONE double l = GetFastFading ()->at (i).at (index) - GetPathLoss () - GetPenetrationLoss () - GetShadowing ();
-	  double l = - GetPathLoss ();
+  for (int i = 0; i < nbOfSubChannels; i++) {
+    //ATTENZIONE double l = GetFastFading ()->at (i).at (index) - GetPathLoss () - GetPenetrationLoss () - GetShadowing ();
+    double l = -GetPathLoss();
 
-	  loss.push_back (l);
+    loss.push_back(l);
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
-       std::cout << "\t\t mlp = " << GetFastFading ()->at (i).at (index)
-		  << " pl = " << GetPathLoss ()
-          << " pnl = " << GetPenetrationLoss()
-          << " sh = " << GetShadowing()
-          << " LOSS = " << l
-		  << std::endl;
+    std::cout << "\t\t mlp = " << GetFastFading()->at(i).at(index)
+              << " pl = " << GetPathLoss() << " pnl = " << GetPenetrationLoss()
+              << " sh = " << GetShadowing() << " LOSS = " << l << std::endl;
 #endif
-    }
+  }
 
   return loss;
 }

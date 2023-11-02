@@ -20,67 +20,59 @@
  */
 
 #include "wideband-cqi-manager.h"
-#include "../NetworkNode.h"
 #include "../../core/idealMessages/ideal-control-messages.h"
-#include "../../protocolStack/mac/AMCModule.h"
-#include "../UserEquipment.h"
-#include "../ENodeB.h"
-#include "../HeNodeB.h"
-#include "../../phy/lte-phy.h"
 #include "../../core/spectrum/bandwidth-manager.h"
 #include "../../load-parameters.h"
+#include "../../phy/lte-phy.h"
+#include "../../protocolStack/mac/AMCModule.h"
 #include "../../utility/eesm-effective-sinr.h"
+#include "../ENodeB.h"
+#include "../HeNodeB.h"
+#include "../NetworkNode.h"
+#include "../UserEquipment.h"
 
+WidebandCqiManager::WidebandCqiManager() {}
 
+WidebandCqiManager::~WidebandCqiManager() {}
 
-WidebandCqiManager::WidebandCqiManager()
-{}
-
-WidebandCqiManager::~WidebandCqiManager()
-{}
-
-void
-WidebandCqiManager::CreateCqiFeedbacks (std::vector<double> sinr)
-{
+void WidebandCqiManager::CreateCqiFeedbacks(std::vector<double> sinr) {
 #ifdef TEST_CQI_FEEDBACKS
   std::cout << "WidebandCqiManager -> CreateCqiFeedbacks " << std::endl;
 #endif
 
-  double effective_sinr = GetEesmEffectiveSinr (sinr);
-  for (int i = 0; i < sinr.size (); i++)
-    {
-	  sinr.at (i) = effective_sinr;
-    }
+  double effective_sinr = GetEesmEffectiveSinr(sinr);
+  for (int i = 0; i < sinr.size(); i++) {
+    sinr.at(i) = effective_sinr;
+  }
 
 #ifdef AMC_MAPPING
   std::cout << "\t sinr: ";
-  for (int i = 0; i < sinr.size (); i++)
-    {
-	  std::cout << sinr.at (i) << " ";
-    }
+  for (int i = 0; i < sinr.size(); i++) {
+    std::cout << sinr.at(i) << " ";
+  }
   std::cout << std::endl;
 #endif
 
+  UserEquipment* thisNode = (UserEquipment*)GetDevice();
+  NetworkNode* targetNode = thisNode->GetTargetNode();
 
-  UserEquipment* thisNode = (UserEquipment*) GetDevice ();
-  NetworkNode* targetNode = thisNode->GetTargetNode ();
+  AMCModule* amc =
+      GetDevice()->GetProtocolStack()->GetMacEntity()->GetAmcModule();
+  std::vector<int> cqi = amc->CreateCqiFeedbacks(sinr);
 
-  AMCModule *amc = GetDevice ()->GetProtocolStack ()->GetMacEntity ()->GetAmcModule ();
-  std::vector<int> cqi = amc->CreateCqiFeedbacks (sinr);
+  CqiIdealControlMessage* msg = new CqiIdealControlMessage();
+  msg->SetSourceDevice(thisNode);
+  msg->SetDestinationDevice(targetNode);
 
-  CqiIdealControlMessage *msg = new CqiIdealControlMessage ();
-  msg->SetSourceDevice (thisNode);
-  msg->SetDestinationDevice (targetNode);
+  int nbSubChannels = cqi.size();
+  std::vector<double> dlSubChannels =
+      thisNode->GetPhy()->GetBandwidthManager()->GetDlSubChannels();
 
-  int nbSubChannels = cqi.size ();
-  std::vector<double> dlSubChannels = thisNode->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ();
+  for (int i = 0; i < nbSubChannels; i++) {
+    msg->AddNewRecord(dlSubChannels.at(i), cqi.at(i));
+  }
 
-  for (int i = 0; i < nbSubChannels; i++)
-    {
-      msg->AddNewRecord (dlSubChannels.at (i), cqi.at (i));
-    }
+  SetLastSent();
 
-  SetLastSent ();
-
-  thisNode->GetPhy ()->SendIdealControlMessage (msg);
+  thisNode->GetPhy()->SendIdealControlMessage(msg);
 }

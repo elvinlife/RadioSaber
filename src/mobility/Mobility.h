@@ -19,85 +19,64 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef MOBILITY_H_
 #define MOBILITY_H_
 
-#include "../core/cartesianCoodrdinates/CartesianCoordinates.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "../core/cartesianCoodrdinates/CartesianCoordinates.h"
 
 class Mobility {
-public:
-	Mobility();
-	virtual ~Mobility();
+ public:
+  Mobility();
+  virtual ~Mobility();
 
-	enum MobilityModel {
-		CONSTANT_POSITION,
-		RANDOM_DIRECTION,
-		RANDOM_WALK,
-		RANDOM_WAYPOINT,
-		MANHATTAN
-	};
+  enum MobilityModel {
+    CONSTANT_POSITION,
+    RANDOM_DIRECTION,
+    RANDOM_WALK,
+    RANDOM_WAYPOINT,
+    MANHATTAN
+  };
 
-	void
-	SetNodeID (int id);
-	int
-	GetNodeID (void) const;
+  void SetNodeID(int id);
+  int GetNodeID(void) const;
 
-	void
-	SetMobilityModel(MobilityModel model);
-	Mobility::MobilityModel
-	GetMobilityModel(void) const;
+  void SetMobilityModel(MobilityModel model);
+  Mobility::MobilityModel GetMobilityModel(void) const;
 
-	void
-	SetAbsolutePosition (CartesianCoordinates *position);
-	CartesianCoordinates*
-	GetAbsolutePosition (void) const;
-	void
-	DeleteAbsolutePosition (void);
+  void SetAbsolutePosition(CartesianCoordinates* position);
+  CartesianCoordinates* GetAbsolutePosition(void) const;
+  void DeleteAbsolutePosition(void);
 
-	virtual void UpdatePosition (double time) = 0;
+  virtual void UpdatePosition(double time) = 0;
 
-	void
-	SetSpeed (int speed);
-	int
-	GetSpeed (void) const;
-	void
-	SetSpeedDirection (double speedDirection);
-	double
-	GetSpeedDirection (void) const;
+  void SetSpeed(int speed);
+  int GetSpeed(void) const;
+  void SetSpeedDirection(double speedDirection);
+  double GetSpeedDirection(void) const;
 
-	void
-	SetPositionLastUpdate (double time);
-	double
-	GetPositionLastUpdate (void) const;
+  void SetPositionLastUpdate(double time);
+  double GetPositionLastUpdate(void) const;
 
-	void
-	SetHandover (bool handover);
-	bool
-	GetHandover (void) const;
-	void
-	SetLastHandoverTime (double lastHOtime);
-	double
-	GetLastHandoverTime (void) const;
+  void SetHandover(bool handover);
+  bool GetHandover(void) const;
+  void SetLastHandoverTime(double lastHOtime);
+  double GetLastHandoverTime(void) const;
 
-	double
-	GetTopologyBorder (void);
+  double GetTopologyBorder(void);
 
+ private:
+  int m_nodeID;
 
-private:
-	int m_nodeID;
+  MobilityModel m_mobilityModel;
 
-	MobilityModel m_mobilityModel;
-
-	CartesianCoordinates *m_AbsolutePosition;
-	int m_speed;			 		// Km/h
-	double m_speedDirection;	 	// radianti
-	double m_positionLastUpdate; 	// s
-	bool m_handover;				// true to enable hand over
-	double m_handoverLastRun;		// s
+  CartesianCoordinates* m_AbsolutePosition;
+  int m_speed;                  // Km/h
+  double m_speedDirection;      // radianti
+  double m_positionLastUpdate;  // s
+  bool m_handover;              // true to enable hand over
+  double m_handoverLastRun;     // s
 };
 
 #endif /* MOBILITY_H_ */

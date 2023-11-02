@@ -24,27 +24,23 @@
 
 #include "QoSParameters.h"
 
-class QoSForEXP :public QoSParameters {
+class QoSForEXP : public QoSParameters {
 
-public:
-	QoSForEXP ();
-	QoSForEXP(double targetDelay);
-	QoSForEXP(double targetDelay,
-			  double dropProbability);
+ public:
+  QoSForEXP();
+  QoSForEXP(double targetDelay);
+  QoSForEXP(double targetDelay, double dropProbability);
 
-	virtual ~QoSForEXP();
+  virtual ~QoSForEXP();
 
-	void
-	SetDropPorbability (double probability);
-	double
-	GetDropProbability (void) const;
+  void SetDropPorbability(double probability);
+  double GetDropProbability(void) const;
 
-	//Debug
-	void
-	Print ();
+  //Debug
+  void Print();
 
-private:
-	double m_dropProbability;
+ private:
+  double m_dropProbability;
 };
 
 #endif /* QOSFOREXP_H_ */

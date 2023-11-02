@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef TRANSMITTEDSIGNAL_H_
 #define TRANSMITTEDSIGNAL_H_
 
@@ -27,17 +26,17 @@
 class BandwidthManager;
 
 class TransmittedSignal {
-public:
-	TransmittedSignal();
-	virtual ~TransmittedSignal();
+ public:
+  TransmittedSignal();
+  virtual ~TransmittedSignal();
 
-	void SetValues (std::vector<double> values);
-	std::vector<double> Getvalues (void);
+  void SetValues(std::vector<double> values);
+  std::vector<double> Getvalues(void);
 
-	TransmittedSignal* Copy (void);
+  TransmittedSignal* Copy(void);
 
-private:
-	std::vector<double> m_values; //transmitted power for each sub-carrier
+ private:
+  std::vector<double> m_values;  //transmitted power for each sub-carrier
 };
 
 #endif /* TRANSMITTEDSIGNAL_H_ */

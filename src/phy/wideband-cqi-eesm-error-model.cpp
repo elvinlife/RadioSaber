@@ -20,85 +20,70 @@
  */
 
 #include "wideband-cqi-eesm-error-model.h"
-#include "BLERTrace/BLERvsSINR_15CQI_AWGN.h"
-#include "BLERTrace/BLERvsSINR_15CQI_TU.h"
+#include "../load-parameters.h"
 #include "../utility/RandomVariable.h"
 #include "../utility/eesm-effective-sinr.h"
-#include "../load-parameters.h"
+#include "BLERTrace/BLERvsSINR_15CQI_AWGN.h"
+#include "BLERTrace/BLERvsSINR_15CQI_TU.h"
 
-WidebandCqiEesmErrorModel::WidebandCqiEesmErrorModel()
-{}
+WidebandCqiEesmErrorModel::WidebandCqiEesmErrorModel() {}
 
-WidebandCqiEesmErrorModel::~WidebandCqiEesmErrorModel()
-{}
+WidebandCqiEesmErrorModel::~WidebandCqiEesmErrorModel() {}
 
-bool
-WidebandCqiEesmErrorModel::CheckForPhysicalError (std::vector<int> channels, std::vector<int> mcs, std::vector<double> sinr)
-{
+bool WidebandCqiEesmErrorModel::CheckForPhysicalError(
+    std::vector<int> channels, std::vector<int> mcs, std::vector<double> sinr) {
 
   bool error = false;
 
   //compute the sinr vector associated to assigned sub channels
   std::vector<double> new_sinr;
-  for (int i = 0; i < channels.size (); i++)
-	{
-	  new_sinr.push_back (sinr.at (channels.at (i)));
-	}
-
-#ifdef  BLER_DEBUG
-  std::cout << "\n--> CheckForPhysicalError \n\t\t Channels: ";
-  for (int i = 0; i < channels.size (); i++)
-	{
-	  std::cout << channels.at (i) << " ";
-	}
-  std::cout << "\n\t\t MCS: ";
-    for (int i = 0; i < mcs.size (); i++)
-  	{
-  	  std::cout << mcs.at (i) << " ";
-  	}
-    std::cout << "\n\t\t SINR: ";
-  for (int i = 0; i < new_sinr.size (); i++)
-	{
-	  std::cout << new_sinr.at (i) << " ";
-	}
-  std::cout << "\n"<< std::endl;
-#endif
-
-
-  double effective_sinr = GetEesmEffectiveSinr (new_sinr);
-  double randomNumber = (rand () %100 ) / 100.;
-  int mcs_ = mcs.at (0);
-  double bler;
-
-  if (_channel_AWGN_)
-    {
-	  bler = GetBLER_AWGN (effective_sinr, mcs_);
-    }
-  else if (_channel_TU_)
-    {
-	  bler = GetBLER_TU (effective_sinr, mcs_);
-    }
-  else
-    {
-	  bler = GetBLER_AWGN (effective_sinr, mcs_);
-    }
+  for (int i = 0; i < channels.size(); i++) {
+    new_sinr.push_back(sinr.at(channels.at(i)));
+  }
 
 #ifdef BLER_DEBUG
-	  std::cout <<"CheckForPhysicalError: , effective SINR:" << effective_sinr
-			  << ", selected CQI: " << mcs_
-			  << ", random " << randomNumber
-			  << ", BLER: " << bler << std::endl;
+  std::cout << "\n--> CheckForPhysicalError \n\t\t Channels: ";
+  for (int i = 0; i < channels.size(); i++) {
+    std::cout << channels.at(i) << " ";
+  }
+  std::cout << "\n\t\t MCS: ";
+  for (int i = 0; i < mcs.size(); i++) {
+    std::cout << mcs.at(i) << " ";
+  }
+  std::cout << "\n\t\t SINR: ";
+  for (int i = 0; i < new_sinr.size(); i++) {
+    std::cout << new_sinr.at(i) << " ";
+  }
+  std::cout << "\n" << std::endl;
 #endif
 
-  if (randomNumber < bler)
-	{
-	  error = true;
-	  if (_TEST_BLER_) std::cout << "BLER PDF " << effective_sinr << " 1" << std::endl;
-	}
-  else
-	{
-	  if (_TEST_BLER_) std::cout << "BLER PDF " << effective_sinr << " 0" << std::endl;
-	}
+  double effective_sinr = GetEesmEffectiveSinr(new_sinr);
+  double randomNumber = (rand() % 100) / 100.;
+  int mcs_ = mcs.at(0);
+  double bler;
+
+  if (_channel_AWGN_) {
+    bler = GetBLER_AWGN(effective_sinr, mcs_);
+  } else if (_channel_TU_) {
+    bler = GetBLER_TU(effective_sinr, mcs_);
+  } else {
+    bler = GetBLER_AWGN(effective_sinr, mcs_);
+  }
+
+#ifdef BLER_DEBUG
+  std::cout << "CheckForPhysicalError: , effective SINR:" << effective_sinr
+            << ", selected CQI: " << mcs_ << ", random " << randomNumber
+            << ", BLER: " << bler << std::endl;
+#endif
+
+  if (randomNumber < bler) {
+    error = true;
+    if (_TEST_BLER_)
+      std::cout << "BLER PDF " << effective_sinr << " 1" << std::endl;
+  } else {
+    if (_TEST_BLER_)
+      std::cout << "BLER PDF " << effective_sinr << " 0" << std::endl;
+  }
 
   return error;
 }

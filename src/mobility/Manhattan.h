@@ -26,17 +26,14 @@
 
 #include "Mobility.h"
 
-class Manhattan :public Mobility {
-public:
-	Manhattan();
-	virtual ~Manhattan();
+class Manhattan : public Mobility {
+ public:
+  Manhattan();
+  virtual ~Manhattan();
 
-	void
-	UpdatePosition (double time);
+  void UpdatePosition(double time);
 
-	void
-	ForceManhattanGrid (CartesianCoordinates *newpos);
-
+  void ForceManhattanGrid(CartesianCoordinates* newpos);
 };
 
 #endif /* MANHATTAN_H_ */

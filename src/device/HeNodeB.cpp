@@ -22,52 +22,43 @@
 #include "HeNodeB.h"
 #include "../phy/henb-lte-phy.h"
 
-
-HeNodeB::HeNodeB ( int idElement,
-	    		   Femtocell *cell)
-{
-  SetIDNetworkNode (idElement);
+HeNodeB::HeNodeB(int idElement, Femtocell* cell) {
+  SetIDNetworkNode(idElement);
   SetNodeType(NetworkNode::TYPE_HOME_BASE_STATION);
-  SetFemtoCell (cell);
+  SetFemtoCell(cell);
 
   double pos_X = cell->GetCellCenterPosition()->GetCoordinateX();
   double pos_Y = cell->GetCellCenterPosition()->GetCoordinateY();
 
-  CartesianCoordinates *position = new CartesianCoordinates(pos_X, pos_Y);
-  Mobility* m = new ConstantPosition ();
-  m->SetAbsolutePosition (position);
-  SetMobilityModel (m);
+  CartesianCoordinates* position = new CartesianCoordinates(pos_X, pos_Y);
+  Mobility* m = new ConstantPosition();
+  m->SetAbsolutePosition(position);
+  SetMobilityModel(m);
 
   CreateUserEquipmentRecords();
 
-  HenbLtePhy *phy = new HenbLtePhy ();
+  HenbLtePhy* phy = new HenbLtePhy();
   phy->SetDevice(this);
-  SetPhy (phy);
+  SetPhy(phy);
 
-  ProtocolStack *stack = new ProtocolStack (this);
-  SetProtocolStack (stack);
+  ProtocolStack* stack = new ProtocolStack(this);
+  SetProtocolStack(stack);
 
-  Classifier *classifier = new Classifier ();
-  classifier->SetDevice (this);
-  SetClassifier (classifier);
+  Classifier* classifier = new Classifier();
+  classifier->SetDevice(this);
+  SetClassifier(classifier);
 }
 
-HeNodeB::~HeNodeB()
-{
-  Destroy ();
-  DeleteUserEquipmentRecords ();
+HeNodeB::~HeNodeB() {
+  Destroy();
+  DeleteUserEquipmentRecords();
 }
 
-void
-HeNodeB::SetFemtoCell (Femtocell *cell)
-{
+void HeNodeB::SetFemtoCell(Femtocell* cell) {
   m_femtocell = cell;
-  SetCell( (Cell*) cell);
+  SetCell((Cell*)cell);
 }
 
-Femtocell*
-HeNodeB::GetFemtoCell (void)
-{
+Femtocell* HeNodeB::GetFemtoCell(void) {
   return m_femtocell;
 }
-

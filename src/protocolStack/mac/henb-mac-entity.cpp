@@ -22,59 +22,42 @@
 #include "henb-mac-entity.h"
 #include "../../device/UserEquipment.h"
 
-HenbMacEntity::HenbMacEntity()
-{
+HenbMacEntity::HenbMacEntity() {
   m_subscriberList = new std::vector<UserEquipment*>;
   m_restrictedAccessMode = false;
 }
 
-HenbMacEntity::HenbMacEntity(bool restrictedAccess)
-{
+HenbMacEntity::HenbMacEntity(bool restrictedAccess) {
   m_subscriberList = new std::vector<UserEquipment*>;
   m_restrictedAccessMode = restrictedAccess;
 }
 
-HenbMacEntity::~HenbMacEntity ()
-{
+HenbMacEntity::~HenbMacEntity() {
   delete m_subscriberList;
 }
 
-void
-HenbMacEntity::SetRestrictedAccessMode(bool restricted)
-{
+void HenbMacEntity::SetRestrictedAccessMode(bool restricted) {
   m_restrictedAccessMode = restricted;
 }
 
-bool
-HenbMacEntity::GetRestrictedAccessMode (void)
-{
+bool HenbMacEntity::GetRestrictedAccessMode(void) {
   return m_restrictedAccessMode;
 }
 
-void
-HenbMacEntity::AddSubscribedUser (UserEquipment* user)
-{
+void HenbMacEntity::AddSubscribedUser(UserEquipment* user) {
   m_subscriberList->push_back(user);
 }
 
-bool
-HenbMacEntity::CheckSubscribedUser (UserEquipment* user)
-{
-	if (!m_restrictedAccessMode)
-	{
-		return true;
-	}
-	else
-	{
-		for (int i = 0; i < (int) m_subscriberList->size(); i++)
-		{
-			if ( m_subscriberList->at(i)->GetIDNetworkNode() == user->GetIDNetworkNode() )
-			{
-				return true;
-			}
-		}
-	}
-	return false;
+bool HenbMacEntity::CheckSubscribedUser(UserEquipment* user) {
+  if (!m_restrictedAccessMode) {
+    return true;
+  } else {
+    for (int i = 0; i < (int)m_subscriberList->size(); i++) {
+      if (m_subscriberList->at(i)->GetIDNetworkNode() ==
+          user->GetIDNetworkNode()) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
-
-

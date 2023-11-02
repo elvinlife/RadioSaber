@@ -19,18 +19,16 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "lte-phy.h"
-#include "../device/NetworkNode.h"
 #include "../channel/LteChannel.h"
 #include "../core/spectrum/bandwidth-manager.h"
-#include "../protocolStack/packet/packet-burst.h"
 #include "../core/spectrum/transmitted-signal.h"
-#include "interference.h"
+#include "../device/NetworkNode.h"
+#include "../protocolStack/packet/packet-burst.h"
 #include "error-model.h"
+#include "interference.h"
 
-LtePhy::LtePhy()
-{
+LtePhy::LtePhy() {
   m_device = NULL;
   m_dlChannel = NULL;
   m_ulChannel = NULL;
@@ -38,8 +36,7 @@ LtePhy::LtePhy()
   m_txSignal = NULL;
 }
 
-LtePhy::~LtePhy()
-{
+LtePhy::~LtePhy() {
   m_device = NULL;
   m_dlChannel = NULL;
   m_ulChannel = NULL;
@@ -47,9 +44,7 @@ LtePhy::~LtePhy()
   delete m_txSignal;
 }
 
-void
-LtePhy::Destroy (void)
-{
+void LtePhy::Destroy(void) {
   m_device = NULL;
   m_dlChannel = NULL;
   m_ulChannel = NULL;
@@ -59,104 +54,68 @@ LtePhy::Destroy (void)
   delete m_errorModel;
 }
 
-
-void
-LtePhy::SetDevice (NetworkNode* d)
-{
+void LtePhy::SetDevice(NetworkNode* d) {
   m_device = d;
 }
 
-NetworkNode*
-LtePhy::GetDevice (void)
-{
+NetworkNode* LtePhy::GetDevice(void) {
   return m_device;
 }
 
-void
-LtePhy::SetDlChannel (LteChannel* c)
-{
+void LtePhy::SetDlChannel(LteChannel* c) {
   m_dlChannel = c;
 }
 
-LteChannel*
-LtePhy::GetDlChannel (void)
-{
+LteChannel* LtePhy::GetDlChannel(void) {
   return m_dlChannel;
 }
 
-void
-LtePhy::SetUlChannel (LteChannel* c)
-{
+void LtePhy::SetUlChannel(LteChannel* c) {
   m_ulChannel = c;
 }
 
-LteChannel*
-LtePhy::GetUlChannel (void)
-{
+LteChannel* LtePhy::GetUlChannel(void) {
   return m_ulChannel;
 }
 
-void
-LtePhy::SetBandwidthManager (BandwidthManager* s)
-{
+void LtePhy::SetBandwidthManager(BandwidthManager* s) {
   m_bandwidthManager = s;
   if (s != NULL)
-    DoSetBandwidthManager ();
+    DoSetBandwidthManager();
 }
 
-BandwidthManager*
-LtePhy::GetBandwidthManager (void)
-{
+BandwidthManager* LtePhy::GetBandwidthManager(void) {
   return m_bandwidthManager;
 }
 
-void
-LtePhy::SetTxPower (double p)
-{
+void LtePhy::SetTxPower(double p) {
   m_txPower = p;
 }
 
-double
-LtePhy::GetTxPower (void)
-{
+double LtePhy::GetTxPower(void) {
   return m_txPower;
 }
 
-void
-LtePhy::SetTxSignal (TransmittedSignal* txSignal)
-{
+void LtePhy::SetTxSignal(TransmittedSignal* txSignal) {
   m_txSignal = txSignal;
 }
 
-TransmittedSignal*
-LtePhy::GetTxSignal (void)
-{
+TransmittedSignal* LtePhy::GetTxSignal(void) {
   return m_txSignal;
 }
 
-
-void
-LtePhy::SetInterference (Interference* i)
-{
+void LtePhy::SetInterference(Interference* i) {
   m_interference = i;
 }
 
-void
-LtePhy::SetErrorModel (ErrorModel* e)
-{
+void LtePhy::SetErrorModel(ErrorModel* e) {
   m_errorModel = e;
 }
 
-
-Interference*
-LtePhy::GetInterference (void)
-{
+Interference* LtePhy::GetInterference(void) {
   return m_interference;
 }
 
-
-ErrorModel*
-LtePhy::GetErrorModel (void)
-{
+ErrorModel* LtePhy::GetErrorModel(void) {
   return m_errorModel;
 }

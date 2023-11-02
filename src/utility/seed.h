@@ -19,28 +19,18 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef SEED_H_
 #define SEED_H_
 
-static int commonSeed [9] =
-{
-	805290992,
-	749913912,
-	965326802,
-	697084729,
-	1518010490,
-	56234558,
-	1511265396,
-	1412837728,
-	947674421,
+static int commonSeed[9] = {
+    805290992, 749913912,  965326802,  697084729, 1518010490,
+    56234558,  1511265396, 1412837728, 947674421,
 };
 
-static int GetCommonSeed (int i)
-{
-  if (i >= 0 && i< 9 )
-	  return commonSeed[i];
+static int GetCommonSeed(int i) {
+  if (i >= 0 && i < 9)
+    return commonSeed[i];
   else
-	  return commonSeed[0];
+    return commonSeed[0];
 }
 #endif /* SEED_H_ */

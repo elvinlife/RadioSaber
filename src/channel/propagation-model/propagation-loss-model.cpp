@@ -19,74 +19,63 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "propagation-loss-model.h"
-#include "channel-realization.h"
-#include "../../core/spectrum/transmitted-signal.h"
-#include "../../load-parameters.h"
-#include "../../device/NetworkNode.h"
-#include <vector>
 #include <math.h>
+#include <vector>
+#include "../../core/spectrum/transmitted-signal.h"
+#include "../../device/NetworkNode.h"
+#include "../../load-parameters.h"
+#include "channel-realization.h"
 
-PropagationLossModel::PropagationLossModel()
-{}
+PropagationLossModel::PropagationLossModel() {}
 
-PropagationLossModel::~PropagationLossModel()
-{
-  m_channelRealizationMap.clear ();
+PropagationLossModel::~PropagationLossModel() {
+  m_channelRealizationMap.clear();
 }
 
-void
-PropagationLossModel::AddChannelRealization (ChannelRealization* chRealization)
-{
-  ChannelRealizationId_t idMap = std::make_pair (chRealization->GetSourceNode (),
-		                                         chRealization->GetDestinationNode ());
-  m_channelRealizationMap.insert (
-		  std::pair <ChannelRealizationId_t, ChannelRealization* > (idMap, chRealization));
+void PropagationLossModel::AddChannelRealization(
+    ChannelRealization* chRealization) {
+  ChannelRealizationId_t idMap = std::make_pair(
+      chRealization->GetSourceNode(), chRealization->GetDestinationNode());
+  m_channelRealizationMap.insert(
+      std::pair<ChannelRealizationId_t, ChannelRealization*>(idMap,
+                                                             chRealization));
 }
 
-void
-PropagationLossModel::DelChannelRealization (NetworkNode* src, NetworkNode* dst)
-{
-  ChannelRealizationId_t idMap = std::make_pair (src,dst);
+void PropagationLossModel::DelChannelRealization(NetworkNode* src,
+                                                 NetworkNode* dst) {
+  ChannelRealizationId_t idMap = std::make_pair(src, dst);
 
-  if (m_channelRealizationMap.find (idMap) != m_channelRealizationMap.end ())
-    {
-	  m_channelRealizationMap.find (idMap)->second->Destroy ();
-      m_channelRealizationMap.erase (idMap);
-    }
+  if (m_channelRealizationMap.find(idMap) != m_channelRealizationMap.end()) {
+    m_channelRealizationMap.find(idMap)->second->Destroy();
+    m_channelRealizationMap.erase(idMap);
+  }
 }
 
-
-ChannelRealization*
-PropagationLossModel::GetChannelRealization (NetworkNode* src, NetworkNode* dst)
-{
+ChannelRealization* PropagationLossModel::GetChannelRealization(
+    NetworkNode* src, NetworkNode* dst) {
   ChannelRealizationMap::iterator it;
 
-  ChannelRealizationId_t idMap = std::make_pair (src, dst);
-  it = m_channelRealizationMap.find (idMap);
+  ChannelRealizationId_t idMap = std::make_pair(src, dst);
+  it = m_channelRealizationMap.find(idMap);
 
   return it->second;
 }
 
 PropagationLossModel::ChannelRealizationMap
-PropagationLossModel::GetChannelRealizationMap (void)
-{
+PropagationLossModel::GetChannelRealizationMap(void) {
   return m_channelRealizationMap;
 }
 
-TransmittedSignal*
-PropagationLossModel::AddLossModel (NetworkNode* src,
-                                    NetworkNode* dst,
-	                                TransmittedSignal* txSignal)
-{
+TransmittedSignal* PropagationLossModel::AddLossModel(
+    NetworkNode* src, NetworkNode* dst, TransmittedSignal* txSignal) {
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
-  std::cout << "\t  --> add loss between "
-		  << src->GetIDNetworkNode () << " and " << dst->GetIDNetworkNode () << std::endl;
+  std::cout << "\t  --> add loss between " << src->GetIDNetworkNode() << " and "
+            << dst->GetIDNetworkNode() << std::endl;
 #endif
 
-  TransmittedSignal* rxSignal = txSignal->Copy ();
+  TransmittedSignal* rxSignal = txSignal->Copy();
 
   /*
    * The loss propagation model for LTE networks is based on
@@ -102,13 +91,13 @@ PropagationLossModel::AddLossModel (NetworkNode* src,
    * where i is the i-th sub-channel and t is the current time (Simulator::Now()).
    */
 
-
-  ChannelRealization* c = GetChannelRealization (src, dst);
-  std::vector<double> rxSignalValues = rxSignal->Getvalues ();
-  std::vector<double> loss = c->GetLoss ();
+  ChannelRealization* c = GetChannelRealization(src, dst);
+  std::vector<double> rxSignalValues = rxSignal->Getvalues();
+  std::vector<double> loss = c->GetLoss();
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
-  std::cout << "tx sub channels " << rxSignalValues.size () << " loss sub channels " << loss.size () << std::endl;
+  std::cout << "tx sub channels " << rxSignalValues.size()
+            << " loss sub channels " << loss.size() << std::endl;
 #endif
   // std::cerr << "tx sub channels " << rxSignalValues.size () << " loss sub channels " << loss.size () << std::endl;
   // std::cerr << "channel: " << typeid(*c).name();
@@ -117,15 +106,14 @@ PropagationLossModel::AddLossModel (NetworkNode* src,
   // }
   // std::cerr << std::endl;
 
-  int nbOfSubChannels = rxSignalValues.size ();
+  int nbOfSubChannels = rxSignalValues.size();
 
-  for (int i = 0; i < nbOfSubChannels; i++)
-  {
-	  double rxPower = rxSignalValues.at (i) + loss.at (i); // add propagation loss
-	  rxSignalValues.at (i) = rxPower; // in W/Hz
+  for (int i = 0; i < nbOfSubChannels; i++) {
+    double rxPower = rxSignalValues.at(i) + loss.at(i);  // add propagation loss
+    rxSignalValues.at(i) = rxPower;                      // in W/Hz
   }
 
-  rxSignal->SetValues (rxSignalValues);
+  rxSignal->SetValues(rxSignalValues);
 
   return rxSignal;
 }

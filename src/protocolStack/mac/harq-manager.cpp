@@ -21,10 +21,9 @@
 #include "harq-manager.h"
 
 HarqManager::HarqManager() {
-	// TODO Auto-generated constructor stub
-
+  // TODO Auto-generated constructor stub
 }
 
 HarqManager::~HarqManager() {
-	// TODO Auto-generated destructor stub
+  // TODO Auto-generated destructor stub
 }

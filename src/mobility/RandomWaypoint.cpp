@@ -19,35 +19,25 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #include "RandomWaypoint.h"
 #include "../componentManagers/NetworkManager.h"
-#include "../device/Gateway.h"
 #include "../device/ENodeB.h"
+#include "../device/Gateway.h"
 #include "../device/UserEquipment.h"
 #include "../load-parameters.h"
 
-
-RandomWaypoint::RandomWaypoint()
-{
+RandomWaypoint::RandomWaypoint() {
   SetMobilityModel(Mobility::RANDOM_WAYPOINT);
-  SetSpeed (0);
-  SetSpeedDirection (0.0);
-  SetPositionLastUpdate (0.0);
-  SetHandover (false);
-  SetLastHandoverTime (0.0);
-  SetAbsolutePosition (NULL);
+  SetSpeed(0);
+  SetSpeedDirection(0.0);
+  SetPositionLastUpdate(0.0);
+  SetHandover(false);
+  SetLastHandoverTime(0.0);
+  SetAbsolutePosition(NULL);
 }
 
-RandomWaypoint::~RandomWaypoint()
-{
-  DeleteAbsolutePosition ();
+RandomWaypoint::~RandomWaypoint() {
+  DeleteAbsolutePosition();
 }
 
-void
-RandomWaypoint::UpdatePosition(double time)
-{
-
-}
-
+void RandomWaypoint::UpdatePosition(double time) {}

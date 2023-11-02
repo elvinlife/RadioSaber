@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef QOSPARAMETERS_H_
 #define QOSPARAMETERS_H_
 
@@ -56,52 +55,35 @@
  */
 
 class QoSParameters {
-public:
-	QoSParameters();
-	QoSParameters (int qci,
-				   double gbr,
-				   double mbr);
-	QoSParameters (int qci,
-				   bool arpPreEmptionCapability,
-				   bool arpPreEmptionVulnerability,
-				   double gbr,
-				   double mbr);
-	virtual ~QoSParameters();
+ public:
+  QoSParameters();
+  QoSParameters(int qci, double gbr, double mbr);
+  QoSParameters(int qci, bool arpPreEmptionCapability,
+                bool arpPreEmptionVulnerability, double gbr, double mbr);
+  virtual ~QoSParameters();
 
-	void
-	SetQCI (int qci);
-	int
-	GetQCI (void) const;
-	void
-	SetArpPreEmptionCapability (bool flag);
-	bool
-	GetArpPreEmptionCapability (void) const;
-	void
-	SetArpPreEmptionVulnerability (bool flag);
-	bool
-	GetArpPreEmptionVulnerability (void) const;
-	void
-	SetGBR (double gbr);
-	double
-	GetGBR (void) const;
-	void
-	SetMBR (double mbr);
-	double
-	GetMBR (void) const;
+  void SetQCI(int qci);
+  int GetQCI(void) const;
+  void SetArpPreEmptionCapability(bool flag);
+  bool GetArpPreEmptionCapability(void) const;
+  void SetArpPreEmptionVulnerability(bool flag);
+  bool GetArpPreEmptionVulnerability(void) const;
+  void SetGBR(double gbr);
+  double GetGBR(void) const;
+  void SetMBR(double mbr);
+  double GetMBR(void) const;
 
-	void
-	SetMaxDelay (double targetDelay);
-	double
-	GetMaxDelay (void) const;
+  void SetMaxDelay(double targetDelay);
+  double GetMaxDelay(void) const;
 
-private:
-	int m_qci;
-	bool m_arpPreEmptionCapability;
-	bool m_arpPreEmptionVulnerability;
-	double m_gbr;
-	double m_mbr;
+ private:
+  int m_qci;
+  bool m_arpPreEmptionCapability;
+  bool m_arpPreEmptionVulnerability;
+  double m_gbr;
+  double m_mbr;
 
-	double m_maxDelay;
+  double m_maxDelay;
 };
 
 #endif /* QOSPARAMETERS_H_ */

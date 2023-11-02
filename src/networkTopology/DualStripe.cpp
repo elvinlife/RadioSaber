@@ -19,37 +19,30 @@
  */
 
 #include "DualStripe.h"
-#include "Femtocell.h"
 #include "../core/cartesianCoodrdinates/CartesianCoordinates.h"
 #include "../device/UserEquipment.h"
+#include "Femtocell.h"
 
-DualStripe::DualStripe (int idBuilding,
-					int type,
-	     	 	    int nbFloors,
-	     	 	    double side_X,
-	     	 	    double side_Y,
-	     	 	    double center_X,
-	     	 	    double center_Y)
-{
-	SetIdBuilding(idBuilding);
+DualStripe::DualStripe(int idBuilding, int type, int nbFloors, double side_X,
+                       double side_Y, double center_X, double center_Y) {
+  SetIdBuilding(idBuilding);
 
-	SetBuildingType(TYPE_3GPP_dual_stripe);
+  SetBuildingType(TYPE_3GPP_dual_stripe);
 
-	SetFloors(nbFloors);
+  SetFloors(nbFloors);
 
-	double* side = new double[2];
-	side [0] = side_X;
-	side [1] = side_Y;
-	SetSide(side);
+  double* side = new double[2];
+  side[0] = side_X;
+  side[1] = side_Y;
+  SetSide(side);
 
-	CartesianCoordinates *Position = new CartesianCoordinates(center_X,center_Y);
-	SetCenterPosition(Position);
+  CartesianCoordinates* Position = new CartesianCoordinates(center_X, center_Y);
+  SetCenterPosition(Position);
 
-	std::vector<Femtocell*>* femtoCellsInBuilding = new std::vector<Femtocell*>;
-	SetFemtoCellsInBuilding(femtoCellsInBuilding);
+  std::vector<Femtocell*>* femtoCellsInBuilding = new std::vector<Femtocell*>;
+  SetFemtoCellsInBuilding(femtoCellsInBuilding);
 }
 
-DualStripe::~DualStripe()
-{
+DualStripe::~DualStripe() {
   ClearAll();
 }

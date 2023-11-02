@@ -26,13 +26,13 @@
 
 class PacketBurst;
 
-class TmRlcEntity: public RlcEntity {
-public:
-	TmRlcEntity();
-	virtual ~TmRlcEntity();
+class TmRlcEntity : public RlcEntity {
+ public:
+  TmRlcEntity();
+  virtual ~TmRlcEntity();
 
-	virtual PacketBurst* TransmissionProcedure (int availableBytes);
-	virtual void ReceptionProcedure (Packet* p);
+  virtual PacketBurst* TransmissionProcedure(int availableBytes);
+  virtual void ReceptionProcedure(Packet* p);
 };
 
 #endif /* TMRLCENTITY_H_ */

@@ -19,154 +19,114 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "Mobility.h"
 #include "../componentManagers/NetworkManager.h"
-#include "../networkTopology/Cell.h"
 #include "../load-parameters.h"
+#include "../networkTopology/Cell.h"
 
-Mobility::Mobility()
-{
+Mobility::Mobility() {
   m_AbsolutePosition = NULL;
 }
 
-Mobility::~Mobility()
-{
+Mobility::~Mobility() {
   delete m_AbsolutePosition;
 }
 
-void
-Mobility::SetNodeID (int id)
-{
+void Mobility::SetNodeID(int id) {
   m_nodeID = id;
 }
 
-int
-Mobility::GetNodeID (void) const
-{
+int Mobility::GetNodeID(void) const {
   return m_nodeID;
 }
 
-void
-Mobility::SetMobilityModel(MobilityModel model)
-{
+void Mobility::SetMobilityModel(MobilityModel model) {
   m_mobilityModel = model;
 }
 
-Mobility::MobilityModel
-Mobility::GetMobilityModel(void) const
-{
+Mobility::MobilityModel Mobility::GetMobilityModel(void) const {
   return m_mobilityModel;
 }
 
-void
-Mobility::SetAbsolutePosition (CartesianCoordinates *position)
-{
-  if (position == NULL)
-    {
-	  m_AbsolutePosition = NULL;
-      return;
-    }
+void Mobility::SetAbsolutePosition(CartesianCoordinates* position) {
+  if (position == NULL) {
+    m_AbsolutePosition = NULL;
+    return;
+  }
 
-  if (m_AbsolutePosition == NULL)
-    {
-	  m_AbsolutePosition = new CartesianCoordinates ();
-    }
+  if (m_AbsolutePosition == NULL) {
+    m_AbsolutePosition = new CartesianCoordinates();
+  }
 
-  m_AbsolutePosition->SetCoordinateX (position->GetCoordinateX ());
-  m_AbsolutePosition->SetCoordinateY (position->GetCoordinateY ());
+  m_AbsolutePosition->SetCoordinateX(position->GetCoordinateX());
+  m_AbsolutePosition->SetCoordinateY(position->GetCoordinateY());
 }
 
-CartesianCoordinates*
-Mobility::GetAbsolutePosition (void) const
-{
+CartesianCoordinates* Mobility::GetAbsolutePosition(void) const {
   return m_AbsolutePosition;
 }
 
-void
-Mobility::DeleteAbsolutePosition (void)
-{
-  delete  m_AbsolutePosition;
+void Mobility::DeleteAbsolutePosition(void) {
+  delete m_AbsolutePosition;
 }
 
-void
-Mobility::SetSpeed (int speed)
-{
+void Mobility::SetSpeed(int speed) {
   m_speed = speed;
 }
 
-int
-Mobility::GetSpeed (void) const
-{
+int Mobility::GetSpeed(void) const {
   return m_speed;
 }
 
-void
-Mobility::SetSpeedDirection (double speedDirection)
-{
+void Mobility::SetSpeedDirection(double speedDirection) {
   m_speedDirection = speedDirection;
 }
 
-double
-Mobility::GetSpeedDirection (void) const
-{
+double Mobility::GetSpeedDirection(void) const {
   return m_speedDirection;
 }
 
-void
-Mobility::SetPositionLastUpdate (double time)
-{
+void Mobility::SetPositionLastUpdate(double time) {
   m_positionLastUpdate = time;
 }
 
-double
-Mobility::GetPositionLastUpdate (void) const
-{
+double Mobility::GetPositionLastUpdate(void) const {
   return m_positionLastUpdate;
 }
 
-void
-Mobility::SetHandover (bool handover)
-{
+void Mobility::SetHandover(bool handover) {
   m_handover = handover;
 }
 
-bool
-Mobility::GetHandover (void) const
-{
+bool Mobility::GetHandover(void) const {
   return m_handover;
 }
 
-void
-Mobility::SetLastHandoverTime (double lastHOtime)
-{
+void Mobility::SetLastHandoverTime(double lastHOtime) {
   m_handoverLastRun = lastHOtime;
 }
 
-double
-Mobility::GetLastHandoverTime (void) const
-{
+double Mobility::GetLastHandoverTime(void) const {
   return m_handoverLastRun;
 }
 
-double
-Mobility::GetTopologyBorder (void)
-{
+double Mobility::GetTopologyBorder(void) {
   int nbCell = NetworkManager::Init()->GetNbCell();
 
-  switch (nbCell)
-    {
-      case 1:
-    	  return (NetworkManager::Init()->GetCellByID (0)->GetRadius () * 1000);
-    	  break;
-      case 7:
-    	  return ((2.6 * NetworkManager::Init()->GetCellByID (0)->GetRadius ()) * 1000);
-    	  break;
-      case 19:
-          return ((4. * NetworkManager::Init()->GetCellByID (0)->GetRadius ()) * 1000);
-          break;
-      default:
-    	  return 1000.0;
-    	  break;
-    }
+  switch (nbCell) {
+    case 1:
+      return (NetworkManager::Init()->GetCellByID(0)->GetRadius() * 1000);
+      break;
+    case 7:
+      return ((2.6 * NetworkManager::Init()->GetCellByID(0)->GetRadius()) *
+              1000);
+      break;
+    case 19:
+      return ((4. * NetworkManager::Init()->GetCellByID(0)->GetRadius()) *
+              1000);
+      break;
+    default:
+      return 1000.0;
+      break;
+  }
 }

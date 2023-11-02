@@ -20,37 +20,32 @@
  */
 
 #include "fullband-cqi-manager.h"
-#include "../NetworkNode.h"
+#include <cassert>
+#include <exception>
 #include "../../core/idealMessages/ideal-control-messages.h"
-#include "../../protocolStack/mac/AMCModule.h"
-#include "../UserEquipment.h"
-#include "../ENodeB.h"
-#include "../HeNodeB.h"
-#include "../../phy/lte-phy.h"
 #include "../../core/spectrum/bandwidth-manager.h"
 #include "../../load-parameters.h"
-#include <exception>
-#include <cassert>
+#include "../../phy/lte-phy.h"
+#include "../../protocolStack/mac/AMCModule.h"
 #include "../../utility/eesm-effective-sinr.h"
+#include "../ENodeB.h"
+#include "../HeNodeB.h"
+#include "../NetworkNode.h"
+#include "../UserEquipment.h"
 
+FullbandCqiManager::FullbandCqiManager() {}
 
-FullbandCqiManager::FullbandCqiManager()
-{}
+FullbandCqiManager::~FullbandCqiManager() {}
 
-FullbandCqiManager::~FullbandCqiManager()
-{}
-
-
-
-std::vector<double>
-FullbandCqiManager::GenSubbandSINR( std::vector<double> sinr )
-{
+std::vector<double> FullbandCqiManager::GenSubbandSINR(
+    std::vector<double> sinr) {
   int subband_size = get_subband_size(sinr.size());
   std::vector<double> subbands_sinr(sinr.size(), 0);
   int l = 0, r = 0;
   while (l < sinr.size()) {
     r = l + subband_size;
-    if (r >= sinr.size()) r = sinr.size();
+    if (r >= sinr.size())
+      r = sinr.size();
     std::vector<double> subset(sinr.cbegin() + l, sinr.cbegin() + r);
     //assert(subset.size() == subband_size);
     double effective_sinr = GetEesmEffectiveSinr(subset);
@@ -62,31 +57,29 @@ FullbandCqiManager::GenSubbandSINR( std::vector<double> sinr )
   return subbands_sinr;
 }
 
-void
-FullbandCqiManager::CreateCqiFeedbacks (std::vector<double> sinr)
-{
+void FullbandCqiManager::CreateCqiFeedbacks(std::vector<double> sinr) {
 #ifdef TEST_CQI_FEEDBACKS
   std::cout << "FullbandCqiManager -> CreateCqiFeedbacks " << std::endl;
 #endif
 
 #ifdef AMC_MAPPING
   std::cout << "\t sinr: ";
-  for (int i = 0; i < sinr.size (); i++)
-    {
-	  std::cout << sinr.at (i) << " ";
-    }
+  for (int i = 0; i < sinr.size(); i++) {
+    std::cout << sinr.at(i) << " ";
+  }
   std::cout << std::endl;
 #endif
 
   // subband cqi feedbacks generated here
-  UserEquipment* thisNode = (UserEquipment*) GetDevice ();
-  NetworkNode* targetNode = thisNode->GetTargetNode ();
+  UserEquipment* thisNode = (UserEquipment*)GetDevice();
+  NetworkNode* targetNode = thisNode->GetTargetNode();
 
-  AMCModule *amc = GetDevice ()->GetProtocolStack ()->GetMacEntity ()->GetAmcModule ();
+  AMCModule* amc =
+      GetDevice()->GetProtocolStack()->GetMacEntity()->GetAmcModule();
 
   sinr = GenSubbandSINR(sinr);
 
-  std::vector<int> cqi = amc->CreateCqiFeedbacks (sinr);
+  std::vector<int> cqi = amc->CreateCqiFeedbacks(sinr);
 
   //int subband_size = get_subband_size(sinr.size());
   //for (int i = 0; i < cqi.size();) {
@@ -95,19 +88,19 @@ FullbandCqiManager::CreateCqiFeedbacks (std::vector<double> sinr)
   //}
   //std:cerr << std::endl;
 
-  CqiIdealControlMessage *msg = new CqiIdealControlMessage ();
-  msg->SetSourceDevice (thisNode);
-  msg->SetDestinationDevice (targetNode);
+  CqiIdealControlMessage* msg = new CqiIdealControlMessage();
+  msg->SetSourceDevice(thisNode);
+  msg->SetDestinationDevice(targetNode);
 
-  int nbSubChannels = cqi.size ();
-  std::vector<double> dlSubChannels = thisNode->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ();
+  int nbSubChannels = cqi.size();
+  std::vector<double> dlSubChannels =
+      thisNode->GetPhy()->GetBandwidthManager()->GetDlSubChannels();
 
-  for (int i = 0; i < nbSubChannels; i++)
-    {
-      msg->AddNewRecord (dlSubChannels.at (i), cqi.at (i));
-    }
+  for (int i = 0; i < nbSubChannels; i++) {
+    msg->AddNewRecord(dlSubChannels.at(i), cqi.at(i));
+  }
 
-  SetLastSent ();
+  SetLastSent();
 
-  thisNode->GetPhy ()->SendIdealControlMessage (msg);
+  thisNode->GetPhy()->SendIdealControlMessage(msg);
 }

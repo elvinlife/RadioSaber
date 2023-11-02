@@ -19,125 +19,97 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "radio-bearer.h"
+#include "../device/IPClassifier/ClassifierParameters.h"
 #include "../device/NetworkNode.h"
 #include "../device/UserEquipment.h"
-#include "../device/IPClassifier/ClassifierParameters.h"
-#include "application/Application.h"
-#include "../protocolStack/packet/Packet.h"
 #include "../flows/MacQueue.h"
-#include "../flows/QoS/QoSParameters.h"
 #include "../flows/QoS/QoSForEXP.h"
 #include "../flows/QoS/QoSForFLS.h"
 #include "../flows/QoS/QoSForM_LWDF.h"
+#include "../flows/QoS/QoSParameters.h"
+#include "../load-parameters.h"
+#include "../protocolStack/packet/Packet.h"
+#include "../protocolStack/rlc/am-rlc-entity.h"
+#include "../protocolStack/rlc/amd-record.h"
 #include "../protocolStack/rlc/rlc-entity.h"
 #include "../protocolStack/rlc/tm-rlc-entity.h"
 #include "../protocolStack/rlc/um-rlc-entity.h"
-#include "../protocolStack/rlc/am-rlc-entity.h"
-#include "../protocolStack/rlc/amd-record.h"
-#include "../load-parameters.h"
+#include "application/Application.h"
 
-RadioBearer::RadioBearer()
- :m_cumulativeBytes(0), m_cumulativeRBs(0)
-{
-  m_macQueue = new MacQueue ();
+RadioBearer::RadioBearer() : m_cumulativeBytes(0), m_cumulativeRBs(0) {
+  m_macQueue = new MacQueue();
   m_application = NULL;
 
   //RlcEntity *rlc = new TmRlcEntity ();
   //RlcEntity *rlc = new AmRlcEntity ();
-  RlcEntity *rlc = new UmRlcEntity ();
+  RlcEntity* rlc = new UmRlcEntity();
 
-  rlc->SetRadioBearer (this);
+  rlc->SetRadioBearer(this);
   SetRlcEntity(rlc);
 
-  m_averageTransmissionRate = 100000; //start value = 100kbps
-  ResetTransmittedBytes ();
+  m_averageTransmissionRate = 100000;  //start value = 100kbps
+  ResetTransmittedBytes();
 }
 
-RadioBearer::~RadioBearer()
-{
-  Destory ();
+RadioBearer::~RadioBearer() {
+  Destory();
   delete m_macQueue;
   m_application = NULL;
 }
 
-MacQueue*
-RadioBearer::GetMacQueue (void)
-{
+MacQueue* RadioBearer::GetMacQueue(void) {
   return m_macQueue;
 }
 
-void
-RadioBearer::SetApplication (Application* a)
-{
+void RadioBearer::SetApplication(Application* a) {
   m_application = a;
 }
 
-Application*
-RadioBearer::GetApplication (void)
-{
+Application* RadioBearer::GetApplication(void) {
   return m_application;
 }
 
-int
-RadioBearer::GetUserID(void)
-{
+int RadioBearer::GetUserID(void) {
   return GetDestination()->GetIDNetworkNode();
 }
 
-int
-RadioBearer::GetPriority(void)
-{
-  if (m_application->GetApplicationType() == Application::APPLICATION_TYPE_IPFLOW) {
+int RadioBearer::GetPriority(void) {
+  if (m_application->GetApplicationType() ==
+      Application::APPLICATION_TYPE_IPFLOW) {
     return m_application->GetPriority();
-  }
-  else {
+  } else {
     return 0;
   }
 }
 
-void
-RadioBearer::UpdateCumulateRBs (int rbs)
-{
+void RadioBearer::UpdateCumulateRBs(int rbs) {
   m_cumulativeRBs += rbs;
 }
 
-unsigned long
-RadioBearer::GetCumulateRBs (void) const
-{
+unsigned long RadioBearer::GetCumulateRBs(void) const {
   return m_cumulativeRBs;
 }
 
-unsigned long
-RadioBearer::GetCumulateBytes (void) const
-{
+unsigned long RadioBearer::GetCumulateBytes(void) const {
   return m_cumulativeBytes;
 }
 
-void
-RadioBearer::UpdateTransmittedBytes (int bytes)
-{
+void RadioBearer::UpdateTransmittedBytes(int bytes) {
   m_transmittedBytes += bytes;
   m_cumulativeBytes += bytes;
 }
 
-int
-RadioBearer::GetTransmittedBytes (void) const
-{
+int RadioBearer::GetTransmittedBytes(void) const {
   return m_transmittedBytes;
 }
 
-void
-RadioBearer::ResetTransmittedBytes (void)
-{
+void RadioBearer::ResetTransmittedBytes(void) {
   m_transmittedBytes = 0;
-  SetLastUpdate ();
+  SetLastUpdate();
 }
 
-void
-RadioBearer::UpdateAverageTransmissionRate ()
-{
+void RadioBearer::UpdateAverageTransmissionRate() {
   /*
    * Update Transmission Data Rate with
    * a Moving Average
@@ -147,7 +119,8 @@ RadioBearer::UpdateAverageTransmissionRate ()
   if (Simulator::Init()->Now() == GetLastUpdate())
     return;
 
-  double rate = (GetTransmittedBytes () * 8)/(Simulator::Init()->Now() - GetLastUpdate());
+  double rate = (GetTransmittedBytes() * 8) /
+                (Simulator::Init()->Now() - GetLastUpdate());
 
   // double beta = 0.1;
   double beta = 0.02;
@@ -155,270 +128,220 @@ RadioBearer::UpdateAverageTransmissionRate ()
   m_averageTransmissionRate =
       ((1 - beta) * m_averageTransmissionRate) + (beta * rate);
 
-  if (m_averageTransmissionRate < 1)
-  {
-	  m_averageTransmissionRate = 1;
+  if (m_averageTransmissionRate < 1) {
+    m_averageTransmissionRate = 1;
   }
 
   ResetTransmittedBytes();
 }
 
-double
-RadioBearer::GetAverageTransmissionRate (void) const
-{
+double RadioBearer::GetAverageTransmissionRate(void) const {
   return m_averageTransmissionRate;
 }
 
-void
-RadioBearer::SetLastUpdate (void)
-{
+void RadioBearer::SetLastUpdate(void) {
   m_lastUpdate = Simulator::Init()->Now();
 }
 
-double
-RadioBearer::GetLastUpdate (void) const
-{
+double RadioBearer::GetLastUpdate(void) const {
   return m_lastUpdate;
 }
 
-Packet*
-RadioBearer::CreatePacket (int bytes)
-{
-  Packet *p = new Packet ();
+Packet* RadioBearer::CreatePacket(int bytes) {
+  Packet* p = new Packet();
 
-  p->SetID(Simulator::Init()->GetUID ());
-  p->SetTimeStamp(Simulator::Init()->Now ());
+  p->SetID(Simulator::Init()->GetUID());
+  p->SetTimeStamp(Simulator::Init()->Now());
 
-  UDPHeader *udp = new UDPHeader (GetClassifierParameters ()->GetSourcePort(),
-		                          GetClassifierParameters ()->GetDestinationPort ());
+  UDPHeader* udp =
+      new UDPHeader(GetClassifierParameters()->GetSourcePort(),
+                    GetClassifierParameters()->GetDestinationPort());
   p->AddUDPHeader(udp);
 
-  IPHeader *ip = new IPHeader (GetClassifierParameters ()->GetSourceID (),
-                               GetClassifierParameters ()->GetDestinationID());
+  IPHeader* ip = new IPHeader(GetClassifierParameters()->GetSourceID(),
+                              GetClassifierParameters()->GetDestinationID());
   p->AddIPHeader(ip);
 
-  PDCPHeader *pdcp = new PDCPHeader ();
-  p->AddPDCPHeader (pdcp);
+  PDCPHeader* pdcp = new PDCPHeader();
+  p->AddPDCPHeader(pdcp);
 
-  RLCHeader *rlc = new RLCHeader ();
+  RLCHeader* rlc = new RLCHeader();
   p->AddRLCHeader(rlc);
 
-  PacketTAGs *tags = new PacketTAGs ();
+  PacketTAGs* tags = new PacketTAGs();
   tags->SetApplicationType(PacketTAGs::APPLICATION_TYPE_INFINITE_BUFFER);
   p->SetPacketTags(tags);
 
-  if (_APP_TRACING_)
-    {
-	  /*
+  if (_APP_TRACING_) {
+    /*
 	   * Trace format:
 	   *
 	   * TX   APPLICATION_TYPE   BEARER_ID  SIZE   SRC_ID   DST_ID   TIME
 	   */
-	  UserEquipment* ue = (UserEquipment*) GetApplication ()->GetDestination ();
-	   std::cout << "TX";
-	   switch (p->GetPacketTags ()->GetApplicationType ())
-	     {
-	       case Application::APPLICATION_TYPE_VOIP:
-	         {
-	     	  std::cout << " VOIP";
-	     	  break;
-	         }
-	       case Application::APPLICATION_TYPE_TRACE_BASED:
-	         {
-	           std::cout << " VIDEO";
-	     	  break;
-	         }
-	       case Application::APPLICATION_TYPE_CBR:
-	         {
-	     	  std::cout << " CBR";
-	     	  break;
-	         }
-	       case Application::APPLICATION_TYPE_INFINITE_BUFFER:
-	         {
-	     	  std::cout << " INF_BUF";
-	     	  break;
-	         }
-	       default:
-	         {
-	     	  std::cout << " UNDEFINED";
-	     	  break;
-	         }
-	     }
-
-	   if (bytes > 1490) bytes = 1490;
-	   else bytes = bytes - 13;
-
-       std::cout << " ID " << p->GetID ()
-	 		    << " B " << GetRlcEntity ()->GetRlcEntityIndex ()
-	 			<< " SIZE " << bytes
-	 			<< " SRC " << GetSource ()->GetIDNetworkNode ()
-	 			<< " DST " << GetDestination ()->GetIDNetworkNode ()
-	 			<< " T " << Simulator::Init()->Now()
-	 			<< " " << ue->IsIndoor () << std::endl;
+    UserEquipment* ue = (UserEquipment*)GetApplication()->GetDestination();
+    std::cout << "TX";
+    switch (p->GetPacketTags()->GetApplicationType()) {
+      case Application::APPLICATION_TYPE_VOIP: {
+        std::cout << " VOIP";
+        break;
+      }
+      case Application::APPLICATION_TYPE_TRACE_BASED: {
+        std::cout << " VIDEO";
+        break;
+      }
+      case Application::APPLICATION_TYPE_CBR: {
+        std::cout << " CBR";
+        break;
+      }
+      case Application::APPLICATION_TYPE_INFINITE_BUFFER: {
+        std::cout << " INF_BUF";
+        break;
+      }
+      default: {
+        std::cout << " UNDEFINED";
+        break;
+      }
     }
+
+    if (bytes > 1490)
+      bytes = 1490;
+    else
+      bytes = bytes - 13;
+
+    std::cout << " ID " << p->GetID() << " B "
+              << GetRlcEntity()->GetRlcEntityIndex() << " SIZE " << bytes
+              << " SRC " << GetSource()->GetIDNetworkNode() << " DST "
+              << GetDestination()->GetIDNetworkNode() << " T "
+              << Simulator::Init()->Now() << " " << ue->IsIndoor() << std::endl;
+  }
 
   return p;
 }
 
-int
-RadioBearer::GetQueueSize (void)
-{
+int RadioBearer::GetQueueSize(void) {
   int size = 0;
-  size += GetMacQueue ()->GetQueueSizeWithMACHoverhead ();
+  size += GetMacQueue()->GetQueueSizeWithMACHoverhead();
 
-  if (GetRlcEntity ()->GetRlcModel () == RlcEntity::AM_RLC_MODE)
-  {
-    AmRlcEntity* amRlc = (AmRlcEntity*) GetRlcEntity ();
+  if (GetRlcEntity()->GetRlcModel() == RlcEntity::AM_RLC_MODE) {
+    AmRlcEntity* amRlc = (AmRlcEntity*)GetRlcEntity();
     int unacked = amRlc->GetSizeOfUnaknowledgedAmd();
     size += unacked;
-    if (unacked) 
-      std::cout << "AM_RLC: unacked size: " << amRlc->GetSizeOfUnaknowledgedAmd() << std::endl;
+    if (unacked)
+      std::cout << "AM_RLC: unacked size: "
+                << amRlc->GetSizeOfUnaknowledgedAmd() << std::endl;
   }
 
   return size;
 }
 
-double
-RadioBearer::GetHeadOfLinePacketDelay (void)
-{
+double RadioBearer::GetHeadOfLinePacketDelay(void) {
   double HOL = 0.;
   double now = Simulator::Init()->Now();
   if (GetMacQueue()->GetQueueSize() == 0)
     return HOL;
-  if (GetRlcEntity ()->GetRlcModel () == RlcEntity::AM_RLC_MODE)
-    {
-	  AmRlcEntity* amRlc = (AmRlcEntity*) GetRlcEntity ();
-	  if (amRlc->GetSentAMDs()->size() > 0)
-	    {
-		  HOL = now - amRlc->GetSentAMDs()->at (0)->m_packet->GetTimeStamp ();
-	    }
-	  else
-	    {
-          HOL = now - GetMacQueue ()->Peek ().GetTimeStamp ();
-	    }
+  if (GetRlcEntity()->GetRlcModel() == RlcEntity::AM_RLC_MODE) {
+    AmRlcEntity* amRlc = (AmRlcEntity*)GetRlcEntity();
+    if (amRlc->GetSentAMDs()->size() > 0) {
+      HOL = now - amRlc->GetSentAMDs()->at(0)->m_packet->GetTimeStamp();
+    } else {
+      HOL = now - GetMacQueue()->Peek().GetTimeStamp();
     }
-  else
-    {
-	  HOL = now - GetMacQueue ()->Peek().GetTimeStamp ();
-    }
+  } else {
+    HOL = now - GetMacQueue()->Peek().GetTimeStamp();
+  }
 
-  if (HOL < 0.00001) HOL = 0.00001;
+  if (HOL < 0.00001)
+    HOL = 0.00001;
 
   return HOL;
 }
 
-void
-RadioBearer::CheckForDropPackets ()
-{
-  if (m_application->GetApplicationType ()  != Application::APPLICATION_TYPE_TRACE_BASED
-		  &&
-		  m_application->GetApplicationType ()  != Application::APPLICATION_TYPE_VOIP)
-    {
-	  return;
-    }
+void RadioBearer::CheckForDropPackets() {
+  if (m_application->GetApplicationType() !=
+          Application::APPLICATION_TYPE_TRACE_BASED &&
+      m_application->GetApplicationType() !=
+          Application::APPLICATION_TYPE_VOIP) {
+    return;
+  }
 
-  GetMacQueue()->CheckForDropPackets(
-		  GetQoSParameters()->GetMaxDelay(), m_application->GetApplicationID ());
+  GetMacQueue()->CheckForDropPackets(GetQoSParameters()->GetMaxDelay(),
+                                     m_application->GetApplicationID());
 }
 
-void
-RadioBearer::Enqueue (Packet *packet)
-{
+void RadioBearer::Enqueue(Packet* packet) {
 #ifdef TEST_ENQUEUE_PACKETS
-      std::cout << "Enqueue packet on " << GetSource ()->GetIDNetworkNode () << std::endl;
-#endif
-  GetMacQueue ()->Enqueue(packet);
-  PacketTAGs* tags = packet->GetPacketTags();
-  if ( tags->GetStartByte() == 1 &&
-      tags->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_IPFLOW ) {
-
-        std::cerr << "ipflow start app: " << m_application->GetApplicationID()
-            << " flow: " << tags->GetFrameNumber()
-            << " flowsize: " << tags->GetApplicationSize()
+  std::cout << "Enqueue packet on " << GetSource()->GetIDNetworkNode()
             << std::endl;
-        m_flow_enqueueInfo[tags->GetFrameNumber()] =  packet->GetTimeStamp();
+#endif
+  GetMacQueue()->Enqueue(packet);
+  PacketTAGs* tags = packet->GetPacketTags();
+  if (tags->GetStartByte() == 1 &&
+      tags->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_IPFLOW) {
+
+    std::cerr << "ipflow start app: " << m_application->GetApplicationID()
+              << " flow: " << tags->GetFrameNumber()
+              << " flowsize: " << tags->GetApplicationSize() << std::endl;
+    m_flow_enqueueInfo[tags->GetFrameNumber()] = packet->GetTimeStamp();
   }
 }
 
-bool
-RadioBearer::HasPackets (void)
-{
-  if (m_application->GetApplicationType ()  == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-    {
-	  return true;
-    }
+bool RadioBearer::HasPackets(void) {
+  if (m_application->GetApplicationType() ==
+      Application::APPLICATION_TYPE_INFINITE_BUFFER) {
+    return true;
+  }
 
-  if (GetRlcEntity ()->GetRlcModel () == RlcEntity::AM_RLC_MODE)
-    {
-	  AmRlcEntity* amRlc = (AmRlcEntity*) GetRlcEntity ();
-	  if (amRlc->GetSentAMDs()->size() > 0)
-	    {
-		  return true;
-	    }
-	  else
-	    {
-		  return !GetMacQueue ()->IsEmpty();
-	    }
+  if (GetRlcEntity()->GetRlcModel() == RlcEntity::AM_RLC_MODE) {
+    AmRlcEntity* amRlc = (AmRlcEntity*)GetRlcEntity();
+    if (amRlc->GetSentAMDs()->size() > 0) {
+      return true;
+    } else {
+      return !GetMacQueue()->IsEmpty();
     }
-  else
-    {
-	  return !GetMacQueue ()->IsEmpty();
-    }
+  } else {
+    return !GetMacQueue()->IsEmpty();
+  }
 }
 
-int
-RadioBearer::GetHeadOfLinePacketSize (void)
-{
+int RadioBearer::GetHeadOfLinePacketSize(void) {
   int size = 0;
-  if (GetRlcEntity ()->GetRlcModel () == RlcEntity::AM_RLC_MODE)
-        {
-          AmRlcEntity* amRlc = (AmRlcEntity*) GetRlcEntity ();
-          if (amRlc->GetSentAMDs()->size() > 0)
-                {
-                  size = amRlc->GetSizeOfUnaknowledgedAmd ();
-                }
-          else
-                {
-                  size = GetMacQueue ()->Peek ().GetSize () - GetMacQueue ()->Peek ().GetFragmentOffset();
-                }
-        }
-  else
-        {
-          size = GetMacQueue ()->Peek ().GetSize () - GetMacQueue ()->Peek ().GetFragmentOffset();
-        }
+  if (GetRlcEntity()->GetRlcModel() == RlcEntity::AM_RLC_MODE) {
+    AmRlcEntity* amRlc = (AmRlcEntity*)GetRlcEntity();
+    if (amRlc->GetSentAMDs()->size() > 0) {
+      size = amRlc->GetSizeOfUnaknowledgedAmd();
+    } else {
+      size = GetMacQueue()->Peek().GetSize() -
+             GetMacQueue()->Peek().GetFragmentOffset();
+    }
+  } else {
+    size = GetMacQueue()->Peek().GetSize() -
+           GetMacQueue()->Peek().GetFragmentOffset();
+  }
 
   return size;
 }
 
-int
-RadioBearer::GetByte (int byte)
-{
-	int maxData= 0;
-	if (GetRlcEntity ()->GetRlcModel () == RlcEntity::AM_RLC_MODE)
-	  {
-		AmRlcEntity* amRlc = (AmRlcEntity*) GetRlcEntity ();
-		std::vector<AmdRecord*>* am_segments = amRlc->GetSentAMDs ();
-		if (am_segments->size() > 0)
-		  {
-			for (int i=0; i < am_segments->size(); i++)
-			  {
-				maxData =+ am_segments->at (i)->m_packet->GetSize () + 6;
-				if (maxData >= byte) continue;
-			  }
-		  }
-	  }
+int RadioBearer::GetByte(int byte) {
+  int maxData = 0;
+  if (GetRlcEntity()->GetRlcModel() == RlcEntity::AM_RLC_MODE) {
+    AmRlcEntity* amRlc = (AmRlcEntity*)GetRlcEntity();
+    std::vector<AmdRecord*>* am_segments = amRlc->GetSentAMDs();
+    if (am_segments->size() > 0) {
+      for (int i = 0; i < am_segments->size(); i++) {
+        maxData = +am_segments->at(i)->m_packet->GetSize() + 6;
+        if (maxData >= byte)
+          continue;
+      }
+    }
+  }
 
-	if (maxData < byte)
-	  {
-		maxData += GetMacQueue ()->GetByte (byte - maxData);
-	  }
+  if (maxData < byte) {
+    maxData += GetMacQueue()->GetByte(byte - maxData);
+  }
 
-	return maxData;
-
+  return maxData;
 }
 
-std::unordered_map<int, double>&
-RadioBearer::GetFlowEnqueueInfo()
-{
+std::unordered_map<int, double>& RadioBearer::GetFlowEnqueueInfo() {
   return m_flow_enqueueInfo;
 }

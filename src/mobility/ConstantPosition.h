@@ -19,18 +19,17 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef CONSTANTPOSITION_H_
 #define CONSTANTPOSITION_H_
 
 #include "Mobility.h"
 
-class ConstantPosition: public Mobility {
-public:
-	ConstantPosition();
-	virtual ~ConstantPosition();
+class ConstantPosition : public Mobility {
+ public:
+  ConstantPosition();
+  virtual ~ConstantPosition();
 
-	virtual void UpdatePosition (double time);
+  virtual void UpdatePosition(double time);
 };
 
 #endif /* CONSTANTPOSITION_H_ */

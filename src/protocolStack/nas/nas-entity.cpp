@@ -19,30 +19,21 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "nas-entity.h"
 #include "../../device/NetworkNode.h"
 
-
-NasEntity::NasEntity()
-{
+NasEntity::NasEntity() {
   m_device = NULL;
 }
 
-NasEntity::~NasEntity()
-{
+NasEntity::~NasEntity() {
   m_device = 0;
 }
 
-void
-NasEntity::SetDevice (NetworkNode* d)
-{
+void NasEntity::SetDevice(NetworkNode* d) {
   m_device = d;
 }
 
-NetworkNode*
-NasEntity::GetDevice ()
-{
+NetworkNode* NasEntity::GetDevice() {
   return m_device;
 }
-

@@ -25,9 +25,9 @@
 #include "NetworkNode.h"
 
 class Gateway : public NetworkNode {
-public:
-	Gateway();
-	virtual ~Gateway();
+ public:
+  Gateway();
+  virtual ~Gateway();
 };
 
 #endif /* GATEWAY__H_ */

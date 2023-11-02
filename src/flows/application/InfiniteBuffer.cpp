@@ -19,26 +19,17 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #include "InfiniteBuffer.h"
 #include "../../componentManagers/NetworkManager.h"
 
-InfiniteBuffer::InfiniteBuffer()
-{
-  SetApplicationType (Application::APPLICATION_TYPE_INFINITE_BUFFER);
+InfiniteBuffer::InfiniteBuffer() {
+  SetApplicationType(Application::APPLICATION_TYPE_INFINITE_BUFFER);
 }
 
-InfiniteBuffer::~InfiniteBuffer()
-{
-  Destroy ();
+InfiniteBuffer::~InfiniteBuffer() {
+  Destroy();
 }
 
-void
-InfiniteBuffer::DoStart (void)
-{}
+void InfiniteBuffer::DoStart(void) {}
 
-void
-InfiniteBuffer::DoStop (void)
-{}
-
+void InfiniteBuffer::DoStop(void) {}

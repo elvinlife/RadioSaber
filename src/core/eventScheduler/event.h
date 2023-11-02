@@ -23,25 +23,20 @@
 #define EVENT_H_
 
 class Event {
-public:
-	Event();
-	virtual ~Event();
+ public:
+  Event();
+  virtual ~Event();
 
-	void
-	SetTimeStamp (double time);
-	double
-	GetTimeStamp (void) const;
-	void
-	SetUID (int uid);
-	int
-	GetUID (void) const;
+  void SetTimeStamp(double time);
+  double GetTimeStamp(void) const;
+  void SetUID(int uid);
+  int GetUID(void) const;
 
-	virtual void
-	RunEvent (void) = 0;
+  virtual void RunEvent(void) = 0;
 
-private:
-	double m_timeStamp;
-	int m_uid;
+ private:
+  double m_timeStamp;
+  int m_uid;
 };
 
 #endif /* EVENT_H_ */

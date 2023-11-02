@@ -23,36 +23,29 @@
 #include "../core/cartesianCoodrdinates/CartesianCoordinates.h"
 //#include "../device/UserEquipment.h"
 
-ApartmentGrid::ApartmentGrid()
-{}
+ApartmentGrid::ApartmentGrid() {}
 
-ApartmentGrid::ApartmentGrid (int idBuilding,
-					int type,
-	     	 	    int nbFloors,
-	     	 	    double side_X,
-	     	 	    double side_Y,
-	     	 	    double center_X,
-	     	 	    double center_Y)
-{
-	SetIdBuilding(idBuilding);
+ApartmentGrid::ApartmentGrid(int idBuilding, int type, int nbFloors,
+                             double side_X, double side_Y, double center_X,
+                             double center_Y) {
+  SetIdBuilding(idBuilding);
 
-	SetBuildingType(TYPE_3GPP_5x5_grid);
+  SetBuildingType(TYPE_3GPP_5x5_grid);
 
-	SetFloors(nbFloors);
+  SetFloors(nbFloors);
 
-	double* side = new double[2];
-	side [0] = side_X;
-	side [1] = side_Y;
-	SetSide(side);
+  double* side = new double[2];
+  side[0] = side_X;
+  side[1] = side_Y;
+  SetSide(side);
 
-	CartesianCoordinates *Position = new CartesianCoordinates(center_X,center_Y);
-	SetCenterPosition(Position);
+  CartesianCoordinates* Position = new CartesianCoordinates(center_X, center_Y);
+  SetCenterPosition(Position);
 
-	std::vector<Femtocell*>* femtoCellsInBuilding = new std::vector<Femtocell*>;
-	SetFemtoCellsInBuilding(femtoCellsInBuilding);
+  std::vector<Femtocell*>* femtoCellsInBuilding = new std::vector<Femtocell*>;
+  SetFemtoCellsInBuilding(femtoCellsInBuilding);
 }
 
-ApartmentGrid::~ApartmentGrid()
-{
+ApartmentGrid::~ApartmentGrid() {
   ClearAll();
 }

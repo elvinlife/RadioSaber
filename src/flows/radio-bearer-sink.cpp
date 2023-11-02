@@ -20,54 +20,46 @@
  */
 
 #include "radio-bearer-sink.h"
-#include "radio-bearer.h"
-#include "../device/NetworkNode.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
-#include "application/application-sink.h"
+#include "../device/NetworkNode.h"
+#include "../load-parameters.h"
+#include "../protocolStack/rlc/am-rlc-entity.h"
 #include "../protocolStack/rlc/rlc-entity.h"
 #include "../protocolStack/rlc/tm-rlc-entity.h"
 #include "../protocolStack/rlc/um-rlc-entity.h"
-#include "../protocolStack/rlc/am-rlc-entity.h"
-#include "../load-parameters.h"
+#include "application/application-sink.h"
+#include "radio-bearer.h"
 
-RadioBearerSink::RadioBearerSink()
-{
-  SetClassifierParameters (NULL);
-  SetSource (NULL);
-  SetDestination (NULL);
+RadioBearerSink::RadioBearerSink() {
+  SetClassifierParameters(NULL);
+  SetSource(NULL);
+  SetDestination(NULL);
 
   //RlcEntity *rlc = new TmRlcEntity ();
   //RlcEntity *rlc = new AmRlcEntity ();
-  RlcEntity *rlc = new UmRlcEntity ();
+  RlcEntity* rlc = new UmRlcEntity();
 
-  rlc->SetRadioBearer (this);
+  rlc->SetRadioBearer(this);
   SetRlcEntity(rlc);
 }
 
-RadioBearerSink::~RadioBearerSink()
-{
+RadioBearerSink::~RadioBearerSink() {
   m_application = NULL;
-  Destory ();
+  Destory();
 }
 
-void
-RadioBearerSink::SetApplication (ApplicationSink* a)
-{
+void RadioBearerSink::SetApplication(ApplicationSink* a) {
   m_application = a;
 }
 
-ApplicationSink*
-RadioBearerSink::GetApplication (void)
-{
+ApplicationSink* RadioBearerSink::GetApplication(void) {
   return m_application;
 }
 
-void
-RadioBearerSink::Receive (Packet* p)
-{
-  RadioBearer* txBearer = GetApplication ()->GetSourceApplication ()->GetRadioBearer ();
+void RadioBearerSink::Receive(Packet* p) {
+  RadioBearer* txBearer =
+      GetApplication()->GetSourceApplication()->GetRadioBearer();
   //txBearer->UpdateTransmittedBytes (p->GetSize ());
 
-  GetApplication ()->Receive (p);
+  GetApplication()->Receive(p);
 }
-

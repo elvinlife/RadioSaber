@@ -24,12 +24,11 @@
 
 #include "enb-lte-phy.h"
 
-class HenbLtePhy :public EnbLtePhy {
+class HenbLtePhy : public EnbLtePhy {
 
-public:
-	HenbLtePhy();
-	virtual ~HenbLtePhy();
-
+ public:
+  HenbLtePhy();
+  virtual ~HenbLtePhy();
 };
 
 #endif /* HENB_LTE_PHY_H_ */

@@ -19,68 +19,59 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "3gpp-downlin-channel-realization.h"
-#include "../../device/UserEquipment.h"
+#include "../../core/eventScheduler/simulator.h"
+#include "../../core/spectrum/bandwidth-manager.h"
 #include "../../device/ENodeB.h"
 #include "../../device/HeNodeB.h"
+#include "../../device/UserEquipment.h"
+#include "../../load-parameters.h"
+#include "../../phy/lte-phy.h"
 #include "../../utility/RandomVariable.h"
 #include "shadowing-trace.h"
-#include "../../core/spectrum/bandwidth-manager.h"
-#include "../../phy/lte-phy.h"
-#include "../../core/eventScheduler/simulator.h"
-#include "../../load-parameters.h"
 
-
-ThreeGppDownlinChannelRealization::ThreeGppDownlinChannelRealization (NetworkNode* src, NetworkNode* dst)
-{
-  SetSamplingPeriod (0.5);
+ThreeGppDownlinChannelRealization::ThreeGppDownlinChannelRealization(
+    NetworkNode* src, NetworkNode* dst) {
+  SetSamplingPeriod(0.5);
 
   m_penetrationLoss = 10;
   m_shadowing = 0;
   m_pathLoss = 0;
-  SetFastFading (new FastFading ());
+  SetFastFading(new FastFading());
 
-  SetSourceNode (src);
-  SetDestinationNode (dst);
+  SetSourceNode(src);
+  SetDestinationNode(dst);
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
-  std::cout << "Created Channe Realization between "
-		  << src->GetIDNetworkNode () << " and " << dst->GetIDNetworkNode () << std::endl;
+  std::cout << "Created Channe Realization between " << src->GetIDNetworkNode()
+            << " and " << dst->GetIDNetworkNode() << std::endl;
 #endif
 
   if (_simple_jakes_model_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_JAKES);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_JAKES);
   if (_PED_A_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_PED_A);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_PED_A);
   if (_PED_B_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_PED_B);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_PED_B);
   if (_VEH_A_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_VEH_A);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_VEH_A);
   if (_VEH_B_)
-	  SetChannelType (ChannelRealization::CHANNEL_TYPE_VEH_B);
+    SetChannelType(ChannelRealization::CHANNEL_TYPE_VEH_B);
 
-  UpdateModels ();
+  UpdateModels();
 }
 
-ThreeGppDownlinChannelRealization::~ThreeGppDownlinChannelRealization()
-{
-}
+ThreeGppDownlinChannelRealization::~ThreeGppDownlinChannelRealization() {}
 
-void
-ThreeGppDownlinChannelRealization::SetPenetrationLoss (double pnl)
-{
+void ThreeGppDownlinChannelRealization::SetPenetrationLoss(double pnl) {
   m_penetrationLoss = pnl;
 }
 
-double ThreeGppDownlinChannelRealization::GetPenetrationLoss (void)
-{
+double ThreeGppDownlinChannelRealization::GetPenetrationLoss(void) {
   return m_penetrationLoss;
 }
 
-double
-ThreeGppDownlinChannelRealization::GetPathLoss (void)
-{
+double ThreeGppDownlinChannelRealization::GetPathLoss(void) {
   /*
    * Path Loss Model For Indoor Environment.
    * L = 37 + 30 Log10(R) , R in meters
@@ -89,109 +80,92 @@ ThreeGppDownlinChannelRealization::GetPathLoss (void)
 
   double distance;
 
-  if (GetSourceNode ()->GetNodeType () == NetworkNode::TYPE_UE
-		  && GetDestinationNode ()->GetNodeType () == NetworkNode::TYPE_ENODEB)
-    {
-	  UserEquipment* ue = (UserEquipment*) GetSourceNode ();
-	  ENodeB* enb = (ENodeB*) GetDestinationNode ();
+  if (GetSourceNode()->GetNodeType() == NetworkNode::TYPE_UE &&
+      GetDestinationNode()->GetNodeType() == NetworkNode::TYPE_ENODEB) {
+    UserEquipment* ue = (UserEquipment*)GetSourceNode();
+    ENodeB* enb = (ENodeB*)GetDestinationNode();
 
-	  distance =  ue->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (enb->GetMobilityModel ()->GetAbsolutePosition ());
-    }
+    distance = ue->GetMobilityModel()->GetAbsolutePosition()->GetDistance(
+        enb->GetMobilityModel()->GetAbsolutePosition());
+  }
 
-  else if (GetDestinationNode ()->GetNodeType () == NetworkNode::TYPE_UE
-		  && GetSourceNode ()->GetNodeType () == NetworkNode::TYPE_ENODEB)
-    {
-	  UserEquipment* ue = (UserEquipment*) GetDestinationNode ();
-	  ENodeB* enb = (ENodeB*) GetSourceNode ();
+  else if (GetDestinationNode()->GetNodeType() == NetworkNode::TYPE_UE &&
+           GetSourceNode()->GetNodeType() == NetworkNode::TYPE_ENODEB) {
+    UserEquipment* ue = (UserEquipment*)GetDestinationNode();
+    ENodeB* enb = (ENodeB*)GetSourceNode();
 
-	  distance =  ue->GetMobilityModel ()->GetAbsolutePosition ()->GetDistance (enb->GetMobilityModel ()->GetAbsolutePosition ());
-    }
+    distance = ue->GetMobilityModel()->GetAbsolutePosition()->GetDistance(
+        enb->GetMobilityModel()->GetAbsolutePosition());
+  }
 
-
-
-  m_pathLoss = 37 + (30 * log10 (distance));
+  m_pathLoss = 37 + (30 * log10(distance));
 
   return m_pathLoss;
 }
 
-
-void
-ThreeGppDownlinChannelRealization::SetShadowing (double sh)
-{
+void ThreeGppDownlinChannelRealization::SetShadowing(double sh) {
   m_shadowing = sh;
 }
 
-double
-ThreeGppDownlinChannelRealization::GetShadowing (void)
-{
+double ThreeGppDownlinChannelRealization::GetShadowing(void) {
   return m_shadowing;
 }
 
-
-void
-ThreeGppDownlinChannelRealization::UpdateModels ()
-{
+void ThreeGppDownlinChannelRealization::UpdateModels() {
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
   std::cout << "\t --> UpdateModels" << std::endl;
 #endif
 
-
   //update shadowing
   m_shadowing = 0;
-  double probability = GetRandomVariable (101) / 100.0;
-  for (int i = 0; i < 201; i++)
-    {
-	  if (probability <= shadowing_probability[i])
-	    {
-		  m_shadowing = shadowing_value[i];
-          break;
-	    }
+  double probability = GetRandomVariable(101) / 100.0;
+  for (int i = 0; i < 201; i++) {
+    if (probability <= shadowing_probability[i]) {
+      m_shadowing = shadowing_value[i];
+      break;
     }
+  }
 
-  UpdateFastFading ();
+  UpdateFastFading();
 
-  SetLastUpdate ();
+  SetLastUpdate();
 }
 
-
-std::vector<double>
-ThreeGppDownlinChannelRealization::GetLoss ()
-{
+std::vector<double> ThreeGppDownlinChannelRealization::GetLoss() {
 #ifdef TEST_PROPAGATION_LOSS_MODEL
   std::cout << "\t  --> compute loss between "
-		  << GetSourceNode ()->GetIDNetworkNode () << " and "
-		  << GetDestinationNode ()->GetIDNetworkNode () << std::endl;
+            << GetSourceNode()->GetIDNetworkNode() << " and "
+            << GetDestinationNode()->GetIDNetworkNode() << std::endl;
 #endif
 
-  if (NeedForUpdate ())
-    {
-	   UpdateModels ();
-    }
+  if (NeedForUpdate()) {
+    UpdateModels();
+  }
 
   std::vector<double> loss;
 
-
-  int now_ms = Simulator::Init()->Now () * 1000;
-  int lastUpdate_ms = GetLastUpdate () * 1000;
+  int now_ms = Simulator::Init()->Now() * 1000;
+  int lastUpdate_ms = GetLastUpdate() * 1000;
   int index = now_ms - lastUpdate_ms;
 
-  int nbOfSubChannels = GetSourceNode ()->GetPhy ()->GetBandwidthManager ()->GetDlSubChannels ().size ();
+  int nbOfSubChannels = GetSourceNode()
+                            ->GetPhy()
+                            ->GetBandwidthManager()
+                            ->GetDlSubChannels()
+                            .size();
 
-  for (int i = 0; i < nbOfSubChannels; i++)
-    {
-	  double l = GetFastFading ()->at (i).at (index) - GetPathLoss () - GetPenetrationLoss () - GetShadowing ();
-	  loss.push_back (l);
+  for (int i = 0; i < nbOfSubChannels; i++) {
+    double l = GetFastFading()->at(i).at(index) - GetPathLoss() -
+               GetPenetrationLoss() - GetShadowing();
+    loss.push_back(l);
 
 #ifdef TEST_PROPAGATION_LOSS_MODEL
-       std::cout << "\t\t mlp = " << GetFastFading ()->at (i).at (index)
-		  << " pl = " << GetPathLoss ()
-          << " pnl = " << GetPenetrationLoss()
-          << " sh = " << GetShadowing()
-          << " LOSS = " << l
-		  << std::endl;
+    std::cout << "\t\t mlp = " << GetFastFading()->at(i).at(index)
+              << " pl = " << GetPathLoss() << " pnl = " << GetPenetrationLoss()
+              << " sh = " << GetShadowing() << " LOSS = " << l << std::endl;
 #endif
-    }
+  }
 
   return loss;
 }

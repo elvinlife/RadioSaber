@@ -19,37 +19,28 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef CALENDAR_H_
 #define CALENDAR_H_
 
-#include "event.h"
 #include <list>
-
+#include "event.h"
 
 class Calendar {
-public:
-	Calendar();
-	virtual ~Calendar();
+ public:
+  Calendar();
+  virtual ~Calendar();
 
-    typedef std::list<Event*> Events;
+  typedef std::list<Event*> Events;
 
-    Events*
-    GetEvents (void);
+  Events* GetEvents(void);
 
-	void
-	InsertEvent (Event *newEvent);
-	bool
-	IsEmpty (void);
-	Event*
-	GetEvent (void);
-	void
-	RemoveEvent (void);
+  void InsertEvent(Event* newEvent);
+  bool IsEmpty(void);
+  Event* GetEvent(void);
+  void RemoveEvent(void);
 
-
-private:
-    Events *m_events;
+ private:
+  Events* m_events;
 };
 
 #endif /* CALENDAR_H_ */

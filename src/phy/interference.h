@@ -19,18 +19,17 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef INTERFERENCE_H_
 #define INTERFERENCE_H_
 
 class UserEquipment;
 
 class Interference {
-public:
-	Interference();
-	virtual ~Interference();
+ public:
+  Interference();
+  virtual ~Interference();
 
-	double ComputeInterference (UserEquipment *ue);
+  double ComputeInterference(UserEquipment* ue);
 };
 
 #endif /* INTERFERENCE_H_ */

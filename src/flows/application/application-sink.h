@@ -19,12 +19,11 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef APPLICATIONSINK_H_
 #define APPLICATIONSINK_H_
 
-#include <iostream>
 #include <stdint.h>
+#include <iostream>
 #include "Application.h"
 
 class ClassifierParameters;
@@ -32,29 +31,27 @@ class RadioBearer;
 class RadioBearerSink;
 class Packet;
 
-
 class ApplicationSink {
-public:
-	ApplicationSink();
-	virtual ~ApplicationSink();
+ public:
+  ApplicationSink();
+  virtual ~ApplicationSink();
 
-	void SetClassifierParameters (ClassifierParameters* cp);
-	ClassifierParameters* GetClassifierParameters (void);
+  void SetClassifierParameters(ClassifierParameters* cp);
+  ClassifierParameters* GetClassifierParameters(void);
 
-	void SetRadioBearerSink (RadioBearerSink* r);
-	RadioBearerSink* GetRadioBearerSink (void);
+  void SetRadioBearerSink(RadioBearerSink* r);
+  RadioBearerSink* GetRadioBearerSink(void);
 
-	void SetSourceApplication (Application* a);
-	Application* GetSourceApplication (void);
+  void SetSourceApplication(Application* a);
+  Application* GetSourceApplication(void);
 
-	void Receive (Packet* p);
+  void Receive(Packet* p);
 
-private:
-	ClassifierParameters* m_classifierParameters;
-	RadioBearerSink* m_radioBearer;
+ private:
+  ClassifierParameters* m_classifierParameters;
+  RadioBearerSink* m_radioBearer;
 
-	Application* m_sourceApplication;
+  Application* m_sourceApplication;
 };
-
 
 #endif /* APPLICATIONSINK_H_ */

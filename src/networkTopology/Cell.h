@@ -29,42 +29,28 @@
 using namespace std;
 
 class Cell {
-private:
-	int m_idCell;
-	double m_radius;			// Km
-	double m_minDistance;	// km
-	CartesianCoordinates *m_CellCenterPosition;
+ private:
+  int m_idCell;
+  double m_radius;       // Km
+  double m_minDistance;  // km
+  CartesianCoordinates* m_CellCenterPosition;
 
-public:
-	Cell();
-	Cell(int idCell,
-		 double radius,
-		 double minDistance,
-		 double X,
-		 double Y);
-	virtual ~Cell();
+ public:
+  Cell();
+  Cell(int idCell, double radius, double minDistance, double X, double Y);
+  virtual ~Cell();
 
-	void
-	SetIdCell (int idCell);
-	int
-	GetIdCell (void) const;
-	void
-	SetRadius (double radius);
-	double
-	GetRadius (void) const;
-	void
-	SetMinDistance (double minDistance);
-	double
-	GetMinDistance (void) const;
-	void
-	SetCellCenterPosition (CartesianCoordinates *position);
-	CartesianCoordinates*
-	GetCellCenterPosition (void) const;
+  void SetIdCell(int idCell);
+  int GetIdCell(void) const;
+  void SetRadius(double radius);
+  double GetRadius(void) const;
+  void SetMinDistance(double minDistance);
+  double GetMinDistance(void) const;
+  void SetCellCenterPosition(CartesianCoordinates* position);
+  CartesianCoordinates* GetCellCenterPosition(void) const;
 
-
-	//Debug
-	void
-	Print (void);
+  //Debug
+  void Print(void);
 };
 
 #endif /* CELL_H_ */

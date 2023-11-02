@@ -19,88 +19,61 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "PacketTAGs.h"
 
-PacketTAGs::PacketTAGs()
-{
+PacketTAGs::PacketTAGs() {
   m_type = PacketTAGs::APPLICATION_TYPE_INFINITE_BUFFER;
   m_frameNumber = 0;
   m_startByte = 0;
   m_endBytes = 0;
 }
 
-PacketTAGs::PacketTAGs(PacketTAGs::ApplicationType type,
-					   int frameNumber,
-					   int startFrame,
-					   int endFrame)
-{
+PacketTAGs::PacketTAGs(PacketTAGs::ApplicationType type, int frameNumber,
+                       int startFrame, int endFrame) {
   m_type = type;
   m_frameNumber = frameNumber;
   m_startByte = startFrame;
   m_endBytes = endFrame;
 }
 
-PacketTAGs::~PacketTAGs()
-{
-}
+PacketTAGs::~PacketTAGs() {}
 
-void
-PacketTAGs::SetFrameNumber (int frameNumber)
-{
+void PacketTAGs::SetFrameNumber(int frameNumber) {
   m_frameNumber = frameNumber;
 }
 
-int
-PacketTAGs::GetFrameNumber (void) const
-{
+int PacketTAGs::GetFrameNumber(void) const {
   return m_frameNumber;
 }
 
-void
-PacketTAGs::SetStartByte (int startByte)
-{
+void PacketTAGs::SetStartByte(int startByte) {
   m_startByte = startByte;
 }
 
-int
-PacketTAGs::GetStartByte (void) const
-{
+int PacketTAGs::GetStartByte(void) const {
   return m_startByte;
 }
 
-void
-PacketTAGs::SetEndByte (int endByte)
-{
+void PacketTAGs::SetEndByte(int endByte) {
   m_endBytes = endByte;
 }
 
-int
-PacketTAGs::GetEndByte (void) const
-{
+int PacketTAGs::GetEndByte(void) const {
   return m_endBytes;
 }
 
-void
-PacketTAGs::SetApplicationType (PacketTAGs::ApplicationType type)
-{
+void PacketTAGs::SetApplicationType(PacketTAGs::ApplicationType type) {
   m_type = type;
 }
 
-PacketTAGs::ApplicationType
-PacketTAGs::GetApplicationType (void)
-{
+PacketTAGs::ApplicationType PacketTAGs::GetApplicationType(void) {
   return m_type;
 }
 
-void
-PacketTAGs::SetApplicationSize (int s)
-{
+void PacketTAGs::SetApplicationSize(int s) {
   m_applicationSize = s;
 }
 
-int
-PacketTAGs::GetApplicationSize ()
-{
+int PacketTAGs::GetApplicationSize() {
   return m_applicationSize;
 }

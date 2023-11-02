@@ -19,76 +19,60 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "FlowsManager.h"
-#include "NetworkManager.h"
-#include "../device/NetworkNode.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
+#include "../device/NetworkNode.h"
 #include "../flows/application/Application.h"
 #include "../flows/application/CBR.h"
 #include "../flows/application/InfiniteBuffer.h"
-#include "../flows/application/VoIP.h"
 #include "../flows/application/TraceBased.h"
+#include "../flows/application/VoIP.h"
 #include "../load-parameters.h"
+#include "NetworkManager.h"
 
-FlowsManager* FlowsManager::ptr=NULL;
+FlowsManager* FlowsManager::ptr = NULL;
 
-FlowsManager::FlowsManager()
-{}
+FlowsManager::FlowsManager() {}
 
-FlowsManager::~FlowsManager()
-{}
+FlowsManager::~FlowsManager() {}
 
-Application*
-FlowsManager::CreateApplication (int applicationID,
-								 NetworkNode* src, NetworkNode* dst,
-		                         int srcPort, int destPort,
-		                         TransportProtocol::TransportProtocolType protocol,
-		                         Application::ApplicationType type,
-		                         QoSParameters* qos,
-		                         double startTime, double duration)
-{
+Application* FlowsManager::CreateApplication(
+    int applicationID, NetworkNode* src, NetworkNode* dst, int srcPort,
+    int destPort, TransportProtocol::TransportProtocolType protocol,
+    Application::ApplicationType type, QoSParameters* qos, double startTime,
+    double duration) {
 
   Application* app;
 
-  if (type == Application::APPLICATION_TYPE_CBR)
-    {
-	  app = new CBR ();
-    }
-  if (type == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-    {
-	  app = new InfiniteBuffer ();
-    }
-  if (type == Application::APPLICATION_TYPE_VOIP)
-    {
-	  app = new VoIP ();
-    }
-  if (type == Application::APPLICATION_TYPE_TRACE_BASED)
-    {
-	  app = new TraceBased ();
-    }
+  if (type == Application::APPLICATION_TYPE_CBR) {
+    app = new CBR();
+  }
+  if (type == Application::APPLICATION_TYPE_INFINITE_BUFFER) {
+    app = new InfiniteBuffer();
+  }
+  if (type == Application::APPLICATION_TYPE_VOIP) {
+    app = new VoIP();
+  }
+  if (type == Application::APPLICATION_TYPE_TRACE_BASED) {
+    app = new TraceBased();
+  }
 
-  app->SetApplicationID (applicationID);
-  app->SetSource (src);
-  app->SetDestination (dst);
-  app->SetSourcePort (srcPort);
-  app->SetDestinationPort (destPort);
+  app->SetApplicationID(applicationID);
+  app->SetSource(src);
+  app->SetDestination(dst);
+  app->SetSourcePort(srcPort);
+  app->SetDestinationPort(destPort);
 
-  ClassifierParameters *cp = new ClassifierParameters (src->GetIDNetworkNode(),
-      	                                               dst->GetIDNetworkNode(),
-      	                                               srcPort,
-      	                                               destPort,
-      	                                               protocol);
+  ClassifierParameters* cp =
+      new ClassifierParameters(src->GetIDNetworkNode(), dst->GetIDNetworkNode(),
+                               srcPort, destPort, protocol);
 
-  app->SetClassifierParameters (cp);
+  app->SetClassifierParameters(cp);
 
+  app->SetQoSParameters(qos);
 
-  app->SetQoSParameters (qos);
-
-  app->SetStartTime (startTime);
-  app->SetStopTime (startTime + duration);
+  app->SetStartTime(startTime);
+  app->SetStopTime(startTime + duration);
 
   return app;
-
 }
-

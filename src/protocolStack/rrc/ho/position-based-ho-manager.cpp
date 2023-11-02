@@ -19,34 +19,30 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "position-based-ho-manager.h"
-#include "../../../device/NetworkNode.h"
-#include "../../../device/UserEquipment.h"
+#include "../../../componentManagers/NetworkManager.h"
 #include "../../../device/ENodeB.h"
 #include "../../../device/HeNodeB.h"
-#include "../../../componentManagers/NetworkManager.h"
+#include "../../../device/NetworkNode.h"
+#include "../../../device/UserEquipment.h"
 
-PositionBasedHoManager::PositionBasedHoManager()
-{
+PositionBasedHoManager::PositionBasedHoManager() {
   m_target = NULL;
 }
 
-PositionBasedHoManager::~PositionBasedHoManager()
-{
+PositionBasedHoManager::~PositionBasedHoManager() {
   m_target = NULL;
 }
 
-bool
-PositionBasedHoManager::CheckHandoverNeed (UserEquipment* ue)
-{
-  NetworkNode *targetNode = ue->GetTargetNode ();
+bool PositionBasedHoManager::CheckHandoverNeed(UserEquipment* ue) {
+  NetworkNode* targetNode = ue->GetTargetNode();
 
-  CartesianCoordinates *uePosition = ue->GetMobilityModel ()->GetAbsolutePosition ();
-  CartesianCoordinates *targetPosition;
+  CartesianCoordinates* uePosition =
+      ue->GetMobilityModel()->GetAbsolutePosition();
+  CartesianCoordinates* targetPosition;
 
-  targetPosition = targetNode->GetMobilityModel ()->GetAbsolutePosition ();
-  double targetDistance = uePosition->GetDistance (targetPosition);
+  targetPosition = targetNode->GetMobilityModel()->GetAbsolutePosition();
+  double targetDistance = uePosition->GetDistance(targetPosition);
 
   /*
   if (targetDistance <= (ue->GetCell ()->GetRadius () * 0.8))
@@ -55,60 +51,54 @@ PositionBasedHoManager::CheckHandoverNeed (UserEquipment* ue)
     }
   */
 
-  std::vector<ENodeB*> *listOfNodes = NetworkManager::Init ()->GetENodeBContainer ();
+  std::vector<ENodeB*>* listOfNodes =
+      NetworkManager::Init()->GetENodeBContainer();
   std::vector<ENodeB*>::iterator it;
-  for (it = listOfNodes->begin (); it != listOfNodes->end (); it++)
-    {
-	  if ((*it)->GetIDNetworkNode () != targetNode->GetIDNetworkNode () )
-	    {
+  for (it = listOfNodes->begin(); it != listOfNodes->end(); it++) {
+    if ((*it)->GetIDNetworkNode() != targetNode->GetIDNetworkNode()) {
 
-	      NetworkNode *probableNewTargetNode = (*it);
+      NetworkNode* probableNewTargetNode = (*it);
 
+      double distance = probableNewTargetNode->GetMobilityModel()
+                            ->GetAbsolutePosition()
+                            ->GetDistance(uePosition);
 
-	      double distance = probableNewTargetNode->GetMobilityModel ()->
-	    		  GetAbsolutePosition ()->GetDistance (uePosition);
-
-	      if (distance < targetDistance)
-	        {
-	    	  if (NetworkManager::Init()->CheckHandoverPermissions(probableNewTargetNode,ue))
-	    	  {
-			      targetDistance = distance;
-			      targetNode = probableNewTargetNode;
-	    	  }
-	        }
-	    }
+      if (distance < targetDistance) {
+        if (NetworkManager::Init()->CheckHandoverPermissions(
+                probableNewTargetNode, ue)) {
+          targetDistance = distance;
+          targetNode = probableNewTargetNode;
+        }
+      }
     }
-  std::vector<HeNodeB*> *listOfNodes2 = NetworkManager::Init ()->GetHomeENodeBContainer();
+  }
+  std::vector<HeNodeB*>* listOfNodes2 =
+      NetworkManager::Init()->GetHomeENodeBContainer();
   std::vector<HeNodeB*>::iterator it2;
-  for (it2 = listOfNodes2->begin (); it2 != listOfNodes2->end (); it2++)
-    {
-	  if ((*it2)->GetIDNetworkNode () != targetNode->GetIDNetworkNode () )
-	    {
+  for (it2 = listOfNodes2->begin(); it2 != listOfNodes2->end(); it2++) {
+    if ((*it2)->GetIDNetworkNode() != targetNode->GetIDNetworkNode()) {
 
-	      NetworkNode *probableNewTargetNode = (*it2);
+      NetworkNode* probableNewTargetNode = (*it2);
 
+      double distance = probableNewTargetNode->GetMobilityModel()
+                            ->GetAbsolutePosition()
+                            ->GetDistance(uePosition);
 
-	      double distance = probableNewTargetNode->GetMobilityModel ()->
-	    		  GetAbsolutePosition ()->GetDistance (uePosition);
-
-	      if (distance < targetDistance)
-	        {
-	    	  if (NetworkManager::Init()->CheckHandoverPermissions(probableNewTargetNode,ue))
-	    	  {
-			      targetDistance = distance;
-			      targetNode = probableNewTargetNode;
-	    	  }
-	        }
-	    }
+      if (distance < targetDistance) {
+        if (NetworkManager::Init()->CheckHandoverPermissions(
+                probableNewTargetNode, ue)) {
+          targetDistance = distance;
+          targetNode = probableNewTargetNode;
+        }
+      }
     }
+  }
 
-  if (ue->GetTargetNode ()->GetIDNetworkNode () != targetNode->GetIDNetworkNode ())
-    {
-	  m_target = targetNode;
-	  return true;
-    }
-  else
-    {
-	  return false;
-    }
+  if (ue->GetTargetNode()->GetIDNetworkNode() !=
+      targetNode->GetIDNetworkNode()) {
+    m_target = targetNode;
+    return true;
+  } else {
+    return false;
+  }
 }

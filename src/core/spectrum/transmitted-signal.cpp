@@ -19,34 +19,25 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "transmitted-signal.h"
-#include "bandwidth-manager.h"
 #include <iostream>
+#include "bandwidth-manager.h"
 
-TransmittedSignal::TransmittedSignal()
-{}
+TransmittedSignal::TransmittedSignal() {}
 
-TransmittedSignal::~TransmittedSignal()
-{}
+TransmittedSignal::~TransmittedSignal() {}
 
-void
-TransmittedSignal::SetValues (std::vector<double> values)
-{
+void TransmittedSignal::SetValues(std::vector<double> values) {
   m_values = values;
 }
 
-std::vector<double>
-TransmittedSignal::Getvalues (void)
-{
+std::vector<double> TransmittedSignal::Getvalues(void) {
   return m_values;
 }
 
-TransmittedSignal*
-TransmittedSignal::Copy (void)
-{
-  TransmittedSignal* txSignal = new TransmittedSignal ();
-  txSignal->SetValues (Getvalues ());
+TransmittedSignal* TransmittedSignal::Copy(void) {
+  TransmittedSignal* txSignal = new TransmittedSignal();
+  txSignal->SetValues(Getvalues());
 
   return txSignal;
 }

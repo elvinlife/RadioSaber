@@ -19,39 +19,27 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "QoSForM_LWDF.h"
 #include <iostream>
 
-QoSForM_LWDF::QoSForM_LWDF()
-{
+QoSForM_LWDF::QoSForM_LWDF() {
   m_dropProbability = 0.005;
 }
 
-QoSForM_LWDF::QoSForM_LWDF(double targetDelay)
-{
-  SetMaxDelay (targetDelay);
+QoSForM_LWDF::QoSForM_LWDF(double targetDelay) {
+  SetMaxDelay(targetDelay);
   m_dropProbability = 0.005;
 }
 
-QoSForM_LWDF::~QoSForM_LWDF()
-{}
+QoSForM_LWDF::~QoSForM_LWDF() {}
 
-void
-QoSForM_LWDF::SetDropPorbability (double probability)
-{
+void QoSForM_LWDF::SetDropPorbability(double probability) {
   m_dropProbability = probability;
 }
 
-double
-QoSForM_LWDF::GetDropProbability (void) const
-{
+double QoSForM_LWDF::GetDropProbability(void) const {
   return m_dropProbability;
 }
 
-
 //Debug
-void
-QoSForM_LWDF::Print ()
-{
-}
+void QoSForM_LWDF::Print() {}

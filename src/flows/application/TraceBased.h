@@ -19,15 +19,14 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef TRACEBASED_H_
 #define TRACEBASED_H_
 
 #include "Application.h"
 
 #include <cstdio>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 /*
  * This application sends udp packets based on a trace file could be downloaded form :
@@ -42,50 +41,46 @@
  */
 
 class TraceBased : public Application {
-public:
-	TraceBased();
-	TraceBased(NetworkNode *source,
-			   NetworkNode *destination,
-			   int sourcePort,
-			   int destinationPort,
-			   TransportProtocol::TransportProtocolType protocol);
+ public:
+  TraceBased();
+  TraceBased(NetworkNode* source, NetworkNode* destination, int sourcePort,
+             int destinationPort,
+             TransportProtocol::TransportProtocolType protocol);
 
-	virtual ~TraceBased();
+  virtual ~TraceBased();
 
-    void SetTraceFile(std::string traceFile);
-    void LoadTrace (std::string traceFile);
-    void LoadDefaultTrace (void);
+  void SetTraceFile(std::string traceFile);
+  void LoadTrace(std::string traceFile);
+  void LoadDefaultTrace(void);
 
-	virtual void DoStart (void);
-	virtual void DoStop (void);
+  virtual void DoStart(void);
+  virtual void DoStop(void);
 
-    void ScheduleTransmit (double time);
-    void Send (void);
+  void ScheduleTransmit(double time);
+  void Send(void);
 
-    void UpdateFrameCounter (void);
-    int GetFrameCounter (void);
+  void UpdateFrameCounter(void);
+  int GetFrameCounter(void);
 
-    void PrintTrace (void);
+  void PrintTrace(void);
 
-private:
+ private:
+  uint32_t m_TraceSize;  //in packet
+  double m_interval;
+  uint32_t m_size;
+  uint32_t m_sent;
 
-    uint32_t m_TraceSize; //in packet
-    double m_interval;
-    uint32_t m_size;
-    uint32_t m_sent;
+  typedef struct {
+    uint32_t TimeToSend;
+    uint16_t PacketSize;
+    uint32_t FrameIndex;
+    char FrameType;
+  } TraceEntry;
 
-    typedef struct
-    {
-      uint32_t TimeToSend;
-      uint16_t PacketSize;
-      uint32_t FrameIndex;
-      char FrameType;
-    } TraceEntry;
+  std::vector<TraceEntry>* m_entries;
+  std::vector<TraceEntry>::iterator iter;
 
-    std::vector<TraceEntry> * m_entries;
-    std::vector<TraceEntry>::iterator iter;
-
-    int m_frameCounter;
+  int m_frameCounter;
 };
 
 #endif /* TRACEBASED_H_ */

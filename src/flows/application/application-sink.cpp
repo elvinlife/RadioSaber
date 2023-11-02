@@ -19,68 +19,50 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "application-sink.h"
-#include "../../device/IPClassifier/ClassifierParameters.h"
 #include "../../componentManagers/NetworkManager.h"
 #include "../../core/eventScheduler/simulator.h"
-#include "../../load-parameters.h"
+#include "../../device/IPClassifier/ClassifierParameters.h"
 #include "../../device/UserEquipment.h"
+#include "../../load-parameters.h"
 
-ApplicationSink::ApplicationSink()
-{
+ApplicationSink::ApplicationSink() {
   m_classifierParameters = NULL;
   m_radioBearer = NULL;
   m_sourceApplication = NULL;
 }
 
-ApplicationSink::~ApplicationSink()
-{
+ApplicationSink::~ApplicationSink() {
   m_classifierParameters = NULL;
   m_radioBearer = NULL;
   m_sourceApplication = NULL;
 }
 
-void
-ApplicationSink::SetClassifierParameters (ClassifierParameters* cp)
-{
+void ApplicationSink::SetClassifierParameters(ClassifierParameters* cp) {
   m_classifierParameters = cp;
 }
 
-ClassifierParameters*
-ApplicationSink::GetClassifierParameters (void)
-{
+ClassifierParameters* ApplicationSink::GetClassifierParameters(void) {
   return m_classifierParameters;
 }
 
-
-void
-ApplicationSink::SetRadioBearerSink (RadioBearerSink* r)
-{
+void ApplicationSink::SetRadioBearerSink(RadioBearerSink* r) {
   m_radioBearer = r;
 }
 
-RadioBearerSink*
-ApplicationSink::GetRadioBearerSink (void)
-{
+RadioBearerSink* ApplicationSink::GetRadioBearerSink(void) {
   return m_radioBearer;
 }
 
-void
-ApplicationSink::SetSourceApplication (Application* a)
-{
+void ApplicationSink::SetSourceApplication(Application* a) {
   m_sourceApplication = a;
 }
 
-Application*
-ApplicationSink::GetSourceApplication (void)
-{
+Application* ApplicationSink::GetSourceApplication(void) {
   return m_sourceApplication;
 }
 
-void
-ApplicationSink::Receive (Packet* p)
-{
+void ApplicationSink::Receive(Packet* p) {
   /*
    * Trace format:
    *
@@ -94,48 +76,42 @@ ApplicationSink::Receive (Packet* p)
 
   std::cout << "RX";
 
-  switch (m_sourceApplication->GetApplicationType ())
-	{
-	  case Application::APPLICATION_TYPE_VOIP:
-		{
-		  std::cout << " VOIP";
-		  break;
-		}
-	  case Application::APPLICATION_TYPE_TRACE_BASED:
-		{
-		  std::cout << " VIDEO";
-		  break;
-		}
-	  case Application::APPLICATION_TYPE_CBR:
-		{
-		  std::cout << " CBR";
-		  break;
-		}
-	  case Application::APPLICATION_TYPE_INFINITE_BUFFER:
-		{
-		  std::cout << " INF_BUF";
-		  break;
-		}
-	  default:
-		{
-		  std::cout << " UNDEFINED";
-		  break;
-		}
-	}
+  switch (m_sourceApplication->GetApplicationType()) {
+    case Application::APPLICATION_TYPE_VOIP: {
+      std::cout << " VOIP";
+      break;
+    }
+    case Application::APPLICATION_TYPE_TRACE_BASED: {
+      std::cout << " VIDEO";
+      break;
+    }
+    case Application::APPLICATION_TYPE_CBR: {
+      std::cout << " CBR";
+      break;
+    }
+    case Application::APPLICATION_TYPE_INFINITE_BUFFER: {
+      std::cout << " INF_BUF";
+      break;
+    }
+    default: {
+      std::cout << " UNDEFINED";
+      break;
+    }
+  }
 
-  double delay = ((Simulator::Init()->Now() *10000) - (p->GetTimeStamp () *10000)) /10000;
-  if (delay < 0.000001) delay = 0.000001;
+  double delay =
+      ((Simulator::Init()->Now() * 10000) - (p->GetTimeStamp() * 10000)) /
+      10000;
+  if (delay < 0.000001)
+    delay = 0.000001;
 
-  UserEquipment* ue = (UserEquipment*) GetSourceApplication ()->GetDestination ();
+  UserEquipment* ue = (UserEquipment*)GetSourceApplication()->GetDestination();
 
-  std::cout << " ID " << p->GetID ()
-                        << " B " << m_sourceApplication->GetApplicationID ()
-                        << " SIZE " << p->GetPacketTags ()->GetApplicationSize ()
-                        << " SRC " << p->GetSourceID ()
-                        << " DST " << p->GetDestinationID ()
-                        << " D " << delay
-                        << " " << ue->IsIndoor () << std::endl;
-
+  std::cout << " ID " << p->GetID() << " B "
+            << m_sourceApplication->GetApplicationID() << " SIZE "
+            << p->GetPacketTags()->GetApplicationSize() << " SRC "
+            << p->GetSourceID() << " DST " << p->GetDestinationID() << " D "
+            << delay << " " << ue->IsIndoor() << std::endl;
 
   delete p;
 }

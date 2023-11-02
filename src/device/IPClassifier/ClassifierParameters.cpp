@@ -19,23 +19,15 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #include "ClassifierParameters.h"
 #include <cstdlib>
 #include <iostream>
 
-ClassifierParameters::ClassifierParameters()
-{
+ClassifierParameters::ClassifierParameters() {}
 
-}
-
-ClassifierParameters::ClassifierParameters(int sourceID,
-										   int destinationID,
-										   int sourcePort,
-										   int destinationPort,
-										   TransportProtocol::TransportProtocolType protocol)
-{
+ClassifierParameters::ClassifierParameters(
+    int sourceID, int destinationID, int sourcePort, int destinationPort,
+    TransportProtocol::TransportProtocolType protocol) {
   m_sourceID = sourceID;
   m_destinationID = destinationID;
   m_sourcePort = sourcePort;
@@ -43,78 +35,55 @@ ClassifierParameters::ClassifierParameters(int sourceID,
   m_protocolType = protocol;
 }
 
-ClassifierParameters::~ClassifierParameters()
-{}
+ClassifierParameters::~ClassifierParameters() {}
 
-void
-ClassifierParameters::SetSourceID(int id)
-{
+void ClassifierParameters::SetSourceID(int id) {
   m_sourceID = id;
 }
 
-int
-ClassifierParameters::GetSourceID(void)
-{
-  return  m_sourceID;
+int ClassifierParameters::GetSourceID(void) {
+  return m_sourceID;
 }
 
-void
-ClassifierParameters::SetDestinationID(int id)
-{
+void ClassifierParameters::SetDestinationID(int id) {
   m_destinationID = id;
 }
 
-int
-ClassifierParameters::GetDestinationID(void)
-{
+int ClassifierParameters::GetDestinationID(void) {
   return m_destinationID;
 }
 
-void
-ClassifierParameters::SetSourcePort(int port)
-{
+void ClassifierParameters::SetSourcePort(int port) {
   m_sourcePort = port;
 }
 
-int
-ClassifierParameters::GetSourcePort(void)
-{
+int ClassifierParameters::GetSourcePort(void) {
   return m_sourcePort;
 }
 
-void
-ClassifierParameters::SetDestinationPort(int port)
-{
+void ClassifierParameters::SetDestinationPort(int port) {
   m_destinationPort = port;
 }
 
-int
-ClassifierParameters::GetDestinationPort(void)
-{
+int ClassifierParameters::GetDestinationPort(void) {
   return m_destinationPort;
 }
 
-void
-ClassifierParameters::SetTransportProtocol(TransportProtocol::TransportProtocolType protocol)
-{
+void ClassifierParameters::SetTransportProtocol(
+    TransportProtocol::TransportProtocolType protocol) {
   m_protocolType = protocol;
 }
 
 TransportProtocol::TransportProtocolType
-ClassifierParameters::GetTransportProtocol(void)
-{
+ClassifierParameters::GetTransportProtocol(void) {
   return m_protocolType;
 }
 
-void
-ClassifierParameters::Print()
-{
-  std::cout <<
-		  "\t Classifier Parameters:"
-		  "\n\t\t src = " << m_sourceID <<
-		  "\n\t\t dst = " << m_destinationID <<
-		  "\n\t\t srcPort = " << m_sourcePort <<
-   	      "\n\t\t dstPort = " << m_destinationPort <<
-   	      "\n\t\t protocol = " << m_protocolType
-   	      << std::endl;
+void ClassifierParameters::Print() {
+  std::cout << "\t Classifier Parameters:"
+               "\n\t\t src = "
+            << m_sourceID << "\n\t\t dst = " << m_destinationID
+            << "\n\t\t srcPort = " << m_sourcePort
+            << "\n\t\t dstPort = " << m_destinationPort
+            << "\n\t\t protocol = " << m_protocolType << std::endl;
 }

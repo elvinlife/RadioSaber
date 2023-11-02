@@ -19,99 +19,75 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #include "CBR.h"
 #include <cstdlib>
 #include "../../componentManagers/NetworkManager.h"
 #include "../radio-bearer.h"
 
-CBR::CBR()
-{
-  SetApplicationType (Application::APPLICATION_TYPE_CBR);
+CBR::CBR() {
+  SetApplicationType(Application::APPLICATION_TYPE_CBR);
 }
 
-CBR::~CBR()
-{
-  Destroy ();
+CBR::~CBR() {
+  Destroy();
 }
 
-void
-CBR::DoStart (void)
-{
+void CBR::DoStart(void) {
   Simulator::Init()->Schedule(0.0, &CBR::Send, this);
 }
 
-void
-CBR::DoStop (void)
-{
+void CBR::DoStop(void) {}
+
+void CBR::ScheduleTransmit(double time) {
+  if ((Simulator::Init()->Now() + time) < GetStopTime()) {
+    Simulator::Init()->Schedule(time, &CBR::Send, this);
+  }
 }
 
-void
-CBR::ScheduleTransmit (double time)
-{
-  if ( (Simulator::Init()->Now () + time) < GetStopTime () )
-    {
-      Simulator::Init()->Schedule(time, &CBR::Send, this);
-    }
-}
-
-void
-CBR::Send (void)
-{
+void CBR::Send(void) {
   //CREATE A NEW PACKET (ADDING UDP, IP and PDCP HEADERS)
-  Packet *packet = new Packet ();
-  int uid = Simulator::Init()->GetUID ();
+  Packet* packet = new Packet();
+  int uid = Simulator::Init()->GetUID();
 
   packet->SetID(uid);
-  packet->SetTimeStamp (Simulator::Init()->Now ());
-  packet->SetSize (GetSize ());
+  packet->SetTimeStamp(Simulator::Init()->Now());
+  packet->SetSize(GetSize());
 
-  PacketTAGs *tags = new PacketTAGs ();
+  PacketTAGs* tags = new PacketTAGs();
   tags->SetApplicationType(PacketTAGs::APPLICATION_TYPE_CBR);
-  tags->SetApplicationSize (packet->GetSize ());
+  tags->SetApplicationSize(packet->GetSize());
   packet->SetPacketTags(tags);
 
+  UDPHeader* udp =
+      new UDPHeader(GetClassifierParameters()->GetSourcePort(),
+                    GetClassifierParameters()->GetDestinationPort());
+  packet->AddUDPHeader(udp);
 
-  UDPHeader *udp = new UDPHeader (GetClassifierParameters ()->GetSourcePort (),
-		                          GetClassifierParameters ()->GetDestinationPort ());
-  packet->AddUDPHeader (udp);
+  IPHeader* ip = new IPHeader(GetClassifierParameters()->GetSourceID(),
+                              GetClassifierParameters()->GetDestinationID());
+  packet->AddIPHeader(ip);
 
-  IPHeader *ip = new IPHeader (GetClassifierParameters ()->GetSourceID (),
-                               GetClassifierParameters ()->GetDestinationID ());
-  packet->AddIPHeader (ip);
+  PDCPHeader* pdcp = new PDCPHeader();
+  packet->AddPDCPHeader(pdcp);
 
-  PDCPHeader *pdcp = new PDCPHeader ();
-  packet->AddPDCPHeader (pdcp);
+  Trace(packet);
 
-  Trace (packet);
+  GetRadioBearer()->Enqueue(packet);
 
-  GetRadioBearer()->Enqueue (packet);
-
-  ScheduleTransmit (GetInterval ());
-
+  ScheduleTransmit(GetInterval());
 }
 
-
-int
-CBR::GetSize (void) const
-{
+int CBR::GetSize(void) const {
   return m_size;
 }
 
-void
-CBR::SetSize(int size)
-{
+void CBR::SetSize(int size) {
   m_size = size;
 }
-void
-CBR::SetInterval(double interval)
-{
+void CBR::SetInterval(double interval) {
   m_interval = interval;
 }
 
-double
-CBR::GetInterval (void) const
-{
+double CBR::GetInterval(void) const {
   return m_interval;
 }

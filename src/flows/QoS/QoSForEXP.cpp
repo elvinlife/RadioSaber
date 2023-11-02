@@ -19,47 +19,32 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "QoSForEXP.h"
 #include <iostream>
 
-QoSForEXP::QoSForEXP ()
-{
+QoSForEXP::QoSForEXP() {
   m_dropProbability = 0.01;
 }
 
-QoSForEXP::QoSForEXP (double targetDelay)
-{
-  SetMaxDelay (targetDelay);
+QoSForEXP::QoSForEXP(double targetDelay) {
+  SetMaxDelay(targetDelay);
   m_dropProbability = 0.01;
 }
 
-QoSForEXP::QoSForEXP(double targetDelay,
-			         double dropProbability)
-{
-  SetMaxDelay (targetDelay);
+QoSForEXP::QoSForEXP(double targetDelay, double dropProbability) {
+  SetMaxDelay(targetDelay);
   m_dropProbability = dropProbability;
 }
 
-QoSForEXP::~QoSForEXP()
-{}
+QoSForEXP::~QoSForEXP() {}
 
-
-void
-QoSForEXP::SetDropPorbability (double probability)
-{
+void QoSForEXP::SetDropPorbability(double probability) {
   m_dropProbability = probability;
 }
 
-double
-QoSForEXP::GetDropProbability (void) const
-{
+double QoSForEXP::GetDropProbability(void) const {
   return m_dropProbability;
 }
 
-
 //Debug
-void
-QoSForEXP::Print ()
-{
-}
+void QoSForEXP::Print() {}

@@ -19,68 +19,48 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #include "Classifier.h"
 #include "../../core/eventScheduler/simulator.h"
-#include "ClassifierParameters.h"
-#include "../NetworkNode.h"
-#include "../../protocolStack/rrc/rrc-entity.h"
-#include "../../protocolStack/protocol-stack.h"
 #include "../../flows/radio-bearer-sink.h"
 #include "../../flows/radio-bearer.h"
+#include "../../protocolStack/protocol-stack.h"
+#include "../../protocolStack/rrc/rrc-entity.h"
+#include "../NetworkNode.h"
+#include "ClassifierParameters.h"
 
-Classifier::Classifier()
-{
+Classifier::Classifier() {
   m_device = NULL;
 }
 
-Classifier::~Classifier()
-{
+Classifier::~Classifier() {
   m_device = NULL;
 }
 
-
-void
-Classifier::SetDevice (NetworkNode* d)
-{
+void Classifier::SetDevice(NetworkNode* d) {
   m_device = d;
 }
 
-NetworkNode*
-Classifier::GetDevice (void)
-{
+NetworkNode* Classifier::GetDevice(void) {
   return m_device;
 }
 
-void
-Classifier::Classify (Packet* p)
-{
+void Classifier::Classify(Packet* p) {
   //CLASSIFY THE PACKET
-  RrcEntity *rrc = GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
+  RrcEntity* rrc = GetDevice()->GetProtocolStack()->GetRrcEntity();
 
-  ClassifierParameters *cp = new ClassifierParameters (p->GetSourceID(),
-		                                               p->GetDestinationID(),
-		                                               p->GetSourcePort(),
-		                                               p->GetDestinationPort(),
-		                                               TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
+  ClassifierParameters* cp = new ClassifierParameters(
+      p->GetSourceID(), p->GetDestinationID(), p->GetSourcePort(),
+      p->GetDestinationPort(), TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
 
-  RadioBearerSink *sink = rrc->GetRadioBearerSink (cp);
+  RadioBearerSink* sink = rrc->GetRadioBearerSink(cp);
 
-  if (sink != NULL)
-    {
-	  sink->Receive (p);
+  if (sink != NULL) {
+    sink->Receive(p);
+  } else {
+    RadioBearer* bearer = rrc->GetRadioBearer(cp);
+    if (bearer != NULL) {
+      //enqueue
+      bearer->Enqueue(p);
     }
-  else
-  {
-    RadioBearer *bearer = rrc->GetRadioBearer (cp);
-    if (bearer != NULL)
-      {
-	    //enqueue
-    	bearer->Enqueue (p);
-      }
   }
-
-
 }
-

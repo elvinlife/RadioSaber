@@ -20,11 +20,10 @@
  */
 
 #include "Packet.h"
-#include "../../core/eventScheduler/simulator.h"
 #include <iostream>
+#include "../../core/eventScheduler/simulator.h"
 
-Packet::Packet()
-{
+Packet::Packet() {
   m_UDPHeader = NULL;
   m_IPHeader = NULL;
   m_PDCPHeader = NULL;
@@ -37,8 +36,7 @@ Packet::Packet()
   m_size = 0;
 }
 
-Packet::~Packet()
-{
+Packet::~Packet() {
   delete m_UDPHeader;
   delete m_IPHeader;
   delete m_PDCPHeader;
@@ -47,232 +45,170 @@ Packet::~Packet()
   delete m_tags;
 }
 
-void
-Packet::SetTimeStamp (double time)
-{
+void Packet::SetTimeStamp(double time) {
   m_timeStamp = time;
 }
 
-double
-Packet::GetTimeStamp (void) const
-{
+double Packet::GetTimeStamp(void) const {
   return m_timeStamp;
 }
 
-void
-Packet::SetSize (int size)
-{
+void Packet::SetSize(int size) {
   m_size = size;
 }
 
-int
-Packet::GetSize (void) const
-{
+int Packet::GetSize(void) const {
   return m_size;
 }
 
-void
-Packet::AddHeaderSize (int size)
-{
+void Packet::AddHeaderSize(int size) {
   m_size += size;
 }
 
-void
-Packet::UpdatePacketSize (void)
-{}
+void Packet::UpdatePacketSize(void) {}
 
-void
-Packet::AddUDPHeader (UDPHeader *header)
-{
+void Packet::AddUDPHeader(UDPHeader* header) {
   m_UDPHeader = header;
-  AddHeaderSize (8);
+  AddHeaderSize(8);
 }
 
-UDPHeader*
-Packet::GetUDPHeader (void) const
-{
+UDPHeader* Packet::GetUDPHeader(void) const {
   return m_UDPHeader;
 }
 
-void
-Packet::AddIPHeader (IPHeader *header)
-{
+void Packet::AddIPHeader(IPHeader* header) {
   m_IPHeader = header;
-  AddHeaderSize (20); //Header size fo IPv4
+  AddHeaderSize(20);  //Header size fo IPv4
 }
 
-IPHeader*
-Packet::GetIPHeader (void)
-{
-  return  m_IPHeader;
+IPHeader* Packet::GetIPHeader(void) {
+  return m_IPHeader;
 }
 
-void
-Packet::AddPDCPHeader (PDCPHeader *header)
-{
+void Packet::AddPDCPHeader(PDCPHeader* header) {
   m_PDCPHeader = header;
 
   //ROHC Headers Compression: form 40 bytes to 3 bytes
-  int newPacketSize = GetSize () - 28 + 3;
-  SetSize (newPacketSize);
+  int newPacketSize = GetSize() - 28 + 3;
+  SetSize(newPacketSize);
 
-  AddHeaderSize (2);
+  AddHeaderSize(2);
 }
 
-PDCPHeader*
-Packet::GetPDCPHeader (void) const
-{
-  return  m_PDCPHeader;
-
+PDCPHeader* Packet::GetPDCPHeader(void) const {
+  return m_PDCPHeader;
 }
 
-void
-Packet::AddRLCHeader (RLCHeader *header)
-{
+void Packet::AddRLCHeader(RLCHeader* header) {
   m_RLCHeader = header;
-  AddHeaderSize (header->GetHeaderSize());
+  AddHeaderSize(header->GetHeaderSize());
 }
 
-RLCHeader*
-Packet::GetRLCHeader (void) const
-{
+RLCHeader* Packet::GetRLCHeader(void) const {
   return m_RLCHeader;
 }
 
-void
-Packet::AddMACHeader (MACHeader *header)
-{
+void Packet::AddMACHeader(MACHeader* header) {
   m_MACHeader = header;
   AddHeaderSize(header->GetHeaderSize());
 }
 
-MACHeader*
-Packet::GetMACHeader (void) const
-{
+MACHeader* Packet::GetMACHeader(void) const {
   return m_MACHeader;
 }
 
-
-int
-Packet::GetSourceID ()
-{
-  return GetIPHeader ()->GetSourceID ();
+int Packet::GetSourceID() {
+  return GetIPHeader()->GetSourceID();
 }
 
-int
-Packet::GetDestinationID ()
-{
-  return GetIPHeader ()->GetDestinationID ();
+int Packet::GetDestinationID() {
+  return GetIPHeader()->GetDestinationID();
 }
 
-int
-Packet::GetSourcePort ()
-{
-  return GetUDPHeader ()->GetSourcePort();
+int Packet::GetSourcePort() {
+  return GetUDPHeader()->GetSourcePort();
 }
 
-int
-Packet::GetDestinationPort ()
-{
-  return GetUDPHeader ()->GetDestinationPort();
+int Packet::GetDestinationPort() {
+  return GetUDPHeader()->GetDestinationPort();
 }
 
-int
-Packet::GetSourceMAC ()
-{
+int Packet::GetSourceMAC() {
   return GetMACHeader()->GetMACsourceID();
 }
 
-int
-Packet::GetDestinationMAC ()
-{
+int Packet::GetDestinationMAC() {
   return GetMACHeader()->GetMACdestinationID();
 }
 
-void
-Packet::SetID (int uid)
-{
+void Packet::SetID(int uid) {
   m_id = uid;
 }
 
-int
-Packet::GetID (void)
-{
+int Packet::GetID(void) {
   return m_id;
 }
 
-PacketTAGs*
-Packet::GetPacketTags (void) const
-{
+PacketTAGs* Packet::GetPacketTags(void) const {
   return m_tags;
 }
 
-void
-Packet::SetPacketTags (PacketTAGs* tags)
-{
+void Packet::SetPacketTags(PacketTAGs* tags) {
   m_tags = tags;
 }
 
-Packet*
-Packet::Copy (void)
-{
-  Packet *p = new Packet ();
+Packet* Packet::Copy(void) {
+  Packet* p = new Packet();
   p->m_id = m_id;
   p->m_timeStamp = m_timeStamp;
 
-  if (m_UDPHeader != NULL)
-    {
-	  UDPHeader *udp = new UDPHeader (GetSourcePort(), GetDestinationPort());
-	  p->AddUDPHeader(udp);
-    }
+  if (m_UDPHeader != NULL) {
+    UDPHeader* udp = new UDPHeader(GetSourcePort(), GetDestinationPort());
+    p->AddUDPHeader(udp);
+  }
 
-  if (m_IPHeader != NULL)
-    {
-	  IPHeader *ip = new IPHeader (GetSourceID(), GetDestinationID());
-	  p->AddIPHeader(ip);
-    }
+  if (m_IPHeader != NULL) {
+    IPHeader* ip = new IPHeader(GetSourceID(), GetDestinationID());
+    p->AddIPHeader(ip);
+  }
 
-  if (m_PDCPHeader != NULL)
-    {
-	  PDCPHeader *pdcp = new PDCPHeader ();
-	  p->AddPDCPHeader (pdcp);
-    }
+  if (m_PDCPHeader != NULL) {
+    PDCPHeader* pdcp = new PDCPHeader();
+    p->AddPDCPHeader(pdcp);
+  }
 
-  if (m_RLCHeader != NULL)
-    {
-      RLCHeader *rlc = new RLCHeader ();
+  if (m_RLCHeader != NULL) {
+    RLCHeader* rlc = new RLCHeader();
 
-      if (GetRLCHeader ()->IsAFragment ())
-    	  rlc->SetAFragment (true);
-      if (!GetRLCHeader ()->IsTheLatestFragment ())
-          rlc->SetTheLatestFragment (false);
+    if (GetRLCHeader()->IsAFragment())
+      rlc->SetAFragment(true);
+    if (!GetRLCHeader()->IsTheLatestFragment())
+      rlc->SetTheLatestFragment(false);
 
-      rlc->SetFragmentNumber (GetRLCHeader ()->GetFragmentNumber());
-      rlc->SetRlcEntityIndex (GetRLCHeader ()->GetRlcEntityIndex ());
+    rlc->SetFragmentNumber(GetRLCHeader()->GetFragmentNumber());
+    rlc->SetRlcEntityIndex(GetRLCHeader()->GetRlcEntityIndex());
 
-      rlc->SetRlcPduSequenceNumber (GetRLCHeader ()->GetRlcPduSequenceNumber());
-      rlc->SetStartByte (GetRLCHeader ()->GetStartByte ());
-      rlc->SetEndByte (GetRLCHeader ()->GetEndByte ());
+    rlc->SetRlcPduSequenceNumber(GetRLCHeader()->GetRlcPduSequenceNumber());
+    rlc->SetStartByte(GetRLCHeader()->GetStartByte());
+    rlc->SetEndByte(GetRLCHeader()->GetEndByte());
 
-      p->AddRLCHeader (rlc);
-    }
+    p->AddRLCHeader(rlc);
+  }
 
-  if (m_MACHeader != NULL)
-    {
-	  MACHeader *mac = new MACHeader (GetSourceMAC (), GetDestinationMAC ());
-	  p->AddMACHeader(mac);
-    }
+  if (m_MACHeader != NULL) {
+    MACHeader* mac = new MACHeader(GetSourceMAC(), GetDestinationMAC());
+    p->AddMACHeader(mac);
+  }
 
-  if (m_tags != NULL)
-    {
-	  PacketTAGs *tags = new PacketTAGs ();
-	  tags->SetApplicationType(GetPacketTags()->GetApplicationType());
-	  tags->SetFrameNumber (GetPacketTags ()->GetFrameNumber ());
-	  tags->SetStartByte (GetPacketTags ()->GetStartByte ());
-	  tags->SetEndByte (GetPacketTags ()->GetEndByte ());
-	  tags->SetApplicationSize (GetPacketTags ()->GetApplicationSize ());
-      p->SetPacketTags(tags);
-    }
+  if (m_tags != NULL) {
+    PacketTAGs* tags = new PacketTAGs();
+    tags->SetApplicationType(GetPacketTags()->GetApplicationType());
+    tags->SetFrameNumber(GetPacketTags()->GetFrameNumber());
+    tags->SetStartByte(GetPacketTags()->GetStartByte());
+    tags->SetEndByte(GetPacketTags()->GetEndByte());
+    tags->SetApplicationSize(GetPacketTags()->GetApplicationSize());
+    p->SetPacketTags(tags);
+  }
 
   p->m_size = m_size;
 
@@ -280,30 +216,25 @@ Packet::Copy (void)
 }
 
 //Debug
-void
-Packet::Print ()
-{
-  std::cout <<
-      " ********** \n **Packet:"
-	  "\n  ** ID " <<  GetID () <<
-      " timeStamp " <<  GetTimeStamp () <<
-      "\n  ** size: " << GetSize() <<
-      "\n  ** sourcePort "  << GetSourcePort() <<
-      " destinationPort " << GetDestinationPort() <<
-      "\n  ** srcIP " << GetSourceID() <<
-      " dstIP " << GetDestinationID() <<
-      "\n  ** srcMAC " << GetSourceMAC() <<
-      " dstMAC " << GetDestinationMAC() << std::endl;
+void Packet::Print() {
+  std::cout << " ********** \n **Packet:"
+               "\n  ** ID "
+            << GetID() << " timeStamp " << GetTimeStamp()
+            << "\n  ** size: " << GetSize() << "\n  ** sourcePort "
+            << GetSourcePort() << " destinationPort " << GetDestinationPort()
+            << "\n  ** srcIP " << GetSourceID() << " dstIP "
+            << GetDestinationID() << "\n  ** srcMAC " << GetSourceMAC()
+            << " dstMAC " << GetDestinationMAC() << std::endl;
 
   if (m_RLCHeader->IsAFragment())
-	  std::cout << "  ** IsAFragment TRUE ";
+    std::cout << "  ** IsAFragment TRUE ";
   else
-	  std::cout << "  ** IsAFragment FALSE ";
+    std::cout << "  ** IsAFragment FALSE ";
 
   if (m_RLCHeader->IsTheLatestFragment())
-	  std::cout << " IsTheLatestFragment TRUE ";
+    std::cout << " IsTheLatestFragment TRUE ";
   else
-	  std::cout << " IsTheLatestFragment FALSE ";
+    std::cout << " IsTheLatestFragment FALSE ";
 
-      std::cout << "\n **********"  << std::endl;
+  std::cout << "\n **********" << std::endl;
 }

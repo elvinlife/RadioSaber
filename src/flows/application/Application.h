@@ -19,21 +19,18 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef APPLICATION_H_
 #define APPLICATION_H_
 
 #include "../../core/eventScheduler/simulator.h"
-#include "../../protocolStack/packet/Packet.h"
-#include "../../protocolStack/protocols/TransportProtocol.h"
-#include "../../load-parameters.h"
 #include "../../device/IPClassifier/ClassifierParameters.h"
+#include "../../load-parameters.h"
+#include "../../protocolStack/packet/Packet.h"
 #include "../../protocolStack/packet/PacketTAGs.h"
+#include "../../protocolStack/protocols/TransportProtocol.h"
 
-
-#include <iostream>
 #include <stdint.h>
+#include <iostream>
 
 class NetworkNode;
 class ClassifierParameters;
@@ -43,85 +40,84 @@ class ApplicationSink;
 class RadioBearerSink;
 
 class Application {
-public:
-	enum ApplicationType
-	  {
-	    APPLICATION_TYPE_VOIP,
-	    APPLICATION_TYPE_TRACE_BASED,
-	    APPLICATION_TYPE_INFINITE_BUFFER,
-	    APPLICATION_TYPE_CBR,
-		  APPLICATION_TYPE_IPFLOW,
-	    APPLICATION_TYPE_WEB
-	  };
+ public:
+  enum ApplicationType {
+    APPLICATION_TYPE_VOIP,
+    APPLICATION_TYPE_TRACE_BASED,
+    APPLICATION_TYPE_INFINITE_BUFFER,
+    APPLICATION_TYPE_CBR,
+    APPLICATION_TYPE_IPFLOW,
+    APPLICATION_TYPE_WEB
+  };
 
-	Application();
-	Application(ApplicationType applicationType);
-	virtual ~Application();
+  Application();
+  Application(ApplicationType applicationType);
+  virtual ~Application();
 
-	void Destroy (void);
+  void Destroy(void);
 
-	void SetApplicationType (ApplicationType applicationType);
-	ApplicationType GetApplicationType (void) const;
+  void SetApplicationType(ApplicationType applicationType);
+  ApplicationType GetApplicationType(void) const;
 
-	void SetClassifierParameters (ClassifierParameters* cp);
-	ClassifierParameters* GetClassifierParameters (void);
+  void SetClassifierParameters(ClassifierParameters* cp);
+  ClassifierParameters* GetClassifierParameters(void);
 
-	void SetQoSParameters (QoSParameters* qos);
-	QoSParameters* GetQoSParameters (void);
+  void SetQoSParameters(QoSParameters* qos);
+  QoSParameters* GetQoSParameters(void);
 
-	NetworkNode* GetSource (void);
-	void SetSource (NetworkNode *source);
-	NetworkNode* GetDestination (void);
-	void SetDestination (NetworkNode *destination);
-	int GetSourcePort (void) const;
-	void SetSourcePort (int port);
-	int GetDestinationPort (void) const;
-  void SetDestinationPort (int port);
-  TransportProtocol::TransportProtocolType GetTransportProtocol (void) const;
-  void SetTransportProtocol (TransportProtocol::TransportProtocolType protocol);
+  NetworkNode* GetSource(void);
+  void SetSource(NetworkNode* source);
+  NetworkNode* GetDestination(void);
+  void SetDestination(NetworkNode* destination);
+  int GetSourcePort(void) const;
+  void SetSourcePort(int port);
+  int GetDestinationPort(void) const;
+  void SetDestinationPort(int port);
+  TransportProtocol::TransportProtocolType GetTransportProtocol(void) const;
+  void SetTransportProtocol(TransportProtocol::TransportProtocolType protocol);
 
-	void SetStartTime (double time);
-	double GetStartTime (void) const;
-	void SetStopTime (double time);
-	double GetStopTime (void) const;
+  void SetStartTime(double time);
+  double GetStartTime(void) const;
+  void SetStopTime(double time);
+  double GetStopTime(void) const;
 
-	void Start (void);
-	void Stop (void);
-	virtual void DoStart (void) = 0;
-	virtual void DoStop (void) = 0;
+  void Start(void);
+  void Stop(void);
+  virtual void DoStart(void) = 0;
+  virtual void DoStop(void) = 0;
 
-  void SetApplicationID (int id);
-  int GetApplicationID (void);
+  void SetApplicationID(int id);
+  int GetApplicationID(void);
 
-  RadioBearer* GetRadioBearer (void);
-	void Trace (Packet* packet);
+  RadioBearer* GetRadioBearer(void);
+  void Trace(Packet* packet);
 
-	//Debug
-	void Print (void);
+  //Debug
+  void Print(void);
 
   int GetPriority() const;
   void SetPriority(int);
 
-private:
-	ApplicationType m_applicationType;
+ private:
+  ApplicationType m_applicationType;
 
-	NetworkNode *m_source;
-	NetworkNode *m_destination;
-	int m_sourcePort;
-	int m_destinationPort;
-	TransportProtocol::TransportProtocolType m_transportProtocol;
+  NetworkNode* m_source;
+  NetworkNode* m_destination;
+  int m_sourcePort;
+  int m_destinationPort;
+  TransportProtocol::TransportProtocolType m_transportProtocol;
 
-	ClassifierParameters* m_classifierParameters;
-	QoSParameters *m_qosParameters;
+  ClassifierParameters* m_classifierParameters;
+  QoSParameters* m_qosParameters;
 
-	RadioBearer* m_radioBearer;
-	RadioBearerSink *m_bearerSink;
-	ApplicationSink *m_applicationSink;
+  RadioBearer* m_radioBearer;
+  RadioBearerSink* m_bearerSink;
+  ApplicationSink* m_applicationSink;
 
-	double m_startTime;
-	double m_stopTime;
+  double m_startTime;
+  double m_stopTime;
 
-	int m_applicationID;
+  int m_applicationID;
   int m_priority;
 };
 

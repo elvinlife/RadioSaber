@@ -19,8 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef USEREQUIPMENT_H_
 #define USEREQUIPMENT_H_
 
@@ -30,46 +28,39 @@ class ENodeB;
 class Gateway;
 class CqiManager;
 
-
 class UserEquipment : public NetworkNode {
-public:
-	UserEquipment ();
-	UserEquipment (int idElement,
-				   double posx, double posy,
-				   Cell *cell,
-				   NetworkNode* target,
-				   bool handover, Mobility::MobilityModel model);
-	UserEquipment (int idElement,
-				   double posx, double posy, int speed, double speedDirection,
-				   Cell *cell,
-				   NetworkNode* target,
-				   bool handover, Mobility::MobilityModel model);
+ public:
+  UserEquipment();
+  UserEquipment(int idElement, double posx, double posy, Cell* cell,
+                NetworkNode* target, bool handover,
+                Mobility::MobilityModel model);
+  UserEquipment(int idElement, double posx, double posy, int speed,
+                double speedDirection, Cell* cell, NetworkNode* target,
+                bool handover, Mobility::MobilityModel model);
 
-	virtual ~UserEquipment();
+  virtual ~UserEquipment();
 
-	void SetTargetNode (NetworkNode *n);
-	NetworkNode* GetTargetNode (void);
+  void SetTargetNode(NetworkNode* n);
+  NetworkNode* GetTargetNode(void);
 
-	void UpdateUserPosition (double time);
+  void UpdateUserPosition(double time);
 
-	void SetCqiManager (CqiManager *cm);
-	CqiManager* GetCqiManager (void);
+  void SetCqiManager(CqiManager* cm);
+  CqiManager* GetCqiManager(void);
 
-	void
-	SetIndoorFlag ( bool flag );
-	bool
-	IsIndoor (void);
+  void SetIndoorFlag(bool flag);
+  bool IsIndoor(void);
 
-	//Debug
-	void Print (void);
+  //Debug
+  void Print(void);
 
-private:
-	NetworkNode* m_targetNode;
-	CqiManager *m_cqiManager;
+ private:
+  NetworkNode* m_targetNode;
+  CqiManager* m_cqiManager;
 
-	bool m_isIndoor;
+  bool m_isIndoor;
 
-	double m_timePositionUpdate;
+  double m_timePositionUpdate;
 };
 
 #endif /* USEREQUIPMENT_H_ */

@@ -27,105 +27,75 @@
 #include "PacketTAGs.h"
 
 class Packet {
-public:
-	Packet();
-	virtual ~Packet();
+ public:
+  Packet();
+  virtual ~Packet();
 
-	/*
+  /*
 	 * The time stamp represents the time instant in which
 	 * the packet is generated. It cannot be modified during the
 	 * simulation. Moreover, it will be used to compute the
 	 * transmission delay.
 	 */
-	void
-	SetTimeStamp (double time);
-	double
-	GetTimeStamp (void) const;
+  void SetTimeStamp(double time);
+  double GetTimeStamp(void) const;
 
-	/*
+  /*
 	 * m_size represents the size of packet,
 	 * including also the headers overhead.
 	 * Is is updated every time an header is added or
 	 * deleted
 	 */
-	void
-	SetSize (int size);
-	void
-	AddHeaderSize (int size);
-	int
-	GetSize (void) const;
-	void
-	UpdatePacketSize (void);
+  void SetSize(int size);
+  void AddHeaderSize(int size);
+  int GetSize(void) const;
+  void UpdatePacketSize(void);
 
+  void AddUDPHeader(UDPHeader* header);
+  UDPHeader* GetUDPHeader(void) const;
 
-	void
-	AddUDPHeader (UDPHeader *header);
-    UDPHeader*
-    GetUDPHeader (void) const;
+  void AddIPHeader(IPHeader* header);
+  IPHeader* GetIPHeader(void);
 
-	void
-	AddIPHeader (IPHeader *header);
-    IPHeader*
-    GetIPHeader (void) ;
+  void AddPDCPHeader(PDCPHeader* header);
+  PDCPHeader* GetPDCPHeader(void) const;
 
-	void
-	AddPDCPHeader (PDCPHeader *header);
-    PDCPHeader*
-    GetPDCPHeader (void) const;
+  void AddRLCHeader(RLCHeader* header);
+  RLCHeader* GetRLCHeader(void) const;
 
-	void
-	AddRLCHeader (RLCHeader *header);
-    RLCHeader*
-    GetRLCHeader (void) const;
+  void AddMACHeader(MACHeader* header);
+  MACHeader* GetMACHeader(void) const;
 
-	void
-	AddMACHeader (MACHeader *header);
-    MACHeader*
-    GetMACHeader (void) const;
+  int GetSourceID();
+  int GetDestinationID();
+  int GetSourcePort();
+  int GetDestinationPort();
+  int GetSourceMAC();
+  int GetDestinationMAC();
 
+  void SetID(int uid);
+  int GetID(void);
 
-	int
-	GetSourceID ();
-	int
-	GetDestinationID ();
-	int
-	GetSourcePort ();
-	int
-	GetDestinationPort ();
-	int
-	GetSourceMAC ();
-	int
-	GetDestinationMAC ();
+  PacketTAGs* GetPacketTags(void) const;
+  void SetPacketTags(PacketTAGs* tags);
 
-	void
-	SetID (int uid);
-	int
-	GetID (void);
+  Packet* Copy(void);
 
-	PacketTAGs*
-	GetPacketTags (void) const;
-	void
-	SetPacketTags (PacketTAGs* tags);
+  void Print();
 
-	Packet*
-	Copy (void);
+ private:
+  double m_timeStamp;
+  int m_size;
 
-	void
-	Print ();
+  int m_id;
 
-private:
-	double m_timeStamp;
-	int m_size;
+  UDPHeader* m_UDPHeader;
+  IPHeader* m_IPHeader;
+  PDCPHeader* m_PDCPHeader;
+  RLCHeader* m_RLCHeader;
+  MACHeader* m_MACHeader;
 
-	int m_id;
-
-	UDPHeader *m_UDPHeader;
-	IPHeader *m_IPHeader;
-	PDCPHeader *m_PDCPHeader;
-	RLCHeader *m_RLCHeader;
-	MACHeader *m_MACHeader;
-
-	PacketTAGs *m_tags;
+  PacketTAGs* m_tags;
 };
 
 #endif /* PACKET_H_ */

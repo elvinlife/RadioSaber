@@ -19,12 +19,10 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "QoSParameters.h"
 #include <iostream>
 
-QoSParameters::QoSParameters()
-{
+QoSParameters::QoSParameters() {
   m_qci = 0;
   m_gbr = 0;
   m_mbr = 0;
@@ -33,10 +31,7 @@ QoSParameters::QoSParameters()
   m_maxDelay = 0;
 }
 
-QoSParameters::QoSParameters (int qci,
-							  double gbr,
-				              double mbr)
-{
+QoSParameters::QoSParameters(int qci, double gbr, double mbr) {
   m_qci = qci;
   m_gbr = gbr;
   m_mbr = mbr;
@@ -45,12 +40,9 @@ QoSParameters::QoSParameters (int qci,
   m_maxDelay = 0;
 }
 
-QoSParameters::QoSParameters (int qci,
-							  bool arpPreEmptionCapability,
-							  bool arpPreEmptionVulnerability,
-							  double gbr,
-							  double mbr)
-{
+QoSParameters::QoSParameters(int qci, bool arpPreEmptionCapability,
+                             bool arpPreEmptionVulnerability, double gbr,
+                             double mbr) {
   m_qci = qci;
   m_gbr = gbr;
   m_mbr = mbr;
@@ -59,78 +51,52 @@ QoSParameters::QoSParameters (int qci,
   m_maxDelay = 0;
 }
 
+QoSParameters::~QoSParameters() {}
 
-QoSParameters::~QoSParameters()
-{}
-
-void
-QoSParameters::SetQCI (int qci)
-{
+void QoSParameters::SetQCI(int qci) {
   m_qci = qci;
 }
 
-int
-QoSParameters::GetQCI (void) const
-{
+int QoSParameters::GetQCI(void) const {
   return m_qci;
 }
 
-void
-QoSParameters::SetArpPreEmptionCapability (bool flag)
-{
+void QoSParameters::SetArpPreEmptionCapability(bool flag) {
   m_arpPreEmptionCapability = flag;
 }
 
-bool
-QoSParameters::GetArpPreEmptionCapability (void) const
-{
+bool QoSParameters::GetArpPreEmptionCapability(void) const {
   return m_arpPreEmptionCapability;
 }
 
-void
-QoSParameters::SetArpPreEmptionVulnerability (bool flag)
-{
+void QoSParameters::SetArpPreEmptionVulnerability(bool flag) {
   m_arpPreEmptionVulnerability = flag;
 }
 
-bool
-QoSParameters::GetArpPreEmptionVulnerability (void) const
-{
+bool QoSParameters::GetArpPreEmptionVulnerability(void) const {
   return m_arpPreEmptionVulnerability;
 }
 
-void
-QoSParameters::SetGBR (double gbr)
-{
+void QoSParameters::SetGBR(double gbr) {
   m_gbr = gbr;
 }
 
-double
-QoSParameters::GetGBR (void) const
-{
+double QoSParameters::GetGBR(void) const {
   return m_gbr;
 }
 
-void
-QoSParameters::SetMBR (double mbr)
-{
+void QoSParameters::SetMBR(double mbr) {
   m_mbr = mbr;
 }
 
-double
-QoSParameters::GetMBR (void) const
-{
+double QoSParameters::GetMBR(void) const {
   return m_mbr;
 }
 
-void
-QoSParameters::SetMaxDelay (double targetDelay)
-{
+void QoSParameters::SetMaxDelay(double targetDelay) {
   m_maxDelay = targetDelay;
 }
 
-double
-QoSParameters::GetMaxDelay (void) const
-{
+double QoSParameters::GetMaxDelay(void) const {
   return m_maxDelay;
 }

@@ -19,91 +19,85 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "../channel/LteChannel.h"
-#include "../phy/enb-lte-phy.h"
-#include "../phy/ue-lte-phy.h"
-#include "../core/spectrum/bandwidth-manager.h"
-#include "../networkTopology/Cell.h"
-#include "../protocolStack/packet/packet-burst.h"
-#include "../protocolStack/packet/Packet.h"
+#include "../componentManagers/FrameManager.h"
 #include "../core/eventScheduler/simulator.h"
-#include "../load-parameters.h"
-#include "../flows/application/CBR.h"
+#include "../core/spectrum/bandwidth-manager.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
 #include "../flows/QoS/QoSParameters.h"
-#include "../componentManagers/FrameManager.h"
+#include "../flows/application/CBR.h"
+#include "../load-parameters.h"
+#include "../networkTopology/Cell.h"
+#include "../phy/enb-lte-phy.h"
+#include "../phy/ue-lte-phy.h"
+#include "../protocolStack/packet/Packet.h"
+#include "../protocolStack/packet/packet-burst.h"
 
+static void TestDownlinkProportionalFair() {
 
-static void TestDownlinkProportionalFair ()
-{
-
-  FrameManager *frameManager = FrameManager::Init();
+  FrameManager* frameManager = FrameManager::Init();
   frameManager->SetFrameStructure(FrameManager::FRAME_STRUCTURE_FDD);
   NetworkManager* networkManager = NetworkManager::Init();
 
   //Create devices
 
-  Cell *cell = new Cell (0, 1, 0.35, 0, 0);
-  networkManager->GetCellContainer ()->push_back (cell);
+  Cell* cell = new Cell(0, 1, 0.35, 0, 0);
+  networkManager->GetCellContainer()->push_back(cell);
 
-  LteChannel *dlCh = new LteChannel ();
-  LteChannel *ulCh = new LteChannel ();
+  LteChannel* dlCh = new LteChannel();
+  LteChannel* ulCh = new LteChannel();
 
-  BandwidthManager* spectrum = new BandwidthManager (10, 10, 0, 0);
+  BandwidthManager* spectrum = new BandwidthManager(10, 10, 0, 0);
 
   //Create ENodeB
-  ENodeB* enb = new ENodeB (1, cell);
-  enb->GetPhy ()->SetDlChannel (dlCh);
-  enb->GetPhy ()->SetUlChannel (ulCh);
-  enb->GetPhy ()->SetBandwidthManager (spectrum->Copy ());
-  ulCh->AddDevice (enb);
-  networkManager->GetENodeBContainer ()->push_back (enb);
+  ENodeB* enb = new ENodeB(1, cell);
+  enb->GetPhy()->SetDlChannel(dlCh);
+  enb->GetPhy()->SetUlChannel(ulCh);
+  enb->GetPhy()->SetBandwidthManager(spectrum->Copy());
+  ulCh->AddDevice(enb);
+  networkManager->GetENodeBContainer()->push_back(enb);
 
   //Create UE
-  UserEquipment* ue = new UserEquipment (2, 50, 50, 0, 0, cell, enb, 0, Mobility::RANDOM_DIRECTION);
-  ue->GetPhy ()->SetDlChannel (dlCh);
-  ue->GetPhy ()->SetUlChannel (ulCh);
-  ue->GetPhy ()->SetBandwidthManager (spectrum->Copy ());
+  UserEquipment* ue = new UserEquipment(2, 50, 50, 0, 0, cell, enb, 0,
+                                        Mobility::RANDOM_DIRECTION);
+  ue->GetPhy()->SetDlChannel(dlCh);
+  ue->GetPhy()->SetUlChannel(ulCh);
+  ue->GetPhy()->SetBandwidthManager(spectrum->Copy());
 
-  FullbandCqiManager *cqiManager = new FullbandCqiManager ();
-  cqiManager->SetCqiReportingMode (CqiManager::PERIODIC);
-  cqiManager->SetReportingInterval (0.002);
-  cqiManager->SetDevice (ue);
-  ue->SetCqiManager (cqiManager);
+  FullbandCqiManager* cqiManager = new FullbandCqiManager();
+  cqiManager->SetCqiReportingMode(CqiManager::PERIODIC);
+  cqiManager->SetReportingInterval(0.002);
+  cqiManager->SetDevice(ue);
+  ue->SetCqiManager(cqiManager);
 
-  networkManager->GetUserEquipmentContainer ()->push_back (ue);
+  networkManager->GetUserEquipmentContainer()->push_back(ue);
 
   //Create GW
-  Gateway *gw = new Gateway ();
-  networkManager->GetGatewayContainer ()->push_back (gw);
+  Gateway* gw = new Gateway();
+  networkManager->GetGatewayContainer()->push_back(gw);
 
+  enb->SetDLScheduler(ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR);
+  enb->RegisterUserEquipment(ue);
 
-  enb->SetDLScheduler (ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR);
-  enb->RegisterUserEquipment (ue);
+  CBR* app = new CBR();
+  app->SetSource(gw);
+  app->SetDestination(ue);
+  app->SetApplicationID(1);
+  app->SetSize(100);
+  app->SetInterval(0.01);
 
-  CBR *app = new CBR ();
-  app->SetSource (gw);
-  app->SetDestination (ue);
-  app->SetApplicationID (1);
-  app->SetSize (100);
-  app->SetInterval (0.01);
+  ClassifierParameters* cp = new ClassifierParameters(
+      gw->GetIDNetworkNode(), ue->GetIDNetworkNode(), 0, 100,
+      TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
+  QoSParameters* qos = new QoSParameters();
+  qos->SetMaxDelay(0.1);
 
-  ClassifierParameters *cp = new ClassifierParameters (gw->GetIDNetworkNode(),
-                                                      ue->GetIDNetworkNode(),
-                                                      0,
-                                                      100,
-                                                      TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
-  QoSParameters *qos = new QoSParameters ();
-  qos->SetMaxDelay (0.1);
+  app->SetClassifierParameters(cp);
+  app->SetQoSParameters(qos);
 
-  app->SetClassifierParameters (cp);
-  app->SetQoSParameters (qos);
-
-
-  app->SetStartTime (0.01);
-  app->SetStopTime (0.1);
+  app->SetStartTime(0.01);
+  app->SetStopTime(0.1);
 
   Simulator::Init()->SetStop(0.101);
-  Simulator::Init()->Run ();
+  Simulator::Init()->Run();
 }

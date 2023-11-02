@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef PROPAGATIONLOSSMODEL_H_
 #define PROPAGATIONLOSSMODEL_H_
 
@@ -30,25 +29,26 @@ class ChannelRealization;
 class NetworkNode;
 
 class PropagationLossModel {
-public:
-	PropagationLossModel();
-	virtual ~PropagationLossModel();
+ public:
+  PropagationLossModel();
+  virtual ~PropagationLossModel();
 
-	typedef std::pair<NetworkNode*, NetworkNode* > ChannelRealizationId_t;
-	typedef std::map <PropagationLossModel::ChannelRealizationId_t, ChannelRealization* > ChannelRealizationMap;
+  typedef std::pair<NetworkNode*, NetworkNode*> ChannelRealizationId_t;
+  typedef std::map<PropagationLossModel::ChannelRealizationId_t,
+                   ChannelRealization*>
+      ChannelRealizationMap;
 
+  void AddChannelRealization(ChannelRealization* chRealization);
+  void DelChannelRealization(NetworkNode* src, NetworkNode* dst);
 
-	void AddChannelRealization (ChannelRealization* chRealization);
-	void DelChannelRealization (NetworkNode* src, NetworkNode* dst);
+  ChannelRealization* GetChannelRealization(NetworkNode* src, NetworkNode* dst);
+  ChannelRealizationMap GetChannelRealizationMap(void);
 
-	ChannelRealization* GetChannelRealization (NetworkNode* src, NetworkNode* dst);
-	ChannelRealizationMap GetChannelRealizationMap (void);
+  TransmittedSignal* AddLossModel(NetworkNode* src, NetworkNode* dst,
+                                  TransmittedSignal* txSignal);
 
-	TransmittedSignal* AddLossModel (NetworkNode* src,
-			                                 NetworkNode* dst,
-			                                 TransmittedSignal* txSignal);
-private:
-	ChannelRealizationMap m_channelRealizationMap;
+ private:
+  ChannelRealizationMap m_channelRealizationMap;
 };
 
 #endif /* PROPAGATIONLOSSMODEL_H_ */

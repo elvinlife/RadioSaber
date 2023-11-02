@@ -20,120 +20,104 @@
  */
 
 #include "tm-rlc-entity.h"
-#include "../packet/packet-burst.h"
-#include "../../flows/radio-bearer.h"
-#include "../../flows/radio-bearer-sink.h"
+#include "../../device/NetworkNode.h"
 #include "../../flows/MacQueue.h"
 #include "../../flows/application/Application.h"
-#include "../../device/NetworkNode.h"
+#include "../../flows/radio-bearer-sink.h"
+#include "../../flows/radio-bearer.h"
 #include "../../load-parameters.h"
+#include "../packet/packet-burst.h"
 
-
-TmRlcEntity::TmRlcEntity()
-{
-  SetDevice (NULL);
-  SetRadioBearer (NULL);
-  SetRlcPduSequenceNumber (0);
+TmRlcEntity::TmRlcEntity() {
+  SetDevice(NULL);
+  SetRadioBearer(NULL);
+  SetRlcPduSequenceNumber(0);
   SetRlcMode(RlcEntity::TM_RLC_MODE);
 }
 
-TmRlcEntity::~TmRlcEntity()
-{
-  Destroy ();
+TmRlcEntity::~TmRlcEntity() {
+  Destroy();
 }
 
-  PacketBurst*
-TmRlcEntity::TransmissionProcedure (int availableBytes)
-{
+PacketBurst* TmRlcEntity::TransmissionProcedure(int availableBytes) {
 #ifdef RLC_DEBUG
-  std::cout << "TM RLC tx procedure for node " << GetRadioBearerInstance ()->GetSource ()->GetIDNetworkNode ()<< std::endl;
+  std::cout << "TM RLC tx procedure for node "
+            << GetRadioBearerInstance()->GetSource()->GetIDNetworkNode()
+            << std::endl;
 #endif
 
-  PacketBurst* pb = new PacketBurst ();
+  PacketBurst* pb = new PacketBurst();
 
-  RadioBearer *bearer = (RadioBearer*) GetRadioBearerInstance ();
-  MacQueue *queue = bearer->GetMacQueue ();
+  RadioBearer* bearer = (RadioBearer*)GetRadioBearerInstance();
+  MacQueue* queue = bearer->GetMacQueue();
 
-  if (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-  {
+  if (bearer->GetApplication()->GetApplicationType() ==
+      Application::APPLICATION_TYPE_INFINITE_BUFFER) {
     //CREATE PACKET FOR THE INFINITE BUFFER SOURCE
-    while (true)
-    {
-      Packet *packet = bearer->CreatePacket (availableBytes);
+    while (true) {
+      Packet* packet = bearer->CreatePacket(availableBytes);
 
       //Set the id of the receiver RLC entity
-      packet->GetRLCHeader ()->SetRlcEntityIndex (GetRlcEntityIndex ());
+      packet->GetRLCHeader()->SetRlcEntityIndex(GetRlcEntityIndex());
 
       //Add MAC header
-      MACHeader *mac = new MACHeader (GetRadioBearerInstance ()->GetSource ()->GetIDNetworkNode (),
-          GetRadioBearerInstance ()->GetDestination ()->GetIDNetworkNode ());
+      MACHeader* mac = new MACHeader(
+          GetRadioBearerInstance()->GetSource()->GetIDNetworkNode(),
+          GetRadioBearerInstance()->GetDestination()->GetIDNetworkNode());
       packet->AddMACHeader(mac);
-      packet->AddHeaderSize (3); //CRC
+      packet->AddHeaderSize(3);  //CRC
 
-      if (availableBytes > 1503)
-      {
-        packet->SetSize (1503);
-        packet->GetPacketTags ()->SetApplicationSize (1490);
+      if (availableBytes > 1503) {
+        packet->SetSize(1503);
+        packet->GetPacketTags()->SetApplicationSize(1490);
         availableBytes -= 1503;
-        pb->AddPacket (packet);
+        pb->AddPacket(packet);
 
-        if (_RLC_TRACING_)
-        {
-          std::cout << "TX TM_RLC SIZE " << packet->GetSize () <<
-            " B " << GetRlcEntityIndex () << std::endl;
+        if (_RLC_TRACING_) {
+          std::cout << "TX TM_RLC SIZE " << packet->GetSize() << " B "
+                    << GetRlcEntityIndex() << std::endl;
         }
-      }
-      else if (availableBytes > 13)
-      {
-        packet->SetSize (availableBytes);
-        packet->GetPacketTags ()->SetApplicationSize (availableBytes - 13);
+      } else if (availableBytes > 13) {
+        packet->SetSize(availableBytes);
+        packet->GetPacketTags()->SetApplicationSize(availableBytes - 13);
         availableBytes = 0;
-        pb->AddPacket (packet);
+        pb->AddPacket(packet);
 
-        if (_RLC_TRACING_)
-        {
-          std::cout << "TX TM_RLC SIZE " << packet->GetSize () <<
-            " B " << GetRlcEntityIndex () << std::endl;
+        if (_RLC_TRACING_) {
+          std::cout << "TX TM_RLC SIZE " << packet->GetSize() << " B "
+                    << GetRlcEntityIndex() << std::endl;
         }
 
         break;
-      }
-      else
-      {
+      } else {
         availableBytes = 0;
         break;
       }
     }
-  }
-  else
-  {
-    while (availableBytes > 0 && !queue->IsEmpty ())
-    {
-      Packet* packet = queue->Peek ().GetPacket ();
+  } else {
+    while (availableBytes > 0 && !queue->IsEmpty()) {
+      Packet* packet = queue->Peek().GetPacket();
 
-      if ((packet->GetSize () + 6) <= availableBytes)
-      {
-        if (_RLC_TRACING_)
-        {
-          std::cout << "TX TM_RLC SIZE " << packet->GetSize () <<
-            " B " << GetRlcEntityIndex () << std::endl;
+      if ((packet->GetSize() + 6) <= availableBytes) {
+        if (_RLC_TRACING_) {
+          std::cout << "TX TM_RLC SIZE " << packet->GetSize() << " B "
+                    << GetRlcEntityIndex() << std::endl;
         }
 
-        Packet *p = packet->Copy ();
+        Packet* p = packet->Copy();
 
-        queue->UpdateQueueSize (-p->GetSize ());
-        queue->Dequeue ();
+        queue->UpdateQueueSize(-p->GetSize());
+        queue->Dequeue();
 
         //Add MAC header
-        MACHeader *mac = new MACHeader (GetRadioBearerInstance ()->GetSource ()->GetIDNetworkNode (),
-            GetRadioBearerInstance ()->GetDestination ()->GetIDNetworkNode ());
+        MACHeader* mac = new MACHeader(
+            GetRadioBearerInstance()->GetSource()->GetIDNetworkNode(),
+            GetRadioBearerInstance()->GetDestination()->GetIDNetworkNode());
         p->AddMACHeader(mac);
-        p->AddHeaderSize(3); //Add CRC Size
-        pb->AddPacket (p);
-        availableBytes -= p->GetSize ();
-      }
-      else
-      {
+        p->AddHeaderSize(3);  //Add CRC Size
+        pb->AddPacket(p);
+        availableBytes -= p->GetSize();
+      } else {
         availableBytes = 0;
       }
     }
@@ -142,19 +126,17 @@ TmRlcEntity::TransmissionProcedure (int availableBytes)
   return pb;
 }
 
-
-  void
-TmRlcEntity::ReceptionProcedure (Packet* p)
-{
+void TmRlcEntity::ReceptionProcedure(Packet* p) {
 #ifdef RLC_DEBUG
-  std::cout << "TM RLC rx procedure for node " << GetRadioBearerInstance ()->GetSource ()->GetIDNetworkNode ()<< std::endl;
+  std::cout << "TM RLC rx procedure for node "
+            << GetRadioBearerInstance()->GetSource()->GetIDNetworkNode()
+            << std::endl;
 #endif
-  if (_RLC_TRACING_)
-  {
-    std::cout << "RX TM_RLC SIZE " << p->GetSize () <<
-      " B " << GetRlcEntityIndex () << std::endl;
+  if (_RLC_TRACING_) {
+    std::cout << "RX TM_RLC SIZE " << p->GetSize() << " B "
+              << GetRlcEntityIndex() << std::endl;
   }
 
-  RadioBearerSink *bearer = (RadioBearerSink*) GetRadioBearerInstance ();
-  bearer->Receive (p);
+  RadioBearerSink* bearer = (RadioBearerSink*)GetRadioBearerInstance();
+  bearer->Receive(p);
 }

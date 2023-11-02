@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "handover-entity.h"
 #include "../../../device/NetworkNode.h"
 #include "../../../device/UserEquipment.h"
@@ -27,45 +26,32 @@
 #include "position-based-ho-manager.h"
 #include "power-based-ho-manager.h"
 
-HandoverEntity::HandoverEntity()
-{
+HandoverEntity::HandoverEntity() {
   m_device = NULL;
-  m_hoManager = new PowerBasedHoManager ();
+  m_hoManager = new PowerBasedHoManager();
 }
 
-HandoverEntity::~HandoverEntity()
-{
+HandoverEntity::~HandoverEntity() {
   m_device = 0;
   delete m_hoManager;
 }
 
-void
-HandoverEntity::SetDevice (NetworkNode* d)
-{
+void HandoverEntity::SetDevice(NetworkNode* d) {
   m_device = d;
 }
 
-NetworkNode*
-HandoverEntity::GetDevice ()
-{
+NetworkNode* HandoverEntity::GetDevice() {
   return m_device;
 }
 
-void
-HandoverEntity::SetHoManager (HoManager *h)
-{
+void HandoverEntity::SetHoManager(HoManager* h) {
   m_hoManager = h;
 }
 
-HoManager*
-HandoverEntity::GetHoManager (void)
-{
+HoManager* HandoverEntity::GetHoManager(void) {
   return m_hoManager;
 }
 
-
-bool
-HandoverEntity::CheckHandoverNeed (UserEquipment* ue)
-{
-  return GetHoManager ()->CheckHandoverNeed (ue);
+bool HandoverEntity::CheckHandoverNeed(UserEquipment* ue) {
+  return GetHoManager()->CheckHandoverNeed(ue);
 }

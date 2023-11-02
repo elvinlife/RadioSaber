@@ -21,30 +21,21 @@
 
 #include "Femtocell.h"
 
-Femtocell::Femtocell(int idCell,
-		 double side,
-		 double X,
-		 double Y)
-{
+Femtocell::Femtocell(int idCell, double side, double X, double Y) {
   SetIdCell(idCell);
   SetSide(side);
   SetMinDistance(0.0);
-  CartesianCoordinates *Position = new CartesianCoordinates(X,Y);
+  CartesianCoordinates* Position = new CartesianCoordinates(X, Y);
   SetCellCenterPosition(Position);
 }
 
-Femtocell::~Femtocell()
-{}
+Femtocell::~Femtocell() {}
 
-void
-Femtocell::SetSide ( double side )
-{
-	m_side = side;
-	SetRadius(m_side);
+void Femtocell::SetSide(double side) {
+  m_side = side;
+  SetRadius(m_side);
 }
 
-double
-Femtocell::GetSide ( void )
-{
-	return m_side;
+double Femtocell::GetSide(void) {
+  return m_side;
 }

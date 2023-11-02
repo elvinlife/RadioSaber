@@ -19,21 +19,22 @@
  * Author: Khaled Elsayed <khaled@ieee.org>
  */
 
-
 #ifndef FME_UPLINK_PACKET_SCHEDULER_H_
 #define FME_UPLINK_PACKET_SCHEDULER_H_
 
 #include "uplink-packet-scheduler.h"
 
 class EnhancedUplinkPacketScheduler : public UplinkPacketScheduler {
-public:
-	EnhancedUplinkPacketScheduler ();
-	virtual ~EnhancedUplinkPacketScheduler();
+ public:
+  EnhancedUplinkPacketScheduler();
+  virtual ~EnhancedUplinkPacketScheduler();
 
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
-    virtual double ComputeSchedulingMetric (UserToSchedule* user, int subchannel);
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
+  virtual double ComputeSchedulingMetric(UserToSchedule* user, int subchannel);
 
-	virtual void RBsAllocation ();
+  virtual void RBsAllocation();
 };
 
 #endif /* FME_UPLINK_PACKET_SCHEDULER_H_ */

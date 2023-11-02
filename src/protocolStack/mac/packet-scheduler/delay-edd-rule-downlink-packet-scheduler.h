@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef DELAY_EDD_RULE_DOWNLINK_PACKET_SCHEDULER_H_
 #define DELAY_EDD_RULE_DOWNLINK_PACKET_SCHEDULER_H_
 
@@ -33,11 +32,13 @@
  */
 
 class DelayEddRuleDownlinkPacketScheduler : public DownlinkPacketScheduler {
-public:
-	DelayEddRuleDownlinkPacketScheduler();
-	virtual ~DelayEddRuleDownlinkPacketScheduler();
+ public:
+  DelayEddRuleDownlinkPacketScheduler();
+  virtual ~DelayEddRuleDownlinkPacketScheduler();
 
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
 };
 
 #endif /* DELAY_EDD_RULE_DOWNLINK_PACKET_SCHEDULER_H_ */

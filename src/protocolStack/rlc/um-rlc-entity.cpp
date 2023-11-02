@@ -19,172 +19,168 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "um-rlc-entity.h"
-#include "../packet/packet-burst.h"
-#include "../../flows/radio-bearer.h"
-#include "../../flows/radio-bearer-sink.h"
+#include <cstdio>
+#include <unordered_map>
+#include "../../device/NetworkNode.h"
 #include "../../flows/MacQueue.h"
 #include "../../flows/application/Application.h"
-#include "../../device/NetworkNode.h"
+#include "../../flows/radio-bearer-sink.h"
+#include "../../flows/radio-bearer.h"
 #include "../../load-parameters.h"
-#include <unordered_map>
-#include <cstdio>
+#include "../packet/packet-burst.h"
 
-UmRlcEntity::UmRlcEntity()
-{
-  SetDevice (NULL);
-  SetRadioBearer (NULL);
-  SetRlcPduSequenceNumber (0);
+UmRlcEntity::UmRlcEntity() {
+  SetDevice(NULL);
+  SetRadioBearer(NULL);
+  SetRlcPduSequenceNumber(0);
   SetRlcMode(RlcEntity::UM_RLC_MODE);
 }
 
-UmRlcEntity::~UmRlcEntity()
-{
-  ClearIncomingPackets ();
-  Destroy ();
+UmRlcEntity::~UmRlcEntity() {
+  ClearIncomingPackets();
+  Destroy();
 }
 
-  PacketBurst*
-UmRlcEntity::TransmissionProcedure (int availableBytes)
-{
+PacketBurst* UmRlcEntity::TransmissionProcedure(int availableBytes) {
 #ifdef RLC_DEBUG
-  std::cout << "UM RLC tx procedure for node " << GetRadioBearerInstance ()->GetSource ()->GetIDNetworkNode ()<< std::endl;
+  std::cout << "UM RLC tx procedure for node "
+            << GetRadioBearerInstance()->GetSource()->GetIDNetworkNode()
+            << std::endl;
 #endif
 
-  PacketBurst* pb = new PacketBurst ();
+  PacketBurst* pb = new PacketBurst();
 
-  RadioBearer *bearer = (RadioBearer*) GetRadioBearerInstance ();
-  MacQueue *queue = bearer->GetMacQueue ();
+  RadioBearer* bearer = (RadioBearer*)GetRadioBearerInstance();
+  MacQueue* queue = bearer->GetMacQueue();
 
-  if (bearer->GetApplication ()->GetApplicationType () == Application::APPLICATION_TYPE_INFINITE_BUFFER)
-  {
+  if (bearer->GetApplication()->GetApplicationType() ==
+      Application::APPLICATION_TYPE_INFINITE_BUFFER) {
     //CREATE PACKET FOR THE INFINITE BUFFER SOURCE
-    while (true)
-    {
-      Packet *packet = bearer->CreatePacket (availableBytes);
+    while (true) {
+      Packet* packet = bearer->CreatePacket(availableBytes);
 
       //Set the id of the receiver RLC entity
-      packet->GetRLCHeader ()->SetRlcEntityIndex (GetRlcEntityIndex ());
+      packet->GetRLCHeader()->SetRlcEntityIndex(GetRlcEntityIndex());
 
-      packet->GetRLCHeader ()->SetRlcPduSequenceNumber (GetRlcPduSequenceNumber ());
-      int newSequenceNumber = GetRlcPduSequenceNumber () + 1;
-      SetRlcPduSequenceNumber (newSequenceNumber);
+      packet->GetRLCHeader()->SetRlcPduSequenceNumber(
+          GetRlcPduSequenceNumber());
+      int newSequenceNumber = GetRlcPduSequenceNumber() + 1;
+      SetRlcPduSequenceNumber(newSequenceNumber);
 
       //Add MAC header
-      MACHeader *mac = new MACHeader (GetRadioBearerInstance ()->GetSource ()->GetIDNetworkNode (),
-          GetRadioBearerInstance ()->GetDestination ()->GetIDNetworkNode ());
+      MACHeader* mac = new MACHeader(
+          GetRadioBearerInstance()->GetSource()->GetIDNetworkNode(),
+          GetRadioBearerInstance()->GetDestination()->GetIDNetworkNode());
       packet->AddMACHeader(mac);
-      packet->AddHeaderSize (3); //CRC
+      packet->AddHeaderSize(3);  //CRC
 
-      if (availableBytes > 1503)
-      {
-        packet->SetSize (1503);
-        packet->GetPacketTags ()->SetApplicationSize (1490);
+      if (availableBytes > 1503) {
+        packet->SetSize(1503);
+        packet->GetPacketTags()->SetApplicationSize(1490);
         //Set the id of the receiver RLC entity
-        packet->GetRLCHeader ()->SetRlcEntityIndex (GetRlcEntityIndex ());
-        packet->GetRLCHeader ()->SetRlcPduSequenceNumber (GetRlcPduSequenceNumber ());
-        int newSequenceNumber = GetRlcPduSequenceNumber () + 1;
-        SetRlcPduSequenceNumber (newSequenceNumber);
+        packet->GetRLCHeader()->SetRlcEntityIndex(GetRlcEntityIndex());
+        packet->GetRLCHeader()->SetRlcPduSequenceNumber(
+            GetRlcPduSequenceNumber());
+        int newSequenceNumber = GetRlcPduSequenceNumber() + 1;
+        SetRlcPduSequenceNumber(newSequenceNumber);
 
         availableBytes -= 1503;
-        pb->AddPacket (packet);
+        pb->AddPacket(packet);
 
-        if (_RLC_TRACING_)
-        {
-          std::cout << "TX UM_RLC SIZE" << packet->GetSize () <<
-            " B " << GetRlcEntityIndex () <<
-            " PDU_SN " << packet->GetRLCHeader ()->GetRlcPduSequenceNumber() << std::endl;
+        if (_RLC_TRACING_) {
+          std::cout << "TX UM_RLC SIZE" << packet->GetSize() << " B "
+                    << GetRlcEntityIndex() << " PDU_SN "
+                    << packet->GetRLCHeader()->GetRlcPduSequenceNumber()
+                    << std::endl;
         }
-      }
-      else if (availableBytes > 13)
-      {
-        packet->SetSize (availableBytes);
-        packet->GetPacketTags ()->SetApplicationSize (availableBytes - 13);
+      } else if (availableBytes > 13) {
+        packet->SetSize(availableBytes);
+        packet->GetPacketTags()->SetApplicationSize(availableBytes - 13);
         //Set the id of the receiver RLC entity
-        packet->GetRLCHeader ()->SetRlcEntityIndex (GetRlcEntityIndex ());
-        packet->GetRLCHeader ()->SetRlcPduSequenceNumber (GetRlcPduSequenceNumber ());
-        int newSequenceNumber = GetRlcPduSequenceNumber () + 1;
-        SetRlcPduSequenceNumber (newSequenceNumber);
+        packet->GetRLCHeader()->SetRlcEntityIndex(GetRlcEntityIndex());
+        packet->GetRLCHeader()->SetRlcPduSequenceNumber(
+            GetRlcPduSequenceNumber());
+        int newSequenceNumber = GetRlcPduSequenceNumber() + 1;
+        SetRlcPduSequenceNumber(newSequenceNumber);
 
         availableBytes = 0;
-        pb->AddPacket (packet);
+        pb->AddPacket(packet);
 
-        if (_RLC_TRACING_)
-        {
-          std::cout << "TX UM_RLC SIZE" << packet->GetSize () <<
-            " B " << GetRlcEntityIndex () <<
-            " PDU_SN " << packet->GetRLCHeader ()->GetRlcPduSequenceNumber() << std::endl;
+        if (_RLC_TRACING_) {
+          std::cout << "TX UM_RLC SIZE" << packet->GetSize() << " B "
+                    << GetRlcEntityIndex() << " PDU_SN "
+                    << packet->GetRLCHeader()->GetRlcPduSequenceNumber()
+                    << std::endl;
         }
 
         break;
-      }
-      else
-      {
+      } else {
         availableBytes = 0;
         break;
       }
     }
-  }
-  else
-  {
-    while (availableBytes > 0 && !queue->IsEmpty ())
-    {
-      Packet* packet = queue->GetPacketToTramsit (availableBytes);
+  } else {
+    while (availableBytes > 0 && !queue->IsEmpty()) {
+      Packet* packet = queue->GetPacketToTramsit(availableBytes);
 
-      if (packet != NULL)
-      {
+      if (packet != NULL) {
         // log the flow completion time info
-        if ( (packet->GetRLCHeader()->IsAFragment() && packet->GetRLCHeader()->IsTheLatestFragment())
-            || (!packet->GetRLCHeader()->IsAFragment()) ) {
+        if ((packet->GetRLCHeader()->IsAFragment() &&
+             packet->GetRLCHeader()->IsTheLatestFragment()) ||
+            (!packet->GetRLCHeader()->IsAFragment())) {
           PacketTAGs* tags = packet->GetPacketTags();
-          if ( tags->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_IPFLOW &&
+          if (tags->GetApplicationType() ==
+                  PacketTAGs::APPLICATION_TYPE_IPFLOW &&
               tags->GetEndByte() == 1) {
-            std::unordered_map<int, double>& flow_enqueueInfo = bearer->GetFlowEnqueueInfo();
-            if (flow_enqueueInfo.find(tags->GetFrameNumber()) == flow_enqueueInfo.end()) {
+            std::unordered_map<int, double>& flow_enqueueInfo =
+                bearer->GetFlowEnqueueInfo();
+            if (flow_enqueueInfo.find(tags->GetFrameNumber()) ==
+                flow_enqueueInfo.end()) {
               char buffer[100];
               snprintf(buffer, 100, "App %d: flow %d enqueue info not recorded",
-                  bearer->GetApplication()->GetApplicationID(),
-                  tags->GetFrameNumber()
-                  );
+                       bearer->GetApplication()->GetApplicationID(),
+                       tags->GetFrameNumber());
               throw std::runtime_error(std::string(buffer));
             }
-            double flow_complete_time = Simulator::Init()->Now() - flow_enqueueInfo.at(tags->GetFrameNumber());
+            double flow_complete_time =
+                Simulator::Init()->Now() -
+                flow_enqueueInfo.at(tags->GetFrameNumber());
 
-            std::cerr << "ipflow end app: " << bearer->GetApplication()->GetApplicationID()
-                << " flow: " << tags->GetFrameNumber()
-                << " fct: " << flow_complete_time
-                << " flowsize: " << tags->GetApplicationSize()
-                << " priority: " << bearer->GetPriority()
-                << std::endl;
+            std::cerr << "ipflow end app: "
+                      << bearer->GetApplication()->GetApplicationID()
+                      << " flow: " << tags->GetFrameNumber()
+                      << " fct: " << flow_complete_time
+                      << " flowsize: " << tags->GetApplicationSize()
+                      << " priority: " << bearer->GetPriority() << std::endl;
             flow_enqueueInfo.erase(tags->GetFrameNumber());
           }
         }
 
         //Set the id of the receiver RLC entity
-        packet->GetRLCHeader ()->SetRlcEntityIndex (GetRlcEntityIndex ());
-        packet->GetRLCHeader ()->SetRlcPduSequenceNumber (GetRlcPduSequenceNumber ());
-        int newSequenceNumber = GetRlcPduSequenceNumber () + 1;
-        SetRlcPduSequenceNumber (newSequenceNumber);
+        packet->GetRLCHeader()->SetRlcEntityIndex(GetRlcEntityIndex());
+        packet->GetRLCHeader()->SetRlcPduSequenceNumber(
+            GetRlcPduSequenceNumber());
+        int newSequenceNumber = GetRlcPduSequenceNumber() + 1;
+        SetRlcPduSequenceNumber(newSequenceNumber);
 
-        if (_RLC_TRACING_)
-        {
-          std::cout << "TX UM_RLC SIZE" << packet->GetSize () <<
-            " B " << GetRlcEntityIndex () <<
-            " PDU_SN " << packet->GetRLCHeader ()->GetRlcPduSequenceNumber() << std::endl;
+        if (_RLC_TRACING_) {
+          std::cout << "TX UM_RLC SIZE" << packet->GetSize() << " B "
+                    << GetRlcEntityIndex() << " PDU_SN "
+                    << packet->GetRLCHeader()->GetRlcPduSequenceNumber()
+                    << std::endl;
         }
 
         //Add MAC header
-        MACHeader *mac = new MACHeader (GetRadioBearerInstance ()->GetSource ()->GetIDNetworkNode (),
-            GetRadioBearerInstance ()->GetDestination ()->GetIDNetworkNode ());
+        MACHeader* mac = new MACHeader(
+            GetRadioBearerInstance()->GetSource()->GetIDNetworkNode(),
+            GetRadioBearerInstance()->GetDestination()->GetIDNetworkNode());
         packet->AddMACHeader(mac);
-        packet->AddHeaderSize (3); //CRC
+        packet->AddHeaderSize(3);  //CRC
 
-        pb->AddPacket (packet);
-        availableBytes -= packet->GetSize ();
-      }
-      else
-      {
+        pb->AddPacket(packet);
+        availableBytes -= packet->GetSize();
+      } else {
         availableBytes = 0;
       }
     }
@@ -193,151 +189,145 @@ UmRlcEntity::TransmissionProcedure (int availableBytes)
   return pb;
 }
 
-
-  void
-UmRlcEntity::ReceptionProcedure (Packet* p)
-{
+void UmRlcEntity::ReceptionProcedure(Packet* p) {
 #ifdef RLC_DEBUG
-  std::cout << "UM RLC rx procedure for node " << GetRadioBearerInstance ()->GetDestination ()->GetIDNetworkNode ()<< std::endl;
-  std::cout << "RECEIVE PACKET id " << p->GetID() << " frag n " << p->GetRLCHeader ()->GetFragmentNumber ()<< std::endl;
+  std::cout << "UM RLC rx procedure for node "
+            << GetRadioBearerInstance()->GetDestination()->GetIDNetworkNode()
+            << std::endl;
+  std::cout << "RECEIVE PACKET id " << p->GetID() << " frag n "
+            << p->GetRLCHeader()->GetFragmentNumber() << std::endl;
 #endif
 
-  if (_RLC_TRACING_)
-  {
-    std::cout << "RX UM_RLC SIZE " << p->GetSize () <<
-      " B " << GetRlcEntityIndex () <<
-      " PDU_SN " << p->GetRLCHeader ()->GetRlcPduSequenceNumber() << std::endl;
+  if (_RLC_TRACING_) {
+    std::cout << "RX UM_RLC SIZE " << p->GetSize() << " B "
+              << GetRlcEntityIndex() << " PDU_SN "
+              << p->GetRLCHeader()->GetRlcPduSequenceNumber() << std::endl;
   }
 
-  if (m_incomingPacket.size() > 0 && p->GetID () != m_incomingPacket.at (0)->GetID ())
-  {
+  if (m_incomingPacket.size() > 0 &&
+      p->GetID() != m_incomingPacket.at(0)->GetID()) {
 #ifdef RLC_DEBUG
-    std::cout << "received a new packet, delete enqueued fragments"<< std::endl;
+    std::cout << "received a new packet, delete enqueued fragments"
+              << std::endl;
 #endif
 
-    Packet *pp = m_incomingPacket.at (0);
+    Packet* pp = m_incomingPacket.at(0);
 
-    if (_RLC_TRACING_)
-    {
+    if (_RLC_TRACING_) {
       std::cout << "DROP_RX_UM_RLC";
-      if (pp->GetPacketTags()->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_VOIP)
+      if (pp->GetPacketTags()->GetApplicationType() ==
+          PacketTAGs::APPLICATION_TYPE_VOIP)
         std::cout << " VOIP";
-      else if (pp->GetPacketTags()->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
+      else if (pp->GetPacketTags()->GetApplicationType() ==
+               PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
         std::cout << " VIDEO";
-      else if (pp->GetPacketTags()->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_CBR)
+      else if (pp->GetPacketTags()->GetApplicationType() ==
+               PacketTAGs::APPLICATION_TYPE_CBR)
         std::cout << " CBR";
-      else if (pp->GetPacketTags()->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_INFINITE_BUFFER)
+      else if (pp->GetPacketTags()->GetApplicationType() ==
+               PacketTAGs::APPLICATION_TYPE_INFINITE_BUFFER)
         std::cout << " INF_BUF";
       else
         std::cout << " UNKNOW";
 
-      std::cout << " ID "<< pp->GetID()
-        << " B " << GetRlcEntityIndex ();
+      std::cout << " ID " << pp->GetID() << " B " << GetRlcEntityIndex();
 
-      if (pp->GetPacketTags() != NULL
-          && pp->GetPacketTags()->GetApplicationType() ==
-          PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
-      {
-        std::cout << " FRAME " <<  pp->GetPacketTags()->GetFrameNumber()
-          << " START " << pp->GetPacketTags()->GetStartByte()
-          << " END " << pp->GetPacketTags()->GetEndByte();
+      if (pp->GetPacketTags() != NULL &&
+          pp->GetPacketTags()->GetApplicationType() ==
+              PacketTAGs::APPLICATION_TYPE_TRACE_BASED) {
+        std::cout << " FRAME " << pp->GetPacketTags()->GetFrameNumber()
+                  << " START " << pp->GetPacketTags()->GetStartByte() << " END "
+                  << pp->GetPacketTags()->GetEndByte();
       }
-      std::cout  <<  std::endl;
+      std::cout << std::endl;
     }
 
-    ClearIncomingPackets ();
+    ClearIncomingPackets();
   }
 
   //The received packet is not a fragment
-  if (!p->GetRLCHeader ()->IsAFragment ())
-  {
+  if (!p->GetRLCHeader()->IsAFragment()) {
 #ifdef RLC_DEBUG
     std::cout << "\t received a packet " << std::endl;
 #endif
 
-
-    RadioBearerSink *bearer = (RadioBearerSink*) GetRadioBearerInstance ();
-    bearer->Receive (p);
+    RadioBearerSink* bearer = (RadioBearerSink*)GetRadioBearerInstance();
+    bearer->Receive(p);
     return;
   }
 
   //The received packet is a fragment
-  if (p->GetRLCHeader ()->IsAFragment () && !p->GetRLCHeader ()->IsTheLatestFragment())
-  {
+  if (p->GetRLCHeader()->IsAFragment() &&
+      !p->GetRLCHeader()->IsTheLatestFragment()) {
 
 #ifdef RLC_DEBUG
     std::cout << "\t received a fragment " << std::endl;
 #endif
-    m_incomingPacket.push_back (p);
+    m_incomingPacket.push_back(p);
     return;
   }
 
   //The received packet is the latest fragment
-  if (p->GetRLCHeader ()->IsAFragment () && p->GetRLCHeader ()->IsTheLatestFragment())
-  {
+  if (p->GetRLCHeader()->IsAFragment() &&
+      p->GetRLCHeader()->IsTheLatestFragment()) {
 
 #ifdef RLC_DEBUG
     std::cout << "\t received the latest fragment " << std::endl;
 #endif
-    m_incomingPacket.push_back (p);
+    m_incomingPacket.push_back(p);
 
     //check if all fragment have been received
-    int numberOfPackets = p->GetRLCHeader ()->GetFragmentNumber () + 1;
+    int numberOfPackets = p->GetRLCHeader()->GetFragmentNumber() + 1;
 
-    if (m_incomingPacket.size () == numberOfPackets)
-    {
-      RadioBearerSink *bearer = (RadioBearerSink*) GetRadioBearerInstance ();
-      bearer->Receive (p->Copy ());
+    if (m_incomingPacket.size() == numberOfPackets) {
+      RadioBearerSink* bearer = (RadioBearerSink*)GetRadioBearerInstance();
+      bearer->Receive(p->Copy());
 
-      ClearIncomingPackets ();
-    }
-    else
-    {
+      ClearIncomingPackets();
+    } else {
 
 #ifdef RLC_DEBUG
-      std::cout << "list of fragment incomplete -> delete all!"<< std::endl;
+      std::cout << "list of fragment incomplete -> delete all!" << std::endl;
 #endif
 
-      if (_RLC_TRACING_)
-      {
+      if (_RLC_TRACING_) {
         std::cout << "DROP_RX_UM_RLC";
-        if (p->GetPacketTags()->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_VOIP)
+        if (p->GetPacketTags()->GetApplicationType() ==
+            PacketTAGs::APPLICATION_TYPE_VOIP)
           std::cout << " VOIP";
-        else if (p->GetPacketTags()->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
+        else if (p->GetPacketTags()->GetApplicationType() ==
+                 PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
           std::cout << " VIDEO";
-        else if (p->GetPacketTags()->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_CBR)
+        else if (p->GetPacketTags()->GetApplicationType() ==
+                 PacketTAGs::APPLICATION_TYPE_CBR)
           std::cout << " CBR";
-        else if (p->GetPacketTags()->GetApplicationType() == PacketTAGs::APPLICATION_TYPE_INFINITE_BUFFER)
+        else if (p->GetPacketTags()->GetApplicationType() ==
+                 PacketTAGs::APPLICATION_TYPE_INFINITE_BUFFER)
           std::cout << " INF_BUF";
         else
           std::cout << " UNKNOW";
 
-        std::cout << " ID "<< p->GetID()
-          << " B " << GetRlcEntityIndex ();
+        std::cout << " ID " << p->GetID() << " B " << GetRlcEntityIndex();
 
-        if (p->GetPacketTags() != NULL
-            && p->GetPacketTags()->GetApplicationType() ==
-            PacketTAGs::APPLICATION_TYPE_TRACE_BASED)
-        {
-          std::cout << " FRAME " <<  p->GetPacketTags()->GetFrameNumber()
-            << " START " << p->GetPacketTags()->GetStartByte()
-            << " END " << p->GetPacketTags()->GetEndByte();
+        if (p->GetPacketTags() != NULL &&
+            p->GetPacketTags()->GetApplicationType() ==
+                PacketTAGs::APPLICATION_TYPE_TRACE_BASED) {
+          std::cout << " FRAME " << p->GetPacketTags()->GetFrameNumber()
+                    << " START " << p->GetPacketTags()->GetStartByte()
+                    << " END " << p->GetPacketTags()->GetEndByte();
         }
-        std::cout  <<  std::endl;
+        std::cout << std::endl;
       }
 
-      ClearIncomingPackets ();
+      ClearIncomingPackets();
     }
   }
 }
 
-  void
-UmRlcEntity::ClearIncomingPackets (void)
-{
-  std::vector <Packet*>::iterator it;
-  for (it = m_incomingPacket.begin (); it != m_incomingPacket.end (); it++)
-  {
+void UmRlcEntity::ClearIncomingPackets(void) {
+  std::vector<Packet*>::iterator it;
+  for (it = m_incomingPacket.begin(); it != m_incomingPacket.end(); it++) {
     delete *it;
   }
-  m_incomingPacket.clear ();
+  m_incomingPacket.clear();
 }
