@@ -53,8 +53,8 @@ using coord_t = std::pair<int, int>;
 using coord_cqi_t = std::pair<coord_t, double>;
 
 // peter: reading in the slice cionfiguration
-DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname, int interslice_algo)
-{
+DownlinkTransportScheduler::DownlinkTransportScheduler(
+    std::string config_fname, int interslice_algo, int interslice_metric = 0) {
   std::ifstream ifs(config_fname);
   if (!ifs.is_open()) {
     throw std::runtime_error("Fail to open configuration file.");
@@ -97,6 +97,7 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
   std::fill(slice_rbs_offset_.begin(), slice_rbs_offset_.end(), 0);
 
   inter_sched_ = interslice_algo;
+  inter_metric_ = interslice_metric;
   SetMacEntity (0);
   CreateUsersToSchedule();
 }
@@ -573,13 +574,46 @@ DownlinkTransportScheduler::RBsAllocation()
       flow_spectraleff[i][k] = 0;
     }
     std::vector<double> max_ranks(num_slices_, -1);     // the highest flow metric in every slice
-    for (size_t j = 0; j < users->size(); ++j) {
-      int user_id = users->at(j)->GetUserID();
-      int slice_id = user_to_slice_[user_id];
-      if (metrics[i][j] > max_ranks[slice_id]) {
-        max_ranks[slice_id] = metrics[i][j];
-        user_index[i][slice_id] = j;
-        flow_spectraleff[i][slice_id] = users->at(j)->GetSpectralEfficiency().at(i * rbg_size);
+
+    // By default, use spectral efficiency as objective, sched 9
+    if (inter_metric_ == 0) {
+      for (size_t j = 0; j < users->size(); ++j) {
+        int user_id = users->at(j)->GetUserID();
+        int slice_id = user_to_slice_[user_id];
+        if (metrics[i][j] > max_ranks[slice_id]) {
+          max_ranks[slice_id] = metrics[i][j];
+          user_index[i][slice_id] = j;
+          flow_spectraleff[i][slice_id] =
+              users->at(j)->GetSpectralEfficiency().at(i * rbg_size);
+        }
+      }
+    }
+
+    // Use proportional fairness as objective, sched 91
+    else if (inter_metric_ == 1) {
+      for (size_t j = 0; j < users->size(); ++j) {
+        int user_id = users->at(j)->GetUserID();
+        int slice_id = user_to_slice_[user_id];
+        if (metrics[i][j] > max_ranks[slice_id]) {
+          max_ranks[slice_id] = metrics[i][j];
+          user_index[i][slice_id] = j;
+          flow_spectraleff[i][slice_id] =
+              users->at(j)->GetSpectralEfficiency().at(i * rbg_size);  // TODO
+        }
+      }
+    }
+
+    // Use m-lwdf as objective, sched 92
+    else if (inter_metric_ == 2) {
+      for (size_t j = 0; j < users->size(); ++j) {
+        int user_id = users->at(j)->GetUserID();
+        int slice_id = user_to_slice_[user_id];
+        if (metrics[i][j] > max_ranks[slice_id]) {
+          max_ranks[slice_id] = metrics[i][j];
+          user_index[i][slice_id] = j;
+          flow_spectraleff[i][slice_id] =
+              users->at(j)->GetSpectralEfficiency().at(i * rbg_size);  // TODO
+        }
       }
     }
   }

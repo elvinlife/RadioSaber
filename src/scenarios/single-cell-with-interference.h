@@ -125,6 +125,15 @@ static void SingleCellWithInterference (
       downlink_scheduler_type = ENodeB::DLScheduler_NVS_NONGREEDY;
       std::cout << "Scheduler Vogel " << std::endl;
       break;
+    case 91:  // Charlie: RadioSaber with proportional fairness as inter-slice scheduling objective
+      downlink_scheduler_type = ENodeB::DLSScheduler_SEQUENTIAL_FAIRNESS;
+      std::cout << "Scheduler Greedy (RadioSaber with proportional fairness)"
+                << std::endl;
+      break;
+    case 92:  // Charlie: RadioSaber with m-lwdf as inter-slice scheduling objective
+      downlink_scheduler_type = ENodeB::DLSScheduler_SEQUENTIAL_FAIRNESS;
+      std::cout << "Scheduler Greedy (RadioSaber with m-lwdf)" << std::endl;
+      break;
     default:
       string error_log = "Undefined Scheduler: " + std::to_string(sched_type);
       throw std::runtime_error(error_log);
