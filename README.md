@@ -1,5 +1,7 @@
 ## Instructions (to group members)
 
+Always check at least that there are no compilation errors. Simply the `LTE-Sim` executable and do `make -j8` and see if the compilation succeeds.
+
 ### Git operations
 
 For small changes that do not need review, directly modify the `master` branch. However, always pull before pushing. Do `git fetch origin` and `git merge origin/master` and solve any potential conflicts, then do `git push -u origin`.
@@ -20,7 +22,7 @@ Regardless of what format the simluator previously follows, we will stick to [Go
 
 ```bash
 sudo apt install clang-format  # Install clang formatting tool
-git clang-format -style=file  # Do this prior to any commit
+git clang-format --style=file  # Do this prior to any commit
 ```
 
 ## Week of 10/30

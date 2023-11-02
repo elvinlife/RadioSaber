@@ -52,6 +52,26 @@ using std::vector;
 using coord_t = std::pair<int, int>;
 using coord_cqi_t = std::pair<coord_t, double>;
 
+/* Define the inter-slice metrics (objectives) here */
+
+std::vector<double> maxThroughputMetric(
+    DownlinkTransportScheduler::UserToSchedule* user) {
+  return user->GetSpectralEfficiency();
+}
+
+std::vector<double> proportionalFairnessMetric(
+    DownlinkTransportScheduler::UserToSchedule* user) {
+  return user
+      ->GetSpectralEfficiency();  // TODO: change to proportional fairness metric
+}
+
+std::vector<double> mLWDFMetric(
+    DownlinkTransportScheduler::UserToSchedule* user) {
+  return user->GetSpectralEfficiency();  // TODO: change to m-LWDF metric
+}
+
+/* End */
+
 // peter: reading in the slice cionfiguration
 DownlinkTransportScheduler::DownlinkTransportScheduler(
     std::string config_fname, int interslice_algo, int interslice_metric = 0) {
@@ -93,7 +113,23 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(
   std::fill(slice_rbs_offset_.begin(), slice_rbs_offset_.end(), 0);
 
   inter_sched_ = interslice_algo;
-  inter_metric_ = interslice_metric;
+
+  // Charlie: set the inter-slice metric (objective)
+  switch (interslice_metric) {
+    case 1:  // sched 9
+      inter_metric_ = &maxThroughputMetric;
+      break;
+    case 2:  // sched 91
+      inter_metric_ = &proportionalFairnessMetric;
+      break;
+    case 3:  // sched 92
+      inter_metric_ = &mLWDFMetric;
+      break;
+    default:
+      throw std::runtime_error("Error: invalid inter-slice metric (objective)");
+      break;
+  }
+
   SetMacEntity(0);
   CreateUsersToSchedule();
 }
@@ -583,45 +619,15 @@ void DownlinkTransportScheduler::RBsAllocation() {
     std::vector<double> max_ranks(
         num_slices_, -1);  // the highest flow metric in every slice
 
-    // By default, use spectral efficiency as objective, sched 9
-    if (inter_metric_ == 0) {
-      for (size_t j = 0; j < users->size(); ++j) {
-        int user_id = users->at(j)->GetUserID();
-        int slice_id = user_to_slice_[user_id];
-        if (metrics[i][j] > max_ranks[slice_id]) {
-          max_ranks[slice_id] = metrics[i][j];
-          user_index[i][slice_id] = j;
-          flow_spectraleff[i][slice_id] =
-              users->at(j)->GetSpectralEfficiency().at(i * rbg_size);
-        }
-      }
-    }
-
-    // Use proportional fairness as objective, sched 91
-    else if (inter_metric_ == 1) {
-      for (size_t j = 0; j < users->size(); ++j) {
-        int user_id = users->at(j)->GetUserID();
-        int slice_id = user_to_slice_[user_id];
-        if (metrics[i][j] > max_ranks[slice_id]) {
-          max_ranks[slice_id] = metrics[i][j];
-          user_index[i][slice_id] = j;
-          flow_spectraleff[i][slice_id] =
-              users->at(j)->GetSpectralEfficiency().at(i * rbg_size);  // TODO
-        }
-      }
-    }
-
-    // Use m-lwdf as objective, sched 92
-    else if (inter_metric_ == 2) {
-      for (size_t j = 0; j < users->size(); ++j) {
-        int user_id = users->at(j)->GetUserID();
-        int slice_id = user_to_slice_[user_id];
-        if (metrics[i][j] > max_ranks[slice_id]) {
-          max_ranks[slice_id] = metrics[i][j];
-          user_index[i][slice_id] = j;
-          flow_spectraleff[i][slice_id] =
-              users->at(j)->GetSpectralEfficiency().at(i * rbg_size);  // TODO
-        }
+    // Charlie: in this part, we may have different inter-slice scheduling metrics (objectives) based on interslice_metric, reflected on inter_metric_
+    for (size_t j = 0; j < users->size(); ++j) {
+      int user_id = users->at(j)->GetUserID();
+      int slice_id = user_to_slice_[user_id];
+      if (metrics[i][j] > max_ranks[slice_id]) {
+        max_ranks[slice_id] = metrics[i][j];
+        user_index[i][slice_id] = j;
+        flow_spectraleff[i][slice_id] =
+            inter_metric_(users->at(j)).at(i * rbg_size);
       }
     }
   }
@@ -629,21 +635,28 @@ void DownlinkTransportScheduler::RBsAllocation() {
   // calculate the assignment of rbgs to slices
   vector<int> rbg_to_slice;
   unordered_map<int, vector<int>> slice_rbgs;
-  if (inter_sched_ == 0) {
-    rbg_to_slice =
-        GreedyByRow(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
-  } else if (inter_sched_ == 1) {
-    rbg_to_slice =
-        SubOpt(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
-  } else if (inter_sched_ == 2) {
-    rbg_to_slice =
-        MaximizeCell(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
-  } else if (inter_sched_ == 3) {
-    rbg_to_slice = VogelApproximate(flow_spectraleff, slice_quota_rbgs, nb_rbgs,
-                                    num_slices_);
-  } else {
-    slice_rbgs =
-        UpperBound(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+
+  switch (inter_sched_) {
+    case 0:
+      rbg_to_slice =
+          GreedyByRow(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+      break;
+    case 1:
+      rbg_to_slice =
+          SubOpt(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+      break;
+    case 2:
+      rbg_to_slice = MaximizeCell(flow_spectraleff, slice_quota_rbgs, nb_rbgs,
+                                  num_slices_);
+      break;
+    case 3:
+      rbg_to_slice = VogelApproximate(flow_spectraleff, slice_quota_rbgs,
+                                      nb_rbgs, num_slices_);
+      break;
+    default:
+      slice_rbgs =
+          UpperBound(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
+      break;
   }
 
   // ToDo: Generalize the framework
