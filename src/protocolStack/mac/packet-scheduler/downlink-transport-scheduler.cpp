@@ -52,6 +52,7 @@ using std::unordered_map;
 using coord_t = std::pair<int, int>;
 using coord_cqi_t = std::pair<coord_t, double>;
 
+// peter: reading in the slice cionfiguration
 DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname, int interslice_algo)
 {
   std::ifstream ifs(config_fname);
@@ -66,8 +67,10 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
   num_slices_ = ues_per_slice.size();
   int num_ue;
   for (int i = 0; i < num_slices_; i++) {
+    // peter: get the number of users per slice 
     num_ue = ues_per_slice[i].asInt();
     for (int j = 0; j < num_ue; j++) {
+      // peter: map user to slice vector
       user_to_slice_.push_back(i);
     }
   }
@@ -86,8 +89,10 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(std::string config_fname,
       );
     }
   }
+  // [peter] for each slice, calculate the priority
   slice_priority_.resize(num_slices_);
   std::fill(slice_priority_.begin(), slice_priority_.end(), 0);
+  // [Peter] Sth for the slice, but I don't know what this is for 
   slice_rbs_offset_.resize(num_slices_);
   std::fill(slice_rbs_offset_.begin(), slice_rbs_offset_.end(), 0);
 
@@ -102,21 +107,26 @@ DownlinkTransportScheduler::~DownlinkTransportScheduler()
 }
 
 
+// [Peter] for each user, for each RBG, calculate the user's spectral efficiency for that RGB. 
+// [Peter] update the slice's priority to that of the highest UE's priority in the slice 
 void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 {
 #ifdef SCHEDULER_DEBUG
 	std::cout << "\t Select Flows to schedule" << std::endl;
 #endif
 
+// [Peter] get the users that wants to transmit data, in the format of RadioBearers. 
   ClearUsersToSchedule();
   RrcEntity *rrc = GetMacEntity ()->GetDevice ()->GetProtocolStack ()->GetRrcEntity ();
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer ();
 
+// [Peter] Fill the slice priority vector with 0s 
   std::fill(slice_priority_.begin(), slice_priority_.end(), 0);
   for (std::vector<RadioBearer* >::iterator it = bearers->begin (); it != bearers->end (); it++) {
 	  //SELECT FLOWS TO SCHEDULE
 	  RadioBearer *bearer = (*it);
 
+// get the amount of data that the UE wants to transmit 
 	  if (bearer->HasPackets() && bearer->GetDestination ()->GetNodeState () == NetworkNode::STATE_ACTIVE) {
 		  //compute data to transmit
 		  int dataToTransmit;
@@ -129,17 +139,22 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 
 		  //compute spectral efficiency
 		  ENodeB *enb = (ENodeB*) GetMacEntity ()->GetDevice ();
+      // [Peter]Get the previous record of each ue?
 		  ENodeB::UserEquipmentRecord *ueRecord =
         enb->GetUserEquipmentRecord (bearer->GetDestination ()->GetIDNetworkNode ());
+      // [Peter]Are you creating a vector for each RadioBearer. 
+      // [Peter]It seems that each ue has an array of CQIs 
 		  std::vector<double> spectralEfficiency;
 		  std::vector<int> cqiFeedbacks = ueRecord->GetCQI ();
 		  int numberOfCqi = cqiFeedbacks.size ();
       AMCModule *amc = GetMacEntity()->GetAmcModule();
+      // [Peter]calculate spectral efficiency based on CQI
 		  for (int i = 0; i < numberOfCqi; i++) {
         spectralEfficiency.push_back(amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
 			}
       
 		  //create flow to scheduler record
+      // [Peter]update the slice priority to be the biggest of all UEs in that slice
       int slice_id = user_to_slice_[bearer->GetUserID()];
       if (bearer->GetPriority() > slice_priority_[slice_id]) {
         slice_priority_[slice_id] = bearer->GetPriority();
@@ -149,6 +164,8 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule ()
 	}
 }
 
+// [Peter]update the CQI, call the actual scheduling function
+// [Peter]entrance of scheduling 
 void
 DownlinkTransportScheduler::DoSchedule (void)
 {
@@ -156,8 +173,9 @@ DownlinkTransportScheduler::DoSchedule (void)
 	std::cout << "Start DL packet scheduler for node "
 			<< GetMacEntity ()->GetDevice ()->GetIDNetworkNode()<< std::endl;
 #endif
-
+// [Peter] not sure what this function is for. 
   UpdateAverageTransmissionRate ();
+  // [Peter]update each UE's CQI
   SelectFlowsToSchedule ();
 
   if (GetUsersToSchedule()->size() != 0) {
