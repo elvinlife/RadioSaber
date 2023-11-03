@@ -52,31 +52,37 @@ using std::vector;
 using coord_t = std::pair<int, int>;
 using coord_cqi_t = std::pair<coord_t, double>;
 
-/* Define the inter-slice metrics (objectives) here */
-
+/* d_{u,i}, the instantaneous data rate of UE u for RBG i, which is the
+   transmission rate (in bps) per HZ. */
 double maxThroughputMetric(DownlinkTransportScheduler::UserToSchedule* user,
                            int index) {
+  // user: u, index: i * rbg_size
   return user->GetSpectralEfficiency().at(index);
 }
 
+/* d_{u,i} / R_{u}, where R_{u} captures the historical RBG allocation for UE u
+   as an exponential weighted moving average of the user's throughput, based on
+   its data rate for the RBGs it has been assigned so far. */
 double proportionalFairnessMetric(
     DownlinkTransportScheduler::UserToSchedule* user, int index) {
-  double averageRate = 1;  // transmission rate (bps)
+  // user: u, index: i * rbg_size
+  double averageRate = 1;
   for (int i = 0; i < MAX_BEARERS; ++i) {
     if (user->m_bearers[i]) {
       averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
     }
   }
-  return user->GetSpectralEfficiency().at(index) / averageRate;
+  return maxThroughputMetric(user, index) / averageRate;
 }
 
+/* D_{u,p} * d_{u,i} / R_{u}, where D_{u,p} is the queuing delay experience by
+   packet at the head of the queue corresponding to UE u and priority p. */
 double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
                    int index) {
-  return user->GetSpectralEfficiency().at(
-      index);  // TODO: change to m-LWDF metric
+  // user: u, index: i * rbg_size
+  double delay = 0;  // TODO(peter): compute D_{u,p}
+  return delay / proportionalFairnessMetric(user, index);
 }
-
-/* End */
 
 // peter: reading in the slice cionfiguration
 DownlinkTransportScheduler::DownlinkTransportScheduler(
@@ -193,7 +199,7 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule() {
             amc->GetEfficiencyFromCQI(cqiFeedbacks.at(i)));
       }
 
-      //create flow to scheduler record
+      // create flow to scheduler record
       // [Peter]update the slice priority to be the biggest of all UEs in that slice
       int slice_id = user_to_slice_[bearer->GetUserID()];
       if (bearer->GetPriority() > slice_priority_[slice_id]) {
@@ -625,11 +631,9 @@ void DownlinkTransportScheduler::RBsAllocation() {
     std::vector<double> max_ranks(
         num_slices_, -1);  // the highest flow metric in every slice
 
-    /*
-      Charlie: in this part, we may have different inter-slice scheduling
-      metrics (objectives) based on interslice_metric, reflected on the
-      inter_metric_ member (function pointer)
-    */
+    /* Charlie: in this part, we may have different inter-slice scheduling
+       metrics (objectives) based on interslice_metric, reflected on the
+       inter_metric_ member (function pointer) */
     for (size_t j = 0; j < users->size(); ++j) {
       int user_id = users->at(j)->GetUserID();
       int slice_id = user_to_slice_[user_id];
