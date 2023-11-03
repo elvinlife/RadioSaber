@@ -56,13 +56,18 @@ using coord_cqi_t = std::pair<coord_t, double>;
 
 std::vector<double> maxThroughputMetric(
     DownlinkTransportScheduler::UserToSchedule* user) {
-  return user->GetSpectralEfficiency();
+  return user->GetSpectralEfficiency();  // transmission rate (bps) per HZ
 }
 
 std::vector<double> proportionalFairnessMetric(
     DownlinkTransportScheduler::UserToSchedule* user) {
-  return user
-      ->GetSpectralEfficiency();  // TODO: change to proportional fairness metric
+  double averageRate = 1;  // transmission rate (bps)
+  for (int i = 0; i < MAX_BEARERS; ++i) {
+    if (user->m_bearers[i]) {
+      averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
+    }
+  }
+  return user->GetSpectralEfficiency() / averageRate;
 }
 
 std::vector<double> mLWDFMetric(
