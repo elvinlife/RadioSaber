@@ -39,7 +39,7 @@ class DownlinkTransportScheduler : public PacketScheduler {
   int inter_sched_ = 0;
 
   // Charlie: the inter-slice scheduling metric (objective)
-  std::vector<double> (*inter_metric_)(UserToSchedule*);
+  double (*inter_metric_)(UserToSchedule*, int);
 
  public:
   DownlinkTransportScheduler(std::string config_fname, int algo, int metric);

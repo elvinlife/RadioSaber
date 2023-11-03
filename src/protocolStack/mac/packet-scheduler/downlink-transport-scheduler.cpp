@@ -54,20 +54,21 @@ using coord_cqi_t = std::pair<coord_t, double>;
 
 /* Define the inter-slice metrics (objectives) here */
 
-std::vector<double> maxThroughputMetric(
-    DownlinkTransportScheduler::UserToSchedule* user) {
-  return user->GetSpectralEfficiency();
+double maxThroughputMetric(DownlinkTransportScheduler::UserToSchedule* user,
+                           int index) {
+  return user->GetSpectralEfficiency().at(index);
 }
 
-std::vector<double> proportionalFairnessMetric(
-    DownlinkTransportScheduler::UserToSchedule* user) {
-  return user
-      ->GetSpectralEfficiency();  // TODO: change to proportional fairness metric
+double proportionalFairnessMetric(
+    DownlinkTransportScheduler::UserToSchedule* user, int index) {
+  return user->GetSpectralEfficiency().at(
+      index);  // TODO: change to proportional fairness metric
 }
 
-std::vector<double> mLWDFMetric(
-    DownlinkTransportScheduler::UserToSchedule* user) {
-  return user->GetSpectralEfficiency();  // TODO: change to m-LWDF metric
+double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
+                   int index) {
+  return user->GetSpectralEfficiency().at(
+      index);  // TODO: change to m-LWDF metric
 }
 
 /* End */
@@ -619,7 +620,11 @@ void DownlinkTransportScheduler::RBsAllocation() {
     std::vector<double> max_ranks(
         num_slices_, -1);  // the highest flow metric in every slice
 
-    // Charlie: in this part, we may have different inter-slice scheduling metrics (objectives) based on interslice_metric, reflected on inter_metric_
+    /*
+      Charlie: in this part, we may have different inter-slice scheduling
+      metrics (objectives) based on interslice_metric, reflected on the
+      inter_metric_ member (function pointer)
+    */
     for (size_t j = 0; j < users->size(); ++j) {
       int user_id = users->at(j)->GetUserID();
       int slice_id = user_to_slice_[user_id];
@@ -627,7 +632,7 @@ void DownlinkTransportScheduler::RBsAllocation() {
         max_ranks[slice_id] = metrics[i][j];
         user_index[i][slice_id] = j;
         flow_spectraleff[i][slice_id] =
-            inter_metric_(users->at(j)).at(i * rbg_size);
+            inter_metric_(users->at(j), i * rbg_size);
       }
     }
   }
