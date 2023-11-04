@@ -39,6 +39,7 @@ class DownlinkTransportScheduler : public PacketScheduler {
   int inter_sched_ = 0;
 
   // Charlie: the inter-slice scheduling metric (objective)
+  // peter: a function pointer that points to the inter slice algorithm
   double (*inter_metric_)(UserToSchedule*, int);
 
  public:

@@ -49,6 +49,7 @@
 using std::unordered_map;
 using std::vector;
 
+// Peter: The coordinates are likely to represent the RBG (i) and the slice index (j).
 using coord_t = std::pair<int, int>;
 using coord_cqi_t = std::pair<coord_t, double>;
 
@@ -153,17 +154,20 @@ DownlinkTransportScheduler::~DownlinkTransportScheduler() {
   Destroy();
 }
 
-// [Peter] for each user, for each RBG, calculate the user's spectral efficiency for that RGB.
+// [Peter] For each radio bearer in each UE, get the respective spectral efficiency
 // [Peter] update the slice's priority to that of the highest UE's priority in the slice
 void DownlinkTransportScheduler::SelectFlowsToSchedule() {
 #ifdef SCHEDULER_DEBUG
   std::cout << "\t Select Flows to schedule" << std::endl;
 #endif
 
-  // [Peter] get the users that wants to transmit data, in the format of RadioBearers.
   ClearUsersToSchedule();
+  // Peter: RRC stands for radio resource control, it is the place where the slice context is stored
   RrcEntity* rrc =
       GetMacEntity()->GetDevice()->GetProtocolStack()->GetRrcEntity();
+  // Peter: this is unexpected, because according to the paper, radio bearer is managed by individual UE,
+  //  but here it seems to suggest that 
+  // radio bearers are managed by thr RRC
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer();
 
   // [Peter] Fill the slice priority vector with 0s
@@ -187,14 +191,14 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule() {
 
       //compute spectral efficiency
       ENodeB* enb = (ENodeB*)GetMacEntity()->GetDevice();
-      // [Peter]Get the previous record of each ue?
+      // [Peter]Get the previous record of each ue
       ENodeB::UserEquipmentRecord* ueRecord = enb->GetUserEquipmentRecord(
           bearer->GetDestination()->GetIDNetworkNode());
-      // [Peter]Are you creating a vector for each RadioBearer.
-      // [Peter]It seems that each ue has an array of CQIs
       std::vector<double> spectralEfficiency;
       std::vector<int> cqiFeedbacks = ueRecord->GetCQI();
+      // Peter: this is important, each UE has multiple CQI, each for a different frequency
       int numberOfCqi = cqiFeedbacks.size();
+      // peter: get the Adaptive Modulation And Coding Scheme, which contains the method to convert CQI into spectral efficiency
       AMCModule* amc = GetMacEntity()->GetAmcModule();
       // [Peter]calculate spectral efficiency based on CQI
       for (int i = 0; i < numberOfCqi; i++) {
@@ -221,7 +225,7 @@ void DownlinkTransportScheduler::DoSchedule(void) {
   std::cout << "Start DL packet scheduler for node "
             << GetMacEntity()->GetDevice()->GetIDNetworkNode() << std::endl;
 #endif
-  // [Peter] not sure what this function is for.
+  // [Peter] update each bearer's average transmission rate
   UpdateAverageTransmissionRate();
   // [Peter]update each UE's CQI
   SelectFlowsToSchedule();
@@ -233,6 +237,7 @@ void DownlinkTransportScheduler::DoSchedule(void) {
   StopSchedule();
 }
 
+// peter: actually send out the packets. 
 void DownlinkTransportScheduler::DoStopSchedule(void) {
   PacketBurst* pb = new PacketBurst();
   UsersToSchedule* uesToSchedule = GetUsersToSchedule();
@@ -280,6 +285,7 @@ void DownlinkTransportScheduler::DoStopSchedule(void) {
   GetMacEntity()->GetDevice()->SendPacketBurst(pb);
 }
 
+// peter: the UpperBound function, as it is written, does not take into account that an RBG can only be allocated to a single slice or user. 
 static unordered_map<int, vector<int>> UpperBound(double** flow_spectraleff,
                                                   vector<int>& slice_quota_rbgs,
                                                   int nb_rbgs, int nb_slices) {
@@ -417,6 +423,8 @@ static vector<int> SubOpt(double** flow_spectraleff,
   return rbg_to_slice;
 }
 
+
+// peter: I think this is the RadioSaber's approach when every enterprise returns the candidate
 static vector<int> MaximizeCell(double** flow_spectraleff,
                                 vector<int>& slice_quota_rbgs, int nb_rbgs,
                                 int nb_slices) {
@@ -448,6 +456,8 @@ static vector<int> MaximizeCell(double** flow_spectraleff,
   return rbg_to_slice;
 }
 
+
+// peter: I don't bother to understand this, nor do I think it important
 static vector<int> VogelApproximate(double** flow_spectraleff,
                                     vector<int>& slice_quota_rbgs, int nb_rbgs,
                                     int nb_slices) {
@@ -586,6 +596,9 @@ void DownlinkTransportScheduler::RBsAllocation() {
     slice_quota_rbgs[i] = (int)(slice_target_rbs[i] / rbg_size);
     extra_rbgs -= slice_quota_rbgs[i];
   }
+  // peter: Distribute any remaining RBs (extra_rbs) evenly across the slices with data.
+  // peter: If there are leftover RBs after the even distribution, allocate them to the first slice 
+  // (after randomizing the start index with rand_begin_idx to distribute leftovers randomly).
   is_first_slice = true;
   rand_begin_idx = rand();
   for (int i = 0; i < num_slices_; ++i) {
@@ -607,6 +620,7 @@ void DownlinkTransportScheduler::RBsAllocation() {
   std::cout << std::endl;
 
   // create a matrix of flow metrics (RBG, flow index)
+  // Peter: the metics variable here is very important. It is the enterprise score for each flow and each rbg
   double metrics[nb_rbgs][users->size()];
 
   for (int i = 0; i < nb_rbgs; i++) {
