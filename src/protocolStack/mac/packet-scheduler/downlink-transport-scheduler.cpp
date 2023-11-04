@@ -105,6 +105,7 @@ double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
   RadioBearer* bearer = user->m_bearers[selected_bearer];
   double HoL = bearer->GetHeadOfLinePacketDelay();
   double metric = HoL * maxThroughputMetric(user, index) / averageRate;
+  return metric;
 }
 
 // peter: reading in the slice cionfiguration
