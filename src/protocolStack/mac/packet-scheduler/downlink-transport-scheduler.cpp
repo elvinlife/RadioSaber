@@ -77,6 +77,8 @@ double proportionalFairnessMetric(
 
 /* D_{u,p} * d_{u,i} / R_{u}, where D_{u,p} is the queuing delay experience by
    packet at the head of the queue corresponding to UE u and priority p. */
+// Peter: MLWDF is different from previous enterprise scheduling algorithm, because it selects the highest priority first, 
+// and id there are multiple UEs with the same priority, it then runs this metric. 
 double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
                    int index) {
   // user: u, index: i * rbg_size
@@ -102,7 +104,7 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(
     // peter: get the number of users per slice
     num_ue = ues_per_slice[i].asInt();
     for (int j = 0; j < num_ue; j++) {
-      // peter: map user to slice vector
+      // peter: map user to slice vector, important to differentiate between the i and j here. 
       user_to_slice_.push_back(i);
     }
   }
@@ -110,6 +112,7 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(
   for (int i = 0; i < slice_schemes.size(); i++) {
     int n_slices = slice_schemes[i]["n_slices"].asInt();
     for (int j = 0; j < n_slices; j++) {
+      // Peter: this is a useful place to get the enterprise scheduler algorithms parameters. 
       slice_weights_.push_back(slice_schemes[i]["weight"].asDouble());
       slice_algo_params_.emplace_back(slice_schemes[i]["algo_alpha"].asInt(),
                                       slice_schemes[i]["algo_beta"].asInt(),
@@ -120,7 +123,7 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(
   // [peter] for each slice, calculate the priority
   slice_priority_.resize(num_slices_);
   std::fill(slice_priority_.begin(), slice_priority_.end(), 0);
-  // [Peter] Sth for the slice, but I don't know what this is for
+  // [Peter] used later to ensure that the allocations of rbgs overtime is overall fair and accords to the SLA
   slice_rbs_offset_.resize(num_slices_);
   std::fill(slice_rbs_offset_.begin(), slice_rbs_offset_.end(), 0);
 
