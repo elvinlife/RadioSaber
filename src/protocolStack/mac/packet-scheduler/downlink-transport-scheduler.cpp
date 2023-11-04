@@ -83,8 +83,28 @@ double proportionalFairnessMetric(
 double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
                    int index) {
   // user: u, index: i * rbg_size
-  double delay = 0;  // TODO(peter): compute D_{u,p}
-  return delay / proportionalFairnessMetric(user, index);
+
+  // @peter
+  // calculate the averateRate across all priority channels
+  // get the score of the highest priority channel
+
+  double averageRate = 1;
+  int max_priority = -1;
+  int selected_bearer = -1;
+  for (int i = 0; i < MAX_BEARERS; ++i) {
+    if (user->m_bearers[i]) {
+      averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
+      int priority = user->m_bearers[i]->GetPriority();
+      if (priority > max_priority){
+        max_priority = priority;
+        selected_bearer = i;
+      }
+    }
+  }
+
+  RadioBearer* bearer = user->m_bearers[selected_bearer];
+  double HoL = bearer->GetHeadOfLinePacketDelay();
+  double metric = HoL * maxThroughputMetric(user, index) / averageRate;
 }
 
 // peter: reading in the slice cionfiguration
