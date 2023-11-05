@@ -126,6 +126,7 @@ def plot_fairness():
     # print((avg_throughput['max_throughput']))
     print(avg_rbs["mlwdf"])
     print(avg_rbs["max_throughput"])
+    print(avg_rbs["pf"])
 
     fig, ax = plt.subplots(figsize=(10, 6))
     x_array = np.arange(1, n_slices+1 )
