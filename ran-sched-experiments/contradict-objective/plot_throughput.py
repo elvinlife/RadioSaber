@@ -5,10 +5,10 @@ from collections import defaultdict
 import numpy as np
 
 INTRA=""
-TIMES=2
+TIMES=3
 INPUT_DIR="results"
 FTYPE=".png"
-n_users=450
+n_users=204
 COLORS=["brown", "dimgrey", "cornflowerblue"]
 
 def get_cdf(data, ratio=0):
@@ -32,18 +32,36 @@ def get_cumubytes(fname, n_slices):
     slice_cumu_rbs = [0 for i in range(n_slices)]
 
     with open(fname, "r") as fin:
+        # for line in fin:
+        #     words = line.split(" ")
+        #     if not words[0].isdigit():
+        #         continue
+        #     if int(words[0]) > end_ts:
+        #         break
+        #     if int(words[0]) > begin_ts:
+        #         flow = int(words[2])
+        #         sid = int(words[13])
+        #         cumu_rbs[flow] = int( words[7] ) / (end_ts / 1000 )
+        #         cumu_bytes[flow] = int( words[5] ) / ( end_ts / 1000 )
+        #         flow_to_slice[flow] = sid
         for line in fin:
-            words = line.split(" ")
+            words = line.split()
+            # Check if there are enough elements in the 'words' list to prevent 'IndexError'
+            if len(words) < 13:
+                # print(len(words))
+                continue  # Skip lines that don't have enough elements
             if not words[0].isdigit():
                 continue
             if int(words[0]) > end_ts:
                 break
             if int(words[0]) > begin_ts:
-                flow = int(words[2])
-                sid = int(words[13])
-                cumu_rbs[flow] = int( words[7] ) / (end_ts / 1000 )
-                cumu_bytes[flow] = int( words[5] ) / ( end_ts / 1000 )
+                # Parse the log entry correctly based on the labels in the format
+                flow = int(words[words.index('app:') + 1])
+                sid = int(words[words.index('slice:') + 1])
+                cumu_rbs[flow] = int(words[words.index('cumu_rbs:') + 1]) / (end_ts / 1000)
+                cumu_bytes[flow] = int(words[words.index('cumu_bytes:') + 1]) / (end_ts / 1000)
                 flow_to_slice[flow] = sid
+                # print(flow, sid, cumu_rbs[flow], cumu_bytes[flow])
 
     for fid in range(n_users):
         sid = flow_to_slice[fid]
@@ -51,6 +69,9 @@ def get_cumubytes(fname, n_slices):
             continue
         slice_cumu_bytes[sid] += cumu_bytes[fid]
         slice_cumu_rbs[sid] += cumu_rbs[fid]
+        
+    # print(slice_cumu_bytes[sid], " ", sid)
+    # print(slice_cumu_rbs[sid], " ",sid)
 
     return slice_cumu_rbs, slice_cumu_bytes
 
@@ -100,15 +121,20 @@ def plot_fairness():
     default_font = 20
     n_slices = 20
     avg_rbs, avg_throughput = get_throughput_perslice( INPUT_DIR, n_slices )
+    # print(avg_rbs, avg_throughput)
+    # print(len(avg_throughput['max_throughput']))
+    # print((avg_throughput['max_throughput']))
+    print(avg_rbs["mlwdf"])
+    print(avg_rbs["max_throughput"])
 
     fig, ax = plt.subplots(figsize=(10, 6))
     x_array = np.arange(1, n_slices+1 )
     ax.plot( x_array, avg_throughput['max_throughput'], 'bX--', label="Max_throughput" )
+    ax.plot( x_array, avg_throughput['pf'], 'yD--', label="PropF" )
     ax.plot( x_array, avg_throughput['mlwdf'], 'ro--', label="MLWDF" )
-    ax.plot( x_array, avg_throughput['pf'], 'yD--', label="PF" )
     ax.set_xlabel("Slice Id", fontsize=default_font + 4)
     ax.set_ylabel("Throughput(Mbps)", fontsize=default_font + 4)
-    ax.set_ylim( bottom = 0, top = 25 )
+    ax.set_ylim( bottom = 0, top = 100 )
     ax.set_xticks( [ i for i in range(1, n_slices+1, 2)] )
     ax.tick_params(axis="both", labelsize=default_font)
     ax.grid( axis="y", alpha=0.4 )
@@ -122,7 +148,7 @@ def plot_fairness():
     ax.plot( x_array, avg_rbs['pf'], 'yD--', label="PF" )
     ax.set_xlabel("Slice Id", fontsize=default_font + 4)
     ax.set_ylabel("Resource blocks(per-second)", fontsize=default_font + 4)
-    ax.set_ylim( top = 45000 )
+    ax.set_ylim( top = 80000, bottom= 60000)
     ax.legend(fontsize=default_font + 2)
     ax.set_xticks( [ i for i in range(1, n_slices+1, 2)] )
     ax.tick_params(axis="both", labelsize=default_font)
@@ -148,7 +174,7 @@ def plot_sum_bandwidth():
     barlist[1].set_color(COLORS[2])
     ax.errorbar( x_array, bw_array, bwerr_array, fmt=".", capsize=12, color="black" )
     ax.set_xlim( -0.5, 1.5 )
-    ax.set_ylim( 0, 300 )
+    ax.set_ylim( 0, 700 )
 
     ax.set_xticks( x_array  )
     ax.set_xticklabels( scheme_array )
@@ -170,7 +196,7 @@ def plot_together():
     ax[0].plot( x_array, avg_rbs['max_throughput'], '^--', label="Max_throughput", markersize=12, color=COLORS[2] )
     ax[0].set_xlabel("Slice Id", fontsize=default_font + 4)
     ax[0].set_ylabel("Resource blocks(per-second)", fontsize=default_font + 4)
-    ax[0].set_ylim( top = 45000 )
+    ax[0].set_ylim( top =  80000, bottom = 75000)
     ax[0].legend(fontsize=default_font + 2)
     ax[0].set_xticks( [ i for i in range(1, n_slices+1, 2)] )
     ax[0].tick_params(axis="both", labelsize=default_font)
@@ -183,7 +209,7 @@ def plot_together():
     ax[1].plot( x_array, avg_throughput['max_throughput'], '^--', label="Max_throughput", markersize=12, color=COLORS[2] )
     ax[1].set_xlabel("Slice Id", fontsize=default_font + 4)
     ax[1].set_ylabel("Throughput(Mbps)", fontsize=default_font + 4)
-    ax[1].set_ylim( bottom = 0, top = 25 )
+    ax[1].set_ylim( bottom = 0, top = 100 )
     ax[1].set_xticks( [ i for i in range(1, n_slices+1, 2)] )
     ax[1].tick_params(axis="both", labelsize=default_font)
     ax[1].grid( axis="y", alpha=0.4 )
@@ -200,7 +226,7 @@ def plot_together():
         barlist[i].set_color(COLORS[i])
     ax[2].errorbar( x_array, bw_array, bwerr_array, fmt=".", capsize=12, color="black" )
     ax[2].set_xlim( -0.5, 2.5 )
-    ax[2].set_ylim( 0, 300 )
+    ax[2].set_ylim( 0, 700 )
     ax[2].set_xticks( x_array  )
     ax[2].set_xticklabels( scheme_array )
     ax[2].tick_params(axis="both", labelsize=default_font )
@@ -216,6 +242,6 @@ def plot_together():
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
-#plot_fairness()
+plot_fairness()
 plot_together()
-#plot_sum_bandwidth()
+plot_sum_bandwidth()
