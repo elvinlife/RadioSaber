@@ -162,6 +162,7 @@ def plot_sum_bandwidth():
     default_font = 24
     n_slices = 20
     _, avg_throughput = get_throughput_total( INPUT_DIR, n_slices )
+    print("throughput: ", avg_throughput)
     fig, ax = plt.subplots(figsize=(6,6))
     x_array = np.arange( 0, 2, 1 )
     bw_array = [ np.mean(avg_throughput['mlwdf']), np.mean(avg_throughput['max_throughput']) ]
@@ -220,7 +221,7 @@ def plot_together():
     x_array = np.arange( 0, 3, 1 )
     bw_array = [ np.mean(sum_throughput['pf']), np.mean(sum_throughput['mlwdf']), np.mean(sum_throughput['max_throughput'])]
     bwerr_array = [ np.std(sum_throughput['pf']), np.std(sum_throughput['mlwdf']), np.std(sum_throughput['max_throughput']) ]
-    scheme_array = [ "PF", "MLWDF", "Max_throughput" ]
+    scheme_array = [ "PF", "MLWDF", "Max_ThP" ]
     barlist = ax[2].bar( x_array, bw_array, width = 0.3 )
     for i in range(3):
         barlist[i].set_color(COLORS[i])
