@@ -1,0 +1,37 @@
+{
+  "slices":
+  [
+    {
+      "n_slices": 5, "weight": 0.04,
+      "video_app": 0, "video_bitrate": [],
+      "internet_flow": 0, "if_bitrate": [],
+      "backlog_flow": 1,
+      "algo_alpha": 0, "algo_beta": 0, "algo_epsilon": 1, "algo_psi": 1
+    },
+    {
+      "n_slices": 5, "weight": 0.04,
+      "video_app": 0, "video_bitrate": [],
+      "internet_flow": 1, "if_bitrate": [12],
+      "backlog_flow": 0,
+      "algo_alpha": 1, "algo_beta": 0, "algo_epsilon": 1, "algo_psi": 1
+    },
+    {
+      "n_slices": 5, "weight": 0.04,
+      "video_app": 0, "video_bitrate": [],
+      "internet_flow": 2, "if_bitrate": [9, 3],
+      "backlog_flow": 0,
+      "algo_alpha": 1, "algo_beta": 0, "algo_epsilon": 1, "algo_psi": 1
+    },
+    {
+      "n_slices": 5, "weight": 0.08,
+      "video_app": 1, "video_bitrate": [1280],
+      "internet_flow": 0, "if_bitrate": [],
+      "backlog_flow": 0,
+      "algo_alpha": 1, "algo_beta": 1, "algo_epsilon": 1, "algo_psi": 1
+    }
+  ],
+  "ues_per_slice":
+  [
+    14, 11, 7, 9, 13, 9, 7, 12, 13, 6, 14, 10, 7, 13, 11, 9, 7, 9, 8, 5
+  ]
+}
