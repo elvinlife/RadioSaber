@@ -78,8 +78,10 @@ double proportionalFairnessMetric(
 
 /* D_{u,p} * d_{u,i} / R_{u}, where D_{u,p} is the queuing delay experience by
    packet at the head of the queue corresponding to UE u and priority p. */
-// Peter: MLWDF is different from previous enterprise scheduling algorithm, because it selects the highest priority first, 
-// and id there are multiple UEs with the same priority, it then runs this metric. 
+
+// Peter: MLWDF is different from previous enterprise scheduling algorithm,
+// because it selects the highest priority first, and if there are multiple UEs
+// with the same priority, it then runs this metric.
 double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
                    int index) {
   // user: u, index: i * rbg_size
@@ -95,7 +97,7 @@ double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
     if (user->m_bearers[i]) {
       averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
       int priority = user->m_bearers[i]->GetPriority();
-      if (priority > max_priority){
+      if (priority > max_priority) {
         max_priority = priority;
         selected_bearer = i;
       }
@@ -104,8 +106,7 @@ double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
 
   RadioBearer* bearer = user->m_bearers[selected_bearer];
   double HoL = bearer->GetHeadOfLinePacketDelay();
-  double metric = HoL * maxThroughputMetric(user, index) / averageRate;
-  return metric;
+  return HoL * maxThroughputMetric(user, index) / averageRate;
 }
 
 // peter: reading in the slice cionfiguration
@@ -126,7 +127,7 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(
     // peter: get the number of users per slice
     num_ue = ues_per_slice[i].asInt();
     for (int j = 0; j < num_ue; j++) {
-      // peter: map user to slice vector, important to differentiate between the i and j here. 
+      // peter: map user to slice vector, important to differentiate between the i and j here.
       user_to_slice_.push_back(i);
     }
   }
@@ -134,7 +135,7 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(
   for (int i = 0; i < slice_schemes.size(); i++) {
     int n_slices = slice_schemes[i]["n_slices"].asInt();
     for (int j = 0; j < n_slices; j++) {
-      // Peter: this is a useful place to get the enterprise scheduler algorithms parameters. 
+      // Peter: this is a useful place to get the enterprise scheduler algorithms parameters.
       slice_weights_.push_back(slice_schemes[i]["weight"].asDouble());
       slice_algo_params_.emplace_back(slice_schemes[i]["algo_alpha"].asInt(),
                                       slice_schemes[i]["algo_beta"].asInt(),
@@ -187,7 +188,7 @@ void DownlinkTransportScheduler::SelectFlowsToSchedule() {
   RrcEntity* rrc =
       GetMacEntity()->GetDevice()->GetProtocolStack()->GetRrcEntity();
   // Peter: this is unexpected, because according to the paper, radio bearer is managed by individual UE,
-  //  but here it seems to suggest that 
+  //  but here it seems to suggest that
   // radio bearers are managed by thr RRC
   RrcEntity::RadioBearersContainer* bearers = rrc->GetRadioBearerContainer();
 
@@ -258,7 +259,7 @@ void DownlinkTransportScheduler::DoSchedule(void) {
   StopSchedule();
 }
 
-// peter: actually send out the packets. 
+// peter: actually send out the packets.
 void DownlinkTransportScheduler::DoStopSchedule(void) {
   PacketBurst* pb = new PacketBurst();
   UsersToSchedule* uesToSchedule = GetUsersToSchedule();
@@ -306,7 +307,7 @@ void DownlinkTransportScheduler::DoStopSchedule(void) {
   GetMacEntity()->GetDevice()->SendPacketBurst(pb);
 }
 
-// peter: the UpperBound function, as it is written, does not take into account that an RBG can only be allocated to a single slice or user. 
+// peter: the UpperBound function, as it is written, does not take into account that an RBG can only be allocated to a single slice or user.
 static unordered_map<int, vector<int>> UpperBound(double** flow_spectraleff,
                                                   vector<int>& slice_quota_rbgs,
                                                   int nb_rbgs, int nb_slices) {
@@ -444,7 +445,6 @@ static vector<int> SubOpt(double** flow_spectraleff,
   return rbg_to_slice;
 }
 
-
 // peter: I think this is the RadioSaber's approach when every enterprise returns the candidate
 static vector<int> MaximizeCell(double** flow_spectraleff,
                                 vector<int>& slice_quota_rbgs, int nb_rbgs,
@@ -476,7 +476,6 @@ static vector<int> MaximizeCell(double** flow_spectraleff,
           sum_bits * 180 / 8 * 4);  // 4 for rbg_size
   return rbg_to_slice;
 }
-
 
 // peter: I don't bother to understand this, nor do I think it important
 static vector<int> VogelApproximate(double** flow_spectraleff,
@@ -618,7 +617,7 @@ void DownlinkTransportScheduler::RBsAllocation() {
     extra_rbgs -= slice_quota_rbgs[i];
   }
   // peter: Distribute any remaining RBs (extra_rbs) evenly across the slices with data.
-  // peter: If there are leftover RBs after the even distribution, allocate them to the first slice 
+  // peter: If there are leftover RBs after the even distribution, allocate them to the first slice
   // (after randomizing the start index with rand_begin_idx to distribute leftovers randomly).
   is_first_slice = true;
   rand_begin_idx = rand();
