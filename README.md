@@ -27,4 +27,11 @@ git clang-format --style=file  # Do this prior to any commit
 
 ## Week of 10/30
 
-Add customizable objective (metric) to the RadioSaber scheduler. This can be accessed via `SingleCellWithI` and setting the inter-slice scheduler argument. 9 stands for the original RadioSaber (with spectral efficiency as objective), 91 stands for RadioSaber with proportional fairness, and 92 stands for RadioSaber with M-LWDF (modified largest weighted delay first).
+Added customizable objective (metric) to the RadioSaber scheduler. This can be accessed via `SingleCellWithI` and setting the inter-slice scheduler argument. 9 stands for the original RadioSaber (with spectral efficiency as objective), 91 stands for RadioSaber with proportional fairness, and 92 stands for RadioSaber with M-LWDF (modified largest weighted delay first).
+
+Added experiment scripts. These are adapted from RadioSaber experiments, but with different inter-slice metrics. *Plotting functionalities are not yet implemented.* To run the experiments:
+
+```bash
+cd ran-sched-experiments/contradict-objective
+./run.sh
+```
