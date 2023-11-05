@@ -26,6 +26,7 @@
 #include <queue>
 #include "../channel/LteChannel.h"
 #include "../channel/propagation-model/macrocell-urban-area-channel-realization.h"
+#include "../channel/propagation-model/propagation-loss-model.h"
 #include "../componentManagers/FrameManager.h"
 #include "../core/eventScheduler/simulator.h"
 #include "../core/spectrum/bandwidth-manager.h"
@@ -34,6 +35,7 @@
 #include "../device/ENodeB.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
 #include "../device/NetworkNode.h"
+#include "../device/UserEquipment.h"
 #include "../flows/QoS/QoSForEXP.h"
 #include "../flows/QoS/QoSForFLS.h"
 #include "../flows/QoS/QoSForM_LWDF.h"
@@ -50,6 +52,8 @@
 #include "../phy/wideband-cqi-eesm-error-model.h"
 #include "../protocolStack/packet/Packet.h"
 #include "../protocolStack/packet/packet-burst.h"
+#include "../utility/CellPosition.h"
+#include "../utility/frequency-reuse-helper.h"
 #include "../utility/RandomVariable.h"
 #include "../utility/seed.h"
 

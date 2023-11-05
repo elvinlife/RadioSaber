@@ -154,13 +154,13 @@ DownlinkTransportScheduler::DownlinkTransportScheduler(
 
   // Charlie: set the inter-slice metric (objective)
   switch (interslice_metric) {
-    case 1:  // sched 9
+    case 0:  // sched 9
       inter_metric_ = &maxThroughputMetric;
       break;
-    case 2:  // sched 91
+    case 1:  // sched 91
       inter_metric_ = &proportionalFairnessMetric;
       break;
-    case 3:  // sched 92
+    case 2:  // sched 92
       inter_metric_ = &mLWDFMetric;
       break;
     default:

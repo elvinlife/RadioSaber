@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include "../device/NetworkNode.h"
 #include "../networkTopology/Cell.h"
 
 class NetworkNode;
