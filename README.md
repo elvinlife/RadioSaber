@@ -1,6 +1,6 @@
 ## Instructions (to group members)
 
-Always check at least that there are no compilation errors. Simply the `LTE-Sim` executable and do `make -j8` and see if the compilation succeeds.
+Always check at least that there are no compilation errors. Simply remove the `LTE-Sim` executable and do `make -j8` and see if the compilation succeeds.
 
 ### Git operations
 
@@ -29,12 +29,15 @@ git clang-format --style=file  # Do this prior to any commit
 
 Added customizable objective (metric) to the RadioSaber scheduler. This can be accessed via `SingleCellWithI` and setting the inter-slice scheduler argument. 9 stands for the original RadioSaber (with spectral efficiency as objective), 91 stands for RadioSaber with proportional fairness, and 92 stands for RadioSaber with M-LWDF (modified largest weighted delay first).
 
-Added experiment scripts. These are adapted from RadioSaber experiments, but with different inter-slice metrics. To run the experiments:
+Added a trial experiment script, adapted from RadioSaber but with different interslice metrics.
+
+## Week of 11/06
+
+Prepared configurations for the comparison test. Refactored and implemented the plots for throughput, RB/s, flow completion time, and queuing delay. To run the scripts:
 
 ```bash
 cd ran-sched-experiments/contradict-objective
-./run.sh   # Create logs
-./plot.py  # Read logs and plot
+./run.sh                                   # Create all logs (test included)
+./plot.py --test                           # Plot test log
+./plot.py --intra-alg all --flow-type all  # Plot all experiment logs
 ```
-
-One should be able to obtain the plots of per-slice throughput (in Mbps), per-slice resource blocks per second, and sum total throughput.
