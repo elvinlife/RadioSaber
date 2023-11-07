@@ -115,12 +115,12 @@ static void SingleCellWithInterference(double radius, int sched_type,
       std::cout << "Scheduler Vogel " << std::endl;
       break;
     case 91:  // Charlie: RadioSaber with proportional fairness as inter-slice scheduling objective
-      downlink_scheduler_type = ENodeB::DLSScheduler_SEQUENTIAL_FAIRNESS;
+      downlink_scheduler_type = ENodeB::DLSScheduler_MAXCELL_FAIRNESS;
       std::cout << "Scheduler Greedy (RadioSaber with proportional fairness)"
                 << std::endl;
       break;
     case 92:  // Charlie: RadioSaber with m-lwdf as inter-slice scheduling objective
-      downlink_scheduler_type = ENodeB::DLSScheduler_SEQUENTIAL_FAIRNESS;
+      downlink_scheduler_type = ENodeB::DLSScheduler_MAXCELL_MLWDF;
       std::cout << "Scheduler Greedy (RadioSaber with m-lwdf)" << std::endl;
       break;
     default:

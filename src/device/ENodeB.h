@@ -78,8 +78,8 @@ class ENodeB : public NetworkNode {
     DLScheduler_UpperBound,
     DLScheduler_MAXCELL,
     DLScheduler_VOGEL,
-    DLSScheduler_SEQUENTIAL_FAIRNESS,
-    DLSScheduler_SEQUENTIAL_MLWDF
+    DLSScheduler_MAXCELL_FAIRNESS,
+    DLSScheduler_MAXCELL_MLWDF
   };
   enum ULSchedulerType {
     ULScheduler_TYPE_MAXIMUM_THROUGHPUT,
