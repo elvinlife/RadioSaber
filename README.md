@@ -1,6 +1,6 @@
 ## Instructions (to group members)
 
-Always check at least that there are no compilation errors. Simply the `LTE-Sim` executable and do `make -j8` and see if the compilation succeeds.
+Always check at least that there are no compilation errors. Simply remove the `LTE-Sim` executable and do `make -j8` and see if the compilation succeeds.
 
 ### Git operations
 
