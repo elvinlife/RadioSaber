@@ -127,8 +127,10 @@ def process_log(fname):
         with open(fname, "r", encoding="utf-8") as fin:
             data, data_ipflow = [], {}
             for rawline in fin:
-                words = rawline.split()
                 line = rawline.strip()
+                if not line:
+                    continue  # Ignore empty lines
+                words = rawline.split()
 
                 # For instance:
                 # 12062 app: 49 cumu_bytes: 2083456 cumu_rbs: 30224 hol_delay: 0.002 \
