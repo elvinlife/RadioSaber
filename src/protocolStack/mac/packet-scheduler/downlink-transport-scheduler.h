@@ -35,6 +35,12 @@ class DownlinkTransportScheduler : public PacketScheduler {
   std::vector<int> slice_priority_;
   std::vector<double> slice_rbs_offset_;
 
+  // Peter: Keep a running score to measure how well each request is satisfied. 
+  std::vector<double> slice_score_;
+
+  // Peter: Store the result of the score to a file
+  void logScore();
+
   const double beta_ = 0.1;
   int inter_sched_ = 0;
 
