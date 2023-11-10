@@ -110,29 +110,11 @@ double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
 }
 
 // Peter: Save the score to the log 
-// void DownlinkTransportScheduler::logScore() {
-//   std::string filename;
-//   if (inter_metric_ = &maxThroughputMetric){
-//     filename = "MaxThroughputMetric.txt";
-//   } else if (inter_metric_ == &proportionalFairnessMetric){
-//     filename = "ProportionalFairnessMetric.txt";
-//   } else if (inter_metric_ == &mLWDFMetric){
-//     filename = "mLWDFMetric.txt";
-//   } else {
-//     throw std::runtime_error("Error: invalid inter-slice metric (objective)");
-//   }
-
-//   std::ofstream logFile(filename, std::ios_base::app);
-//   if (!logFile.is_open()){
-//     throw std::runtime_error("Failed to open the score log file");
-//   }
-
-//   for (int i = 0; i < slice_score_.size(); i++) {
-//     logFile << "Slice Index: " << i << ", Score: " << slice_score_[i] << std::endl;
-//   }
-
-//   logFile.close();
-// }
+void DownlinkTransportScheduler::logScore() {
+  for (int i = 0; i < slice_score_.size(); i++) {
+    std::cerr << "Slice Index: " << i << ", Score: " << slice_score_[i] << std::endl;
+  }
+}
 
 // peter: reading in the slice cionfiguration
 DownlinkTransportScheduler::DownlinkTransportScheduler(
@@ -283,6 +265,7 @@ void DownlinkTransportScheduler::DoSchedule(void) {
   }
 
   StopSchedule();
+  logScore();
 }
 
 // peter: actually send out the packets.
@@ -740,7 +723,8 @@ void DownlinkTransportScheduler::RBsAllocation() {
   if (inter_sched_ < 4) {
     for (size_t i = 0; i < rbg_to_slice.size(); ++i) {
       // Peter: Update each slice's running score
-      slice_score_[rbg_to_slice[i]] += flow_spectraleff[i][rbg_to_slice[i]];
+      // Peter: Change it to intra slice score instead of interslice score
+      slice_score_[rbg_to_slice[i]] += metrics[i][user_index[i][rbg_to_slice[i]]];
 
       int uindex = user_index[i][rbg_to_slice[i]];
       assert(uindex != -1);
