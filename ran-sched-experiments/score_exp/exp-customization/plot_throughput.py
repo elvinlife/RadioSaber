@@ -67,9 +67,9 @@ def get_throughput_perslice(dname, n_slices):
     avg_rbs['single'] = [0 for i in range(n_slices) ]
 
     for i in range(0, 1):
-        nvs_rbs, nvs_bytes = get_cumubytes( dname + "/nvs_" + INTRA + str(i) + ".log", n_slices )
-        maxcell_rbs, maxcell_bytes = get_cumubytes( dname + "/maxcell_" + INTRA + str(i) + ".log", n_slices )
-        single_rbs, single_bytes = get_cumubytes( dname + "/single_" + INTRA + str(i) + ".log", n_slices )
+        nvs_rbs, nvs_bytes = get_cumubytes( dname + "/max_throughput_"+ str(i) + ".log", n_slices )
+        maxcell_rbs, maxcell_bytes = get_cumubytes( dname + "/mlwdf_" + str(i) + ".log", n_slices )
+        single_rbs, single_bytes = get_cumubytes( dname + "/pf_" + str(i) + ".log", n_slices )
         for j in range(n_slices):
             avg_throughput['nvs'][j] += (nvs_bytes[j] * ratio)
             avg_throughput['maxcell'][j] += (maxcell_bytes[j] * ratio)
@@ -88,9 +88,9 @@ def get_throughput_total(dname, n_slices):
     avg_throughput['single'] = []
 
     for i in range(0, TIMES):
-        _, nvs_bytes = get_cumubytes( dname + "/nvs_" + INTRA + str(i) + ".log", n_slices )
-        _, maxcell_bytes = get_cumubytes( dname + "/maxcell_" + INTRA + str(i) + ".log", n_slices )
-        _, single_bytes = get_cumubytes( dname + "/single_" + INTRA + str(i) + ".log", n_slices )
+        _, nvs_bytes = get_cumubytes( dname + "/max_throughput_"+ str(i) + ".log", n_slices )
+        _, maxcell_bytes = get_cumubytes( dname + "/mlwdf_" + str(i) + ".log", n_slices )
+        _, single_bytes = get_cumubytes( dname + "/pf_" + str(i) + ".log", n_slices )
         avg_throughput['nvs'].append( sum(nvs_bytes) * ratio )
         avg_throughput['maxcell'].append( sum(maxcell_bytes) * ratio )
         avg_throughput['single'].append( sum(single_bytes) * ratio )
@@ -104,12 +104,12 @@ def plot_fairness():
 
     fig, ax = plt.subplots(figsize=(10, 6))
     x_array = np.arange(1, n_slices+1 )
-    ax.plot( x_array, avg_throughput['maxcell'], 'bX--', label="RadioSaber" )
-    ax.plot( x_array, avg_throughput['nvs'], 'ro--', label="NVS" )
-    ax.plot( x_array, avg_throughput['single'], 'yD--', label="No-Slicing" )
+    ax.plot( x_array, avg_throughput['maxcell'], 'bX--', label = "mlwdf" )
+    ax.plot( x_array, avg_throughput['nvs'], 'ro--', label="Max Throughput" )
+    ax.plot( x_array, avg_throughput['single'], 'yD--', label = "pf" )
     ax.set_xlabel("Slice Id", fontsize=default_font + 4)
     ax.set_ylabel("Throughput(Mbps)", fontsize=default_font + 4)
-    ax.set_ylim( bottom = 0, top = 25 )
+    ax.set_ylim( bottom = 0, top = 50 )
     ax.set_xticks( [ i for i in range(1, n_slices+1, 2)] )
     ax.tick_params(axis="both", labelsize=default_font)
     ax.grid( axis="y", alpha=0.4 )
@@ -118,9 +118,9 @@ def plot_fairness():
     fig.savefig("sameweight_tenant_bw" + FTYPE )
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot( x_array, avg_rbs['nvs'], 'ro--', label="NVS" )
-    ax.plot( x_array, avg_rbs['maxcell'], 'bX--', label="RadioSaber" )
-    ax.plot( x_array, avg_rbs['single'], 'yD--', label="No-Slicing" )
+    ax.plot( x_array, avg_rbs['nvs'], 'ro--', label="Max Throughput" )
+    ax.plot( x_array, avg_rbs['maxcell'], 'bX--', label = "mlwdf" )
+    ax.plot( x_array, avg_rbs['single'], 'yD--', label = "pf" )
     ax.set_xlabel("Slice Id", fontsize=default_font + 4)
     ax.set_ylabel("Resource blocks(per-second)", fontsize=default_font + 4)
     ax.set_ylim( top = 45000 )
@@ -149,7 +149,7 @@ def plot_sum_bandwidth():
     barlist[1].set_color(COLORS[2])
     ax.errorbar( x_array, bw_array, bwerr_array, fmt=".", capsize=12, color="black" )
     ax.set_xlim( -0.5, 1.5 )
-    ax.set_ylim( 0, 300 )
+    ax.set_ylim( 0, 400 )
 
     ax.set_xticks( x_array  )
     ax.set_xticklabels( scheme_array )
@@ -166,9 +166,9 @@ def plot_together():
 
     fig, ax = plt.subplots(ncols=3, figsize=(26, 7), gridspec_kw={"width_ratios": [2,2,1]})
     x_array = np.arange(1, n_slices+1 )
-    ax[0].plot( x_array, avg_rbs['single'], 'o--', label="No-Slicing", markersize=12, color=COLORS[0] )
-    ax[0].plot( x_array, avg_rbs['nvs'], 'v--', label="NVS", markersize=12, color=COLORS[1] )
-    ax[0].plot( x_array, avg_rbs['maxcell'], '^--', label="RadioSaber", markersize=12, color=COLORS[2] )
+    ax[0].plot( x_array, avg_rbs['single'], 'o--', label = "pf", markersize=12, color=COLORS[0] )
+    ax[0].plot( x_array, avg_rbs['nvs'], 'v--', label="Max Throughput", markersize=12, color=COLORS[1] )
+    ax[0].plot( x_array, avg_rbs['maxcell'], '^--', label = "mlwdf", markersize=12, color=COLORS[2] )
     ax[0].set_xlabel("Slice Id", fontsize=default_font + 4)
     ax[0].set_ylabel("Resource blocks(per-second)", fontsize=default_font + 4)
     ax[0].set_ylim( top = 45000 )
@@ -179,12 +179,12 @@ def plot_together():
     ax[0].legend(fontsize=default_font + 2, frameon=False, ncol=3, loc="upper center")
     ax[0].set_title("(a) per-slice RBs per second", y=-0.3, fontsize=default_font+5)
 
-    ax[1].plot( x_array, avg_throughput['single'], 'o--', label="No-Slicing", markersize=12, color=COLORS[0] )
-    ax[1].plot( x_array, avg_throughput['nvs'], 'v--', label="NVS", markersize=12, color=COLORS[1] )
-    ax[1].plot( x_array, avg_throughput['maxcell'], '^--', label="RadioSaber", markersize=12, color=COLORS[2] )
+    ax[1].plot( x_array, avg_throughput['single'], 'o--', label = "pf", markersize=12, color=COLORS[0] )
+    ax[1].plot( x_array, avg_throughput['nvs'], 'v--', label="Max Throughput", markersize=12, color=COLORS[1] )
+    ax[1].plot( x_array, avg_throughput['maxcell'], '^--', label = "mlwdf", markersize=12, color=COLORS[2] )
     ax[1].set_xlabel("Slice Id", fontsize=default_font + 4)
     ax[1].set_ylabel("Throughput(Mbps)", fontsize=default_font + 4)
-    ax[1].set_ylim( bottom = 0, top = 25 )
+    ax[1].set_ylim( bottom = 0, top = 50 )
     ax[1].set_xticks( [ i for i in range(1, n_slices+1, 2)] )
     ax[1].tick_params(axis="both", labelsize=default_font)
     ax[1].grid( axis="y", alpha=0.4 )
@@ -195,13 +195,13 @@ def plot_together():
     x_array = np.arange( 0, 3, 1 )
     bw_array = [ np.mean(sum_throughput['single']), np.mean(sum_throughput['nvs']), np.mean(sum_throughput['maxcell'])]
     bwerr_array = [ np.std(sum_throughput['single']), np.std(sum_throughput['nvs']), np.std(sum_throughput['maxcell']) ]
-    scheme_array = [ "No-Slicing", "NVS", "RadioSaber" ]
+    scheme_array = [ "PF", "MT", "MLWDF" ]
     barlist = ax[2].bar( x_array, bw_array, width = 0.3 )
-    for i in range(3):
+    for i in range(3):  
         barlist[i].set_color(COLORS[i])
     ax[2].errorbar( x_array, bw_array, bwerr_array, fmt=".", capsize=12, color="black" )
     ax[2].set_xlim( -0.5, 2.5 )
-    ax[2].set_ylim( 0, 300 )
+    ax[2].set_ylim( 0, 400 )
     ax[2].set_xticks( x_array  )
     ax[2].set_xticklabels( scheme_array )
     ax[2].tick_params(axis="both", labelsize=default_font )

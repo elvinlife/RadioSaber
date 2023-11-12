@@ -110,28 +110,28 @@ def get_throughput(fname, slice_begin, slice_end):
 def get_fct_schemes(dname, slice_begin, slice_end, priority_only):
     all_fct = {}
     for i in range(BEGIN_IDX, BEGIN_IDX+1):
-        all_fct['nvs'] = get_fct( dname + "/nvs_" + INTRA + str(i) + ".log", slice_begin, slice_end, priority_only )
-        all_fct['maxcell'] = get_fct( dname + "/maxcell_" + INTRA + str(i) + ".log", slice_begin, slice_end, priority_only )
-        all_fct['single'] = get_fct( dname + "/single_" + INTRA + str(i) + ".log", slice_begin, slice_end, priority_only )
+        all_fct['nvs'] = get_fct( dname + "/max_throughput_" + str(i) + ".log", slice_begin, slice_end, priority_only )
+        all_fct['maxcell'] = get_fct( dname + "/mlwdf_" + str(i) + ".log", slice_begin, slice_end, priority_only )
+        all_fct['single'] = get_fct( dname + "/pf_" + INTRA + str(i) + ".log", slice_begin, slice_end, priority_only )
     return all_fct
 
 def get_hol_schemes(dname, slice_begin, slice_end):
     all_hol = {}
     for i in range(BEGIN_IDX, BEGIN_IDX+1):
-        all_hol['nvs'] = get_hol( dname + "/nvs_" + INTRA + str(i) + ".log", slice_begin, slice_end)
-        all_hol['maxcell'] = get_hol( dname + "/maxcell_" + INTRA + str(i) + ".log", slice_begin, slice_end )
-        all_hol['single'] = get_hol( dname + "/single_" + INTRA + str(i) + ".log", slice_begin, slice_end )
+        all_hol['nvs'] = get_hol( dname + "/max_throughput_" + str(i) + ".log", slice_begin, slice_end)
+        all_hol['maxcell'] = get_hol( dname + "/mlwdf_" + str(i) + ".log", slice_begin, slice_end )
+        all_hol['single'] = get_hol( dname + "/pf_" + INTRA + str(i) + ".log", slice_begin, slice_end )
     return all_hol
 
 def get_throughput_schemes(dname, slice_begin, slice_end):
     all_throughput = {}
     for i in range(BEGIN_IDX, BEGIN_IDX+1):
         all_throughput['nvs'] = np.mean(
-                get_throughput( dname + "/nvs_" + INTRA + str(i) + ".log", slice_begin, slice_end ) )
+                get_throughput( dname + "/max_throughput_" + str(i) + ".log", slice_begin, slice_end ) )
         all_throughput['maxcell'] = np.mean(
-                get_throughput( dname + "/maxcell_" + INTRA + str(i) + ".log", slice_begin, slice_end ) )
+                get_throughput( dname + "/mlwdf_" + str(i) + ".log", slice_begin, slice_end ) )
         all_throughput['single'] = np.mean(
-                get_throughput( dname + "/single_" + INTRA + str(i) + ".log", slice_begin, slice_end ) )
+                get_throughput( dname + "/pf_" + INTRA + str(i) + ".log", slice_begin, slice_end ) )
     return all_throughput
 
 def print_throughput(slice_begin, slice_end):
@@ -196,5 +196,4 @@ def plot_hol_delay(ofname, slice_begin, slice_end):
 
 # print_throughput( 0, 4 )
 plot_fct( "cdf-fct-pf", 5, 9 )
-plot_fct( "cdf-fct-priority", 10, 14, True )
-plot_hol_delay( "cdf-hol-delay", 15, 19 )
+plot_hol_delay( "cdf-hol-delay", 10, 14 )

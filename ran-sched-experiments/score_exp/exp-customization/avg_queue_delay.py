@@ -77,7 +77,7 @@ plt.xlabel('Slice Index')
 plt.ylabel('Average HOL Delay')
 plt.title('Average HOL Delay for different Interslice algo')
 plt.legend()
-plt.savefig(f'./exp-customize-20slices_second_run/hol_delay_comparison.png')
+plt.savefig(f'./exp-customize-20slices/hol_delay_comparison.png')
 plt.close()
 
 

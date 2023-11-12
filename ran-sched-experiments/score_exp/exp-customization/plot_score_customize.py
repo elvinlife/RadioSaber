@@ -15,7 +15,7 @@ def extract_last_20_scores(file_path):
         
         # We are at the end of the file, start moving backwards
         end_byte = file.tell()
-        lines_to_go = 20
+        lines_to_go = 15
         buffer = bytearray()
         while lines_to_go > 0 and file.tell() > 0:
             file.seek(-1, os.SEEK_CUR)
@@ -70,7 +70,7 @@ def plot_scores_pf():
 
     # Save the plot to a file
     plt.tight_layout()  # Adjust layout for better fit
-    plt.savefig(f'./exp-customize-20slices_second_run/scores_comparison_pf.png')
+    plt.savefig(f'./exp-customize-20slices/scores_comparison_pf_0.png')
     plt.close(fig)  # Close the plot to free up memory
     
     
@@ -100,7 +100,7 @@ def plot_scores_mt():
 
     # Save the plot to a file
     plt.tight_layout()  # Adjust layout for better fit
-    plt.savefig(f'./exp-customize-20slices_second_run/scores_comparison_mt.png')
+    plt.savefig(f'./exp-customize-20slices/scores_comparison_mt_0.png')
     plt.close(fig)  # Close the plot to free up memory
     
     
@@ -130,7 +130,7 @@ def plot_scores_mlwdf():
 
     # Save the plot to a file
     plt.tight_layout()  # Adjust layout for better fit
-    plt.savefig(f'./exp-customize-20slices_second_run/scores_comparison_mlwdf.png')
+    plt.savefig(f'./exp-customize-20slices/scores_comparison_mlwdf_0.png')
     plt.close(fig)  # Close the plot to free up memory
 
 
@@ -160,7 +160,7 @@ def plot_scores_video():
 
     # Save the plot to a file
     plt.tight_layout()  # Adjust layout for better fit
-    plt.savefig(f'./exp-customize-20slices_second_run/scores_comparison_mlwdf_video.png')
+    plt.savefig(f'./exp-customize-20slices/scores_comparison_mlwdf_video_0.png')
     plt.close(fig)  # Close the plot to free up memory
 
 # Process each log file and plot the scores
@@ -170,9 +170,9 @@ def plot_scores_video():
 #     plot_scores(scores, file_name)
 
 # Plot the scores for the last 20 slices of each log file
-max_throughput_scores = extract_last_20_scores('./exp-customize-20slices_second_run/max_throughput_1.log')
-pf_scores = extract_last_20_scores('./exp-customize-20slices_second_run/pf_1.log')
-mlwdf_scores = extract_last_20_scores('./exp-customize-20slices_second_run/mlwdf_1.log')
+max_throughput_scores = extract_last_20_scores('./exp-customize-20slices/max_throughput_0.log')
+pf_scores = extract_last_20_scores('./exp-customize-20slices/pf_0.log')
+mlwdf_scores = extract_last_20_scores('./exp-customize-20slices/mlwdf_0.log')
 plot_scores_pf()
 plot_scores_mt()
 plot_scores_video()

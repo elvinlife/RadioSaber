@@ -1,5 +1,6 @@
 #!/bin/bash
-ODIR="exp-customize-20slices_second_run"
+ODIR="exp-customize-20slices"
+
 
 run_onecase() {
     for i in $(seq 0 2); do
