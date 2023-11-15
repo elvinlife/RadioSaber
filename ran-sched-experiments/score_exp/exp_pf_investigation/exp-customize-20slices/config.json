@@ -11,8 +11,8 @@
     {
       "n_slices": 5, "weight": 0.06,
       "video_app": 0, "video_bitrate": [],
-      "internet_flow": 1, "if_bitrate": [12],
-      "backlog_flow": 0,
+      "internet_flow": 0, "if_bitrate": [],
+      "backlog_flow": 1,
       "algo_alpha": 0, "algo_beta": 0, "algo_epsilon": 1, "algo_psi": 1
     },
     {
