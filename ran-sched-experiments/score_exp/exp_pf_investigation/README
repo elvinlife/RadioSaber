@@ -1,0 +1,6 @@
+to further investigate why the score of the PF metric is irregular, we. 
+1. Change the flow for the pf slice to backlogged flow, and evaluate the variance of the per UE throughput
+2. Compare the per UE throughput when the inter slice scheduler is MLWDF/MT/PF
+
+
+3. Also investigate whether the HoL blocking for MLWDF slice is consistent with its score when the inter slice scheduler is different
