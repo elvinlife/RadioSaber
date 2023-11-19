@@ -56,9 +56,9 @@ def plot_scores_pf():
     fig, ax = plt.subplots(figsize=(15, 8))
 
     # Each set of bars is offset by the width of the bar
-    bar1 = ax.bar(index, max_throughput_scores[5:10], bar_width, label='max_throughput_0')
-    bar2 = ax.bar(index + bar_width, pf_scores[5:10], bar_width, label='pf_0')
-    bar3 = ax.bar(index + bar_width * 2, mlwdf_scores[5:10], bar_width, label='mlwdf_0')
+    bar1 = ax.bar(index, max_throughput_scores[5:10], bar_width, label='max_throughput_0_2nd')
+    bar2 = ax.bar(index + bar_width, pf_scores[5:10], bar_width, label='pf_0_2nd')
+    bar3 = ax.bar(index + bar_width * 2, mlwdf_scores[5:10], bar_width, label='mlwdf_0_2nd')
 
     # Add labels, title, and legend
     ax.set_xlabel('Slice Index')
@@ -70,7 +70,7 @@ def plot_scores_pf():
 
     # Save the plot to a file
     plt.tight_layout()  # Adjust layout for better fit
-    plt.savefig(f'./exp-customize-20slices/scores_comparison_pf_0.png')
+    plt.savefig(f'./exp-customize-20slices/scores_comparison_pf_0_2nd.png')
     plt.close(fig)  # Close the plot to free up memory
     
     
@@ -86,9 +86,9 @@ def plot_scores_mt():
     fig, ax = plt.subplots(figsize=(15, 8))
 
     # Each set of bars is offset by the width of the bar
-    bar1 = ax.bar(index, max_throughput_scores[:5], bar_width, label='max_throughput_0')
-    bar2 = ax.bar(index + bar_width, pf_scores[:5], bar_width, label='pf_0')
-    bar3 = ax.bar(index + bar_width * 2, mlwdf_scores[:5], bar_width, label='mlwdf_0')
+    bar1 = ax.bar(index, max_throughput_scores[:5], bar_width, label='max_throughput_0_2nd')
+    bar2 = ax.bar(index + bar_width, pf_scores[:5], bar_width, label='pf_0_2nd')
+    bar3 = ax.bar(index + bar_width * 2, mlwdf_scores[:5], bar_width, label='mlwdf_0_2nd')
 
     # Add labels, title, and legend
     ax.set_xlabel('Slice Index')
@@ -100,7 +100,7 @@ def plot_scores_mt():
 
     # Save the plot to a file
     plt.tight_layout()  # Adjust layout for better fit
-    plt.savefig(f'./exp-customize-20slices/scores_comparison_mt_0.png')
+    plt.savefig(f'./exp-customize-20slices/scores_comparison_mt_0_2nd.png')
     plt.close(fig)  # Close the plot to free up memory
     
     
@@ -116,9 +116,9 @@ def plot_scores_mlwdf():
     fig, ax = plt.subplots(figsize=(15, 8))
 
     # Each set of bars is offset by the width of the bar
-    bar1 = ax.bar(index, max_throughput_scores[10:15], bar_width, label='max_throughput_0')
-    bar2 = ax.bar(index + bar_width, pf_scores[10:15], bar_width, label='pf_0')
-    bar3 = ax.bar(index + bar_width * 2, mlwdf_scores[10:15], bar_width, label='mlwdf_0')
+    bar1 = ax.bar(index, max_throughput_scores[10:15], bar_width, label='max_throughput_0_2nd')
+    bar2 = ax.bar(index + bar_width, pf_scores[10:15], bar_width, label='pf_0_2nd')
+    bar3 = ax.bar(index + bar_width * 2, mlwdf_scores[10:15], bar_width, label='mlwdf_0_2nd')
 
     # Add labels, title, and legend
     ax.set_xlabel('Slice Index')
@@ -130,7 +130,7 @@ def plot_scores_mlwdf():
 
     # Save the plot to a file
     plt.tight_layout()  # Adjust layout for better fit
-    plt.savefig(f'./exp-customize-20slices/scores_comparison_mlwdf_0.png')
+    plt.savefig(f'./exp-customize-20slices/scores_comparison_mlwdf_0_2nd.png')
     plt.close(fig)  # Close the plot to free up memory
 
 
@@ -146,9 +146,9 @@ def plot_scores_video():
     fig, ax = plt.subplots(figsize=(15, 8))
 
     # Each set of bars is offset by the width of the bar
-    bar1 = ax.bar(index, max_throughput_scores[10:15], bar_width, label='max_throughput_0')
-    bar2 = ax.bar(index + bar_width, pf_scores[10:15], bar_width, label='pf_0')
-    bar3 = ax.bar(index + bar_width * 2, mlwdf_scores[10:15], bar_width, label='mlwdf_0')
+    bar1 = ax.bar(index, max_throughput_scores[10:15], bar_width, label='max_throughput_0_2nd')
+    bar2 = ax.bar(index + bar_width, pf_scores[10:15], bar_width, label='pf_0_2nd')
+    bar3 = ax.bar(index + bar_width * 2, mlwdf_scores[10:15], bar_width, label='mlwdf_0_2nd')
 
     # Add labels, title, and legend
     ax.set_xlabel('Slice Index')
@@ -160,7 +160,7 @@ def plot_scores_video():
 
     # Save the plot to a file
     plt.tight_layout()  # Adjust layout for better fit
-    plt.savefig(f'./exp-customize-20slices/scores_comparison_mlwdf_video_0.png')
+    plt.savefig(f'./exp-customize-20slices/scores_comparison_mlwdf_video_0_2nd.png')
     plt.close(fig)  # Close the plot to free up memory
 
 # Process each log file and plot the scores
@@ -170,9 +170,9 @@ def plot_scores_video():
 #     plot_scores(scores, file_name)
 
 # Plot the scores for the last 20 slices of each log file
-max_throughput_scores = extract_last_20_scores('./exp-customize-20slices/max_throughput_0.log')
-pf_scores = extract_last_20_scores('./exp-customize-20slices/pf_0.log')
-mlwdf_scores = extract_last_20_scores('./exp-customize-20slices/mlwdf_0.log')
+max_throughput_scores = extract_last_20_scores('./exp-customize-20slices/max_throughput_0_2nd.log')
+pf_scores = extract_last_20_scores('./exp-customize-20slices/pf_0_2nd.log')
+mlwdf_scores = extract_last_20_scores('./exp-customize-20slices/mlwdf_0_2nd.log')
 plot_scores_pf()
 plot_scores_mt()
 plot_scores_video()

@@ -79,7 +79,8 @@ class ENodeB : public NetworkNode {
     DLScheduler_MAXCELL,
     DLScheduler_VOGEL,
     DLSScheduler_MAXCELL_FAIRNESS,
-    DLSScheduler_MAXCELL_MLWDF
+    DLSScheduler_MAXCELL_MLWDF,
+    DLSScheduler_RANDOM //Peter: Baseline of variance
   };
   enum ULSchedulerType {
     ULScheduler_TYPE_MAXIMUM_THROUGHPUT,

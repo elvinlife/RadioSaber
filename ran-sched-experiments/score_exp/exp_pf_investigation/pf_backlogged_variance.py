@@ -40,7 +40,7 @@ def calculate_variance(data, ues_per_slice, start_slice, end_slice):
     return variances
 
 print("Interslice is MT0 *******************************")
-filename = "./exp-customize-20slices/max_throughput_0.log"  
+filename = "./exp-customize-20slices/max_throughput_1_2nd.log"  
 
 lines = read_log_file_reverse(filename)
 data = extract_data(lines, 5, 9)
@@ -50,7 +50,7 @@ print(variances_mt)
 
 
 print("Interslice is PF0 *******************************")
-filename = "./exp-customize-20slices/pf_0.log"  
+filename = "./exp-customize-20slices/pf_1_2nd.log"  
 lines = read_log_file_reverse(filename)
 data = extract_data(lines, 5, 9)
 print(min(data.keys()), max(data.keys()))
@@ -59,7 +59,7 @@ print(variances_pf)
 
 
 print("Interslice is mlwdf0 *******************************")
-filename = "./exp-customize-20slices/mlwdf_0.log"  
+filename = "./exp-customize-20slices/random_1_2nd.log"  
 lines = read_log_file_reverse(filename)
 data = extract_data(lines, 5, 9)
 print(min(data.keys()), max(data.keys()))
@@ -78,15 +78,15 @@ positions = np.arange(num_slices)
 # Plotting the data
 bar_mt = ax.bar(positions, variances_mt, bar_width, label='MT')
 bar_pf = ax.bar(positions + bar_width, variances_pf, bar_width, label='PF')
-bar_mlwdf = ax.bar(positions + 2 * bar_width, variances_mlwdf, bar_width, label='MLWDF')
+bar_mlwdf = ax.bar(positions + 2 * bar_width, variances_mlwdf, bar_width, label='Random')
 
 # Adding labels and title
 ax.set_xlabel('Slices')
 ax.set_ylabel('Variance of Cumulative Bytes')
-ax.set_title('Variance Comparison Across Different Scheduling Algorithms log 0')
+ax.set_title('Variance Comparison Across Different Scheduling Algorithms log 1 with random as baseline')
 ax.set_xticks(positions + bar_width)
 ax.set_xticklabels([f'Slice {i+1}' for i in range(num_slices)])
 ax.legend()
 
-plt.savefig("pf_backlogged_variance_log0.png")
+plt.savefig("pf_backlogged_variance_log0_with_random_as_baseline_1.png")
 

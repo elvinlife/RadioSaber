@@ -123,6 +123,10 @@ static void SingleCellWithInterference(double radius, int sched_type,
       downlink_scheduler_type = ENodeB::DLSScheduler_MAXCELL_MLWDF;
       std::cout << "Scheduler Greedy (RadioSaber with m-lwdf)" << std::endl;
       break;
+    case 93: // Peter: Total random selection as a baseline of variance
+      downlink_scheduler_type = ENodeB::DLSScheduler_RANDOM;
+      std::cout << "Scheduler Random" << std::endl;
+      break;
     default:
       string error_log = "Undefined Scheduler: " + std::to_string(sched_type);
       throw std::runtime_error(error_log);

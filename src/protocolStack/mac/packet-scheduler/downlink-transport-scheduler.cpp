@@ -106,8 +106,8 @@ double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
 
   RadioBearer* bearer = user->m_bearers[selected_bearer];
   double HoL = bearer->GetHeadOfLinePacketDelay();
-  fprintf(stderr, "User %d ML Score: %.2f\n", user->GetUserID(),
-          HoL * maxThroughputMetric(user, index) / averageRate * 1000);  // 4 for rbg_size
+  // fprintf(stderr, "User %d ML Score: %.2f\n", user->GetUserID(),
+  //         HoL * maxThroughputMetric(user, index) / averageRate * 1000);  // 4 for rbg_size
   return HoL * maxThroughputMetric(user, index) / averageRate * 1000;
 }
 
@@ -266,7 +266,8 @@ void DownlinkTransportScheduler::DoSchedule(void) {
     RBsAllocation();
   }
 
-  StopSchedule();
+  // StopSchedule();
+  DoStopSchedule();
   logScore();
 }
 
@@ -445,6 +446,35 @@ static vector<int> SubOpt(double** flow_spectraleff,
     }
     if (slice_fewer.at(to_slice) <= 0) {
       slice_fewer.erase(to_slice);
+    }
+  }
+  double sum_bits = 0;
+  for (int i = 0; i < nb_rbgs; ++i) {
+    sum_bits += flow_spectraleff[i][rbg_to_slice[i]];
+  }
+  fprintf(stderr, "all_bytes: %.0f\n",
+          sum_bits * 180 / 8 * 4);  // 4 for rbg_size
+  return rbg_to_slice;
+}
+
+
+static vector<int> RandomSelect(double** flow_spectraleff,
+                                vector<int>& slice_quota_rbgs, int nb_rbgs,
+                                int nb_slices)
+{
+  bool flag;
+  fprintf(stderr, "RandomSelect\n");
+  vector<int> slice_rbgs(nb_slices, 0);
+  vector<int> rbg_to_slice(nb_rbgs, -1);
+  for (int i = 0; i < nb_rbgs; ++i) {
+    flag = false;
+    while (flag == false){
+      int slice_id = rand() % nb_slices;
+      if (slice_rbgs[slice_id] < slice_quota_rbgs[slice_id]) {
+        rbg_to_slice[i] = slice_id;
+        slice_rbgs[slice_id] += 1;
+        flag = true;
+      }
     }
   }
   double sum_bits = 0;
@@ -715,6 +745,10 @@ void DownlinkTransportScheduler::RBsAllocation() {
       rbg_to_slice = VogelApproximate(flow_spectraleff, slice_quota_rbgs,
                                       nb_rbgs, num_slices_);
       break;
+    case 5: //peter: random select a inter sched flow. As a baseline of variance. 
+      rbg_to_slice = RandomSelect(flow_spectraleff, slice_quota_rbgs, nb_rbgs,
+                                  num_slices_);
+      break;
     default:
       slice_rbgs =
           UpperBound(flow_spectraleff, slice_quota_rbgs, nb_rbgs, num_slices_);
@@ -722,7 +756,7 @@ void DownlinkTransportScheduler::RBsAllocation() {
   }
 
   // ToDo: Generalize the framework
-  if (inter_sched_ < 4) {
+  if (inter_sched_ < 6) {
     for (size_t i = 0; i < rbg_to_slice.size(); ++i) {
       // Peter: Update each slice's running score
       // Peter: Change it to intra slice score instead of interslice score
@@ -731,6 +765,7 @@ void DownlinkTransportScheduler::RBsAllocation() {
       int uindex = user_index[i][rbg_to_slice[i]];
       assert(uindex != -1);
       int sid = user_to_slice_[users->at(uindex)->GetUserID()];
+      fprintf(stderr, "rbg %d to slice %d, %d\n", i, sid, rbg_to_slice[i]);
       assert(sid == rbg_to_slice[i]);
       slice_final_rbgs[sid] += 1;
       int l = i * rbg_size, r = (i + 1) * rbg_size;
