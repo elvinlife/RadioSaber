@@ -58,7 +58,7 @@ using coord_cqi_t = std::pair<coord_t, double>;
 double maxThroughputMetric(DownlinkTransportScheduler::UserToSchedule* user,
                            int index) {
   // user: u, index: i * rbg_size
-  return user->GetSpectralEfficiency().at(index);
+  return user->GetSpectralEfficiency().at(index) * 180000 / 1000; // transform the unit of spectral efficiency Jiajin 
 }
 
 /* d_{u,i} / R_{u}, where R_{u} captures the historical RBG allocation for UE u
@@ -73,7 +73,7 @@ double proportionalFairnessMetric(
       averageRate += user->m_bearers[i]->GetAverageTransmissionRate();
     }
   }
-  return maxThroughputMetric(user, index) / averageRate;
+  return maxThroughputMetric(user, index) / averageRate * 1000; // set the transmission rate to kbps, jiajin
 }
 
 /* D_{u,p} * d_{u,i} / R_{u}, where D_{u,p} is the queuing delay experience by

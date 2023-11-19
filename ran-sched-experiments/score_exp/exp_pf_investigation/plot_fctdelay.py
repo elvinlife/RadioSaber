@@ -139,53 +139,20 @@ def print_throughput(slice_begin, slice_end):
             INPUT_DIR, slice_begin, slice_end )
     print(all_throughput)
 
-def plot_fct(ofname, slice_begin, slice_end, priority_only=False):
-    default_font = 20
-    fig, ax = plt.subplots(figsize=(9, 5))
-    all_fct = get_fct_schemes(INPUT_DIR, slice_begin, slice_end, priority_only)
-    nvs_x, nvs_y = get_cdf( all_fct['mt'], 0.0, 5 )
-    mlwdf_x, mlwdf_y = get_cdf( all_fct['mlwdf'], 0.0, 5 )
-    pf_x, pf_y = get_cdf( all_fct['pf'], 0.0, 5 )
-    # nvs_x, nvs_y = get_cdf( all_fct['mt'], 0.0 )
-    # mlwdf_x, mlwdf_y = get_cdf( all_fct['mlwdf'], 0.0 )
-    # pf_x, pf_y = get_cdf( all_fct['pf'], 0.0 )
-
-    # print(ofname)
-    # print("NVS: %f %f %f" % ( np.mean( nvs_x ), nvs_x[int( len(nvs_x)*0.5 )], nvs_x[int( len(nvs_x)*0.95 )] ) )
-    # print("RadioSaber: %f %f %f" % ( np.mean( mlwdf_x ), mlwdf_x[int( len(mlwdf_x)*0.5 )], mlwdf_x[int( len(mlwdf_x)*0.95 )] ) )
-    # print("No-Slicing: %f %f %f" % ( np.mean( pf_x ), pf_x[int( len(pf_x)*0.5 )], pf_x[int( len(pf_x)*0.95 )] ) )
-    # return
-
-    ax.plot( pf_x, pf_y, "--", label="No-Slicing", color=COLORS[0], linewidth=2.5 )
-    ax.plot( nvs_x, nvs_y, "--", label="NVS", color=COLORS[1], linewidth=2.5 )
-    ax.plot( mlwdf_x, mlwdf_y, "--", label="RadioSaber", color=COLORS[2], linewidth=2.5 )
-    ax.set_xlabel("Flow Completion Time(s)", fontsize=default_font + 4)
-    ax.set_ylabel("Ratio", fontsize=default_font + 4)
-    ax.legend(fontsize=default_font + 2)
-    ax.tick_params(axis="both", labelsize=default_font)
-    ax.grid( axis="both", alpha=0.2 )
-    plt.tight_layout()
-    fig.savefig( ofname + FTYPE )
 
 def plot_hol_delay(ofname, slice_begin, slice_end):
     default_font = 20
     fig, ax = plt.subplots(figsize=(9, 5))
     all_hol = get_hol_schemes( INPUT_DIR, slice_begin, slice_end )
-    nvs_x, nvs_y = get_cdf( all_hol['mt'], 0.0, 5 )
+    mt_x, mt_y = get_cdf( all_hol['mt'], 0.0, 5 )
     mlwdf_x, mlwdf_y = get_cdf( all_hol['mlwdf'], 0.0, 5 )
     pf_x, pf_y = get_cdf( all_hol['pf'], 0.0, 5 )
-    # nvs_x, nvs_y = get_cdf( all_hol['mt'], 0.0 )
-    # mlwdf_x, mlwdf_y = get_cdf( all_hol['mlwdf'], 0.0 )
-    # pf_x, pf_y = get_cdf( all_hol['pf'], 0.0 )
+    
+    print(np.mean(all_hol['mt']), np.mean(all_hol['mlwdf']), np.mean(all_hol['pf']))
 
-    # print("NVS: %f %f %f" % ( np.mean( nvs_x ), nvs_x[int( len(nvs_x)*0.5 )], nvs_x[int( len(nvs_x)*0.95 )] ) )
-    # print("RadioSaber: %f %f %f" % ( np.mean( mlwdf_x ), mlwdf_x[int( len(mlwdf_x)*0.5 )], mlwdf_x[int( len(mlwdf_x)*0.95 )] ) )
-    # print("No-Slicing: %f %f %f" % ( np.mean( pf_x ), pf_x[int( len(pf_x)*0.5 )], pf_x[int( len(pf_x)*0.95 )] ) )
-    # return
-
-    ax.plot( pf_x, pf_y, "y--", label="No-Slicing", color=COLORS[0], linewidth=2.5 )
-    ax.plot( nvs_x, nvs_y, "r--", label="NVS", color=COLORS[1], linewidth=2.5 )
-    ax.plot( mlwdf_x, mlwdf_y, "b--", label="RadioSaber", color=COLORS[2], linewidth=2.5 )
+    ax.plot( pf_x, pf_y, "y--", label="PF", color=COLORS[0], linewidth=2.5 )
+    ax.plot( mt_x, mt_y, "r--", label="MT", color=COLORS[1], linewidth=2.5 )
+    ax.plot( mlwdf_x, mlwdf_y, "b--", label="MLWDF", color=COLORS[2], linewidth=2.5 )
     ax.set_xlabel("Queueing Delay(s)", fontsize=default_font + 4)
     ax.set_ylabel("Ratio", fontsize=default_font + 4)
     ax.legend(fontsize=default_font + 2)
@@ -194,6 +161,5 @@ def plot_hol_delay(ofname, slice_begin, slice_end):
     plt.tight_layout()
     fig.savefig( ofname + FTYPE )
 
-# print_throughput( 0, 4 )
-plot_fct( "cdf-fct-pf", 5, 9 )
+print_throughput( 0, 4 )
 plot_hol_delay( "cdf-hol-delay", 10, 14 )
