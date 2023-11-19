@@ -106,7 +106,9 @@ double mLWDFMetric(DownlinkTransportScheduler::UserToSchedule* user,
 
   RadioBearer* bearer = user->m_bearers[selected_bearer];
   double HoL = bearer->GetHeadOfLinePacketDelay();
-  return HoL * maxThroughputMetric(user, index) / averageRate;
+  fprintf(stderr, "User %d ML Score: %.2f\n", user->GetUserID(),
+          HoL * maxThroughputMetric(user, index) / averageRate * 1000);  // 4 for rbg_size
+  return HoL * maxThroughputMetric(user, index) / averageRate * 1000;
 }
 
 // Peter: Save the score to the log 
