@@ -19,7 +19,6 @@
  * Author: Francesco Capozzi <f.capozzi@poliba.it>
  */
 
-
 #ifndef WINNER_DOWNLINKCHANNELREALIZATION_H_
 #define WINNER_DOWNLINKCHANNELREALIZATION_H_
 
@@ -28,24 +27,23 @@
 
 class NetworkNode;
 
-class WinnerDownlinkChannelRealization: public ChannelRealization {
-public:
-	WinnerDownlinkChannelRealization (NetworkNode* src, NetworkNode* dst);
-	virtual ~WinnerDownlinkChannelRealization ();
-	void SetPenetrationLoss (double pnl);
-	double GetPenetrationLoss (void);
-	double GetPathLoss (void);
-	void SetShadowing (double sh);
-	double GetShadowing (void);
-	virtual void UpdateModels (void);
+class WinnerDownlinkChannelRealization : public ChannelRealization {
+ public:
+  WinnerDownlinkChannelRealization(NetworkNode* src, NetworkNode* dst);
+  virtual ~WinnerDownlinkChannelRealization();
+  void SetPenetrationLoss(double pnl);
+  double GetPenetrationLoss(void);
+  double GetPathLoss(void);
+  void SetShadowing(double sh);
+  double GetShadowing(void);
+  virtual void UpdateModels(void);
 
-	virtual std::vector<double> GetLoss ();
+  virtual std::vector<double> GetLoss();
 
-
-private:
-	double m_penetrationLoss;
-	double m_pathLoss;
-	double m_shadowing;
+ private:
+  double m_penetrationLoss;
+  double m_pathLoss;
+  double m_shadowing;
 };
 
 #endif /* WINNER_DOWNLINKCHANNELREALIZATION_H_ */

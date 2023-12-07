@@ -19,30 +19,25 @@
  * Author: Francesco Capozzi <f.capozzi@poliba.it>
  */
 
-
 #ifndef MULTIPATHINTERPOLATION_H_
 #define MULTIPATHINTERPOLATION_H_
 
-double
-LagrangeInterpolatingPolynomial (int degree, double *posVect, double *valVect, double desiredPos)
-{
+double LagrangeInterpolatingPolynomial(int degree, double *posVect,
+                                       double *valVect, double desiredPos) {
   double retVal = 0.0;
 
-  for (int i = 0; i < degree; i++)
-    {
-	  double weight = 1;
+  for (int i = 0; i < degree; i++) {
+    double weight = 1;
 
-	  for (int j = 0; j < degree; j++)
-	    {
-		  // The i-th term has to be skipped
-		  if (j != i)
-		    {
-			  weight *= (desiredPos - posVect[j]) / (posVect[i] - posVect[j]);
-		    }
-	    }
-
-	  retVal += weight * valVect[i];
+    for (int j = 0; j < degree; j++) {
+      // The i-th term has to be skipped
+      if (j != i) {
+        weight *= (desiredPos - posVect[j]) / (posVect[i] - posVect[j]);
+      }
     }
+
+    retVal += weight * valVect[i];
+  }
 
   return retVal;
 }

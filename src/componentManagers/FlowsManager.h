@@ -19,48 +19,40 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef FLOWSMANAGER_H_
 #define FLOWSMANAGER_H_
 
 #include <iostream>
 #include <queue>
-#include "../protocolStack/protocols/TransportProtocol.h"
+
 #include "../flows/application/Application.h"
+#include "../protocolStack/protocols/TransportProtocol.h"
 
 class ClassifierParameters;
 class QoSParameters;
 class NetworkNode;
 
-
 class FlowsManager {
-public:
+ public:
+ private:
+  FlowsManager();
+  static FlowsManager* ptr;
 
-private:
+ public:
+  virtual ~FlowsManager();
 
-	FlowsManager();
-	static FlowsManager *ptr;
+  static FlowsManager* Init(void) {
+    if (ptr == NULL) {
+      ptr = new FlowsManager;
+    }
+    return ptr;
+  }
 
-public:
-	virtual ~FlowsManager();
-
-	static FlowsManager*
-	Init (void)
-	  {
-		if (ptr==NULL)
-	      {
-		    ptr = new FlowsManager;
-	   	  }
-		return ptr;
-	  }
-
-	Application*  CreateApplication (int applicationID,
-									 NetworkNode* src, NetworkNode* dst,
-			                         int srcPort, int destPort,
-			                         TransportProtocol::TransportProtocolType protocol,
-			                         Application::ApplicationType type,
-			                         QoSParameters* qos,
-			                         double startTime, double duration);
+  Application* CreateApplication(
+      int applicationID, NetworkNode* src, NetworkNode* dst, int srcPort,
+      int destPort, TransportProtocol::TransportProtocolType protocol,
+      Application::ApplicationType type, QoSParameters* qos, double startTime,
+      double duration);
 };
 
 #endif /* FLOWSMANAGER_H_ */

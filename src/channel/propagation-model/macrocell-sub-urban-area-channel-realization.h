@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef MacroCellSubUrbanAreaChannelRealization_H_
 #define MacroCellSubUrbanAreaChannelRealization_H_
 
@@ -28,24 +27,23 @@
 
 class NetworkNode;
 
-class MacroCellSubUrbanAreaChannelRealization: public ChannelRealization {
-public:
-	MacroCellSubUrbanAreaChannelRealization (NetworkNode* src, NetworkNode* dst);
-	virtual ~MacroCellSubUrbanAreaChannelRealization ();
-	void SetPenetrationLoss (double pnl);
-	double GetPenetrationLoss (void);
-	double GetPathLoss (void);
-	void SetShadowing (double sh);
-	double GetShadowing (void);
-	virtual void UpdateModels (void);
+class MacroCellSubUrbanAreaChannelRealization : public ChannelRealization {
+ public:
+  MacroCellSubUrbanAreaChannelRealization(NetworkNode* src, NetworkNode* dst);
+  virtual ~MacroCellSubUrbanAreaChannelRealization();
+  void SetPenetrationLoss(double pnl);
+  double GetPenetrationLoss(void);
+  double GetPathLoss(void);
+  void SetShadowing(double sh);
+  double GetShadowing(void);
+  virtual void UpdateModels(void);
 
-	virtual std::vector<double> GetLoss ();
+  virtual std::vector<double> GetLoss();
 
-
-private:
-	double m_penetrationLoss;
-	double m_pathLoss;
-	double m_shadowing;
+ private:
+  double m_penetrationLoss;
+  double m_pathLoss;
+  double m_shadowing;
 };
 
 #endif /* MacroCellSubUrbanAreaChannelRealization_H_ */

@@ -22,15 +22,18 @@
 #ifndef SIMPLE_ERRORMODEL_H_
 #define SIMPLE_ERRORMODEL_H_
 
-#include "error-model.h"
 #include <vector>
 
-class SimpleErrorModel : public ErrorModel {
-public:
-	SimpleErrorModel();
-	virtual ~SimpleErrorModel();
+#include "error-model.h"
 
-	virtual bool CheckForPhysicalError (std::vector<int> channels, std::vector<int> mcs, std::vector<double> m_sinr);
+class SimpleErrorModel : public ErrorModel {
+ public:
+  SimpleErrorModel();
+  virtual ~SimpleErrorModel();
+
+  virtual bool CheckForPhysicalError(std::vector<int> channels,
+                                     std::vector<int> mcs,
+                                     std::vector<double> m_sinr);
 };
 
 #endif /* ERRORMODEL_H_ */

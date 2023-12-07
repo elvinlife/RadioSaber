@@ -23,9 +23,9 @@
 #define PDCPNTITY_H_
 
 class PdcpEntity {
-public:
-	PdcpEntity();
-	virtual ~PdcpEntity();
+ public:
+  PdcpEntity();
+  virtual ~PdcpEntity();
 };
 
 #endif /* PDCPNTITY_H_ */

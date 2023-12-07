@@ -19,30 +19,25 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef QOSFORM_LWDF_H_
 #define QOSFORM_LWDF_H_
 
 #include "QoSParameters.h"
 
-class QoSForM_LWDF :public QoSParameters {
+class QoSForM_LWDF : public QoSParameters {
+ public:
+  QoSForM_LWDF();
+  QoSForM_LWDF(double targetDelay);
+  virtual ~QoSForM_LWDF();
 
-public:
-	QoSForM_LWDF ();
-	QoSForM_LWDF(double targetDelay);
-	virtual ~QoSForM_LWDF();
+  void SetDropPorbability(double probability);
+  double GetDropProbability(void) const;
 
-	void
-	SetDropPorbability (double probability);
-	double
-	GetDropProbability (void) const;
+  // Debug
+  void Print();
 
-	//Debug
-	void
-	Print ();
-
-private:
-	double m_dropProbability;
+ private:
+  double m_dropProbability;
 };
 
 #endif /* QOSFORM_LWDF_H_ */

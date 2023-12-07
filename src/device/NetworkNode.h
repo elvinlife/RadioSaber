@@ -19,95 +19,87 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef NETWORKNODE_H_
 #define NETWORKNODE_H_
 
-#include <vector>
 #include <cmath>
-#include "../networkTopology/Cell.h"
-#include "../networkTopology/Femtocell.h"
-#include "IPClassifier/Classifier.h"
-#include "../protocolStack/protocols/TransportProtocol.h"
+#include <vector>
+
+#include "../mobility/ConstantPosition.h"
+#include "../mobility/Manhattan.h"
 #include "../mobility/Mobility.h"
 #include "../mobility/RandomDirection.h"
 #include "../mobility/RandomWalk.h"
 #include "../mobility/RandomWaypoint.h"
-#include "../mobility/ConstantPosition.h"
-#include "../mobility/Manhattan.h"
+#include "../networkTopology/Cell.h"
+#include "../networkTopology/Femtocell.h"
 #include "../protocolStack/protocol-stack.h"
+#include "../protocolStack/protocols/TransportProtocol.h"
+#include "IPClassifier/Classifier.h"
 
 class PacketBurst;
 class LtePhy;
 
 class NetworkNode {
-public:
-	enum NodeState
-	  {
-		STATE_DETACHED,
-		STATE_ACTIVE,
-		STATE_IDLE
-	  };
+ public:
+  enum NodeState { STATE_DETACHED, STATE_ACTIVE, STATE_IDLE };
 
-	enum NodeType
-	  {
-		TYPE_ENODEB,
-		TYPE_UE,
-		TYPE_GW,
-		TYPE_HOME_BASE_STATION,
-		TYPE_RELAY_NODE
-	  };
+  enum NodeType {
+    TYPE_ENODEB,
+    TYPE_UE,
+    TYPE_GW,
+    TYPE_HOME_BASE_STATION,
+    TYPE_RELAY_NODE
+  };
 
-private:
-	int m_idNetworkNode;
-	NodeState m_state;
-	NodeType m_nodeType;
+ private:
+  int m_idNetworkNode;
+  NodeState m_state;
+  NodeType m_nodeType;
 
-	Cell *m_cell;
+  Cell *m_cell;
 
-	ProtocolStack *m_protocolStack;
+  ProtocolStack *m_protocolStack;
 
-	Classifier *m_classifier;
+  Classifier *m_classifier;
 
-	LtePhy *m_phy;
+  LtePhy *m_phy;
 
-	Mobility *m_mobility;
+  Mobility *m_mobility;
 
-public:
-	NetworkNode();
-	virtual ~NetworkNode();
+ public:
+  NetworkNode();
+  virtual ~NetworkNode();
 
-	void Destroy ();
+  void Destroy();
 
-	void SetIDNetworkNode (int id);
-	int GetIDNetworkNode (void) const;
+  void SetIDNetworkNode(int id);
+  int GetIDNetworkNode(void) const;
 
-	void SetNodeType (NodeType type);
-	NodeType GetNodeType (void) const;
+  void SetNodeType(NodeType type);
+  NodeType GetNodeType(void) const;
 
-	void SetNodeState (NodeState state);
-	void MakeActive (void);
-	NodeState GetNodeState (void) const;
+  void SetNodeState(NodeState state);
+  void MakeActive(void);
+  NodeState GetNodeState(void) const;
 
-	void SetCell (Cell *cell);
-	Cell* GetCell (void);
+  void SetCell(Cell *cell);
+  Cell *GetCell(void);
 
-	void SetProtocolStack (ProtocolStack *stack);
-	ProtocolStack* GetProtocolStack (void) const;
+  void SetProtocolStack(ProtocolStack *stack);
+  ProtocolStack *GetProtocolStack(void) const;
 
-	void SetClassifier (Classifier *classifier);
-	Classifier* GetClassifier (void) const;
+  void SetClassifier(Classifier *classifier);
+  Classifier *GetClassifier(void) const;
 
-	void SetPhy (LtePhy *phy);
-	LtePhy* GetPhy (void);
+  void SetPhy(LtePhy *phy);
+  LtePhy *GetPhy(void);
 
-	void SetMobilityModel (Mobility* m);
-	Mobility* GetMobilityModel (void);
+  void SetMobilityModel(Mobility *m);
+  Mobility *GetMobilityModel(void);
 
-    void SendPacketBurst (PacketBurst* p);
-    void ReceivePacketBurst (PacketBurst* p);
+  void SendPacketBurst(PacketBurst *p);
+  void ReceivePacketBurst(PacketBurst *p);
 };
-
 
 #endif /* NETWORKNODE_H_ */

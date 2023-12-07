@@ -19,66 +19,53 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef PACKETTAGS_H_
 #define PACKETTAGS_H_
 
 #include <vector>
 
 class PacketTAGs {
-public:
-	enum ApplicationType
-	  {
-      APPLICATION_TYPE_VOIP,
-      APPLICATION_TYPE_TRACE_BASED,
-      APPLICATION_TYPE_INFINITE_BUFFER,
-      APPLICATION_TYPE_CBR,
-      APPLICATION_TYPE_WEB,
-      APPLICATION_TYPE_IPFLOW,
-	  };
+ public:
+  enum ApplicationType {
+    APPLICATION_TYPE_VOIP,
+    APPLICATION_TYPE_TRACE_BASED,
+    APPLICATION_TYPE_INFINITE_BUFFER,
+    APPLICATION_TYPE_CBR,
+    APPLICATION_TYPE_WEB,
+    APPLICATION_TYPE_IPFLOW,
+  };
 
-	PacketTAGs ();
-	PacketTAGs(ApplicationType type,
-			   int frameNumber,
-			   int startFrame,
-			   int endFrame);
+  PacketTAGs();
+  PacketTAGs(ApplicationType type, int frameNumber, int startFrame,
+             int endFrame);
 
-	virtual ~PacketTAGs();
+  virtual ~PacketTAGs();
 
+  void SetApplicationType(ApplicationType type);
+  ApplicationType GetApplicationType(void);
 
+  // for video flows
+  void SetFrameNumber(int frameNumber);
+  int GetFrameNumber(void) const;
 
-	void
-	SetApplicationType (ApplicationType type);
-	ApplicationType
-	GetApplicationType (void);
+  void SetStartByte(int startByte);
+  int GetStartByte(void) const;
 
-	//for video flows
-	void
-	SetFrameNumber (int frameNumber);
-	int
-	GetFrameNumber (void) const;
+  void SetEndByte(int endByte);
+  int GetEndByte(void) const;
 
-	void
-	SetStartByte (int startByte);
-	int
-	GetStartByte (void) const;
+  void SetApplicationSize(int s);
+  int GetApplicationSize();
 
-	void
-	SetEndByte (int endByte);
-	int
-	GetEndByte (void) const;
+ private:
+  ApplicationType m_type;
 
-    void SetApplicationSize (int s);
-	int GetApplicationSize ();
-private:
-	ApplicationType m_type;
+  // for video flows
+  int m_frameNumber;
+  int m_startByte;
+  int m_endBytes;
 
-	//for video flows
-	int m_frameNumber;
-	int m_startByte;
-	int m_endBytes;
-
-	int m_applicationSize;
+  int m_applicationSize;
 };
 
 #endif /* PACKETTAG_H_ */

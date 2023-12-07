@@ -22,30 +22,28 @@
 #ifndef FEMTOCELLURBANAREACHANNELREALIZATION_H_
 #define FEMTOCELLURBANAREACHANNELREALIZATION_H_
 
-
 #include "channel-realization.h"
 #include "vector"
 
 class NetworkNode;
 
-class FemtoCellUrbanAreaChannelRealization: public ChannelRealization {
-public:
-	FemtoCellUrbanAreaChannelRealization (NetworkNode* src, NetworkNode* dst);
-	virtual ~FemtoCellUrbanAreaChannelRealization ();
-	void SetPenetrationLoss (double pnl);
-	double GetPenetrationLoss (void);
-	double GetPathLoss (void);
-	void SetShadowing (double sh);
-	double GetShadowing (void);
-	virtual void UpdateModels (void);
+class FemtoCellUrbanAreaChannelRealization : public ChannelRealization {
+ public:
+  FemtoCellUrbanAreaChannelRealization(NetworkNode* src, NetworkNode* dst);
+  virtual ~FemtoCellUrbanAreaChannelRealization();
+  void SetPenetrationLoss(double pnl);
+  double GetPenetrationLoss(void);
+  double GetPathLoss(void);
+  void SetShadowing(double sh);
+  double GetShadowing(void);
+  virtual void UpdateModels(void);
 
-	virtual std::vector<double> GetLoss ();
+  virtual std::vector<double> GetLoss();
 
-
-private:
-	double m_penetrationLoss;
-	double m_pathLoss;
-	double m_shadowing;
+ private:
+  double m_penetrationLoss;
+  double m_pathLoss;
+  double m_shadowing;
 };
 
 #endif /* FEMTOCELLURBANAREACHANNELREALIZATION_H_ */

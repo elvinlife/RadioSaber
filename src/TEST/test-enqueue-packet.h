@@ -19,69 +19,64 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "../channel/LteChannel.h"
-#include "../phy/enb-lte-phy.h"
-#include "../phy/ue-lte-phy.h"
-#include "../core/spectrum/bandwidth-manager.h"
-#include "../networkTopology/Cell.h"
-#include "../protocolStack/packet/packet-burst.h"
-#include "../protocolStack/packet/Packet.h"
 #include "../core/eventScheduler/simulator.h"
-#include "../load-parameters.h"
-#include "../flows/application/CBR.h"
+#include "../core/spectrum/bandwidth-manager.h"
+#include "../device/Gateway.h"
 #include "../device/IPClassifier/ClassifierParameters.h"
 #include "../flows/QoS/QoSParameters.h"
-#include "../device/Gateway.h"
+#include "../flows/application/CBR.h"
+#include "../load-parameters.h"
+#include "../networkTopology/Cell.h"
+#include "../phy/enb-lte-phy.h"
+#include "../phy/ue-lte-phy.h"
+#include "../protocolStack/packet/Packet.h"
+#include "../protocolStack/packet/packet-burst.h"
 
-static void TestEnqueuePackets ()
-{
-  //Create devices
-  Cell *cell = new Cell (0, 1, 0.35, 0, 0);
-  LteChannel *dlCh = new LteChannel ();
-  LteChannel *ulCh = new LteChannel ();
-  BandwidthManager* spectrum = new BandwidthManager (5, 5, 0, 0);
-  //Create ENodeB
-  ENodeB* enb = new ENodeB (1, cell);
-  enb->GetPhy ()->SetDlChannel (dlCh);
-  enb->GetPhy ()->SetUlChannel (ulCh);
-  enb->GetPhy ()->SetBandwidthManager (spectrum->Copy ());
-  ulCh->AddDevice (enb);
-  //Create UE
-  UserEquipment* ue = new UserEquipment (2, 50, 50, 0, 0, cell, enb, 0, Mobility::RANDOM_DIRECTION);
-  ue->GetPhy ()->SetDlChannel (dlCh);
-  ue->GetPhy ()->SetUlChannel (ulCh);
-  ue->GetPhy ()->SetBandwidthManager (spectrum->Copy ());
+static void TestEnqueuePackets() {
+  // Create devices
+  Cell *cell = new Cell(0, 1, 0.35, 0, 0);
+  LteChannel *dlCh = new LteChannel();
+  LteChannel *ulCh = new LteChannel();
+  BandwidthManager *spectrum = new BandwidthManager(5, 5, 0, 0);
+  // Create ENodeB
+  ENodeB *enb = new ENodeB(1, cell);
+  enb->GetPhy()->SetDlChannel(dlCh);
+  enb->GetPhy()->SetUlChannel(ulCh);
+  enb->GetPhy()->SetBandwidthManager(spectrum->Copy());
+  ulCh->AddDevice(enb);
+  // Create UE
+  UserEquipment *ue = new UserEquipment(2, 50, 50, 0, 0, cell, enb, 0,
+                                        Mobility::RANDOM_DIRECTION);
+  ue->GetPhy()->SetDlChannel(dlCh);
+  ue->GetPhy()->SetUlChannel(ulCh);
+  ue->GetPhy()->SetBandwidthManager(spectrum->Copy());
 
-  FullbandCqiManager *cqiManager = new FullbandCqiManager ();
-  cqiManager->SetCqiReportingMode (CqiManager::PERIODIC);
-  cqiManager->SetReportingInterval (0.002);
-  cqiManager->SetDevice (ue);
-  ue->SetCqiManager (cqiManager);
+  FullbandCqiManager *cqiManager = new FullbandCqiManager();
+  cqiManager->SetCqiReportingMode(CqiManager::PERIODIC);
+  cqiManager->SetReportingInterval(0.002);
+  cqiManager->SetDevice(ue);
+  ue->SetCqiManager(cqiManager);
 
-  Gateway *gw = new Gateway ();
+  Gateway *gw = new Gateway();
 
+  CBR *app = new CBR();
+  app->SetSource(gw);
+  app->SetDestination(ue);
+  app->SetApplicationID(1);
+  app->SetSize(500);
+  app->SetInterval(0.01);
 
+  ClassifierParameters *cp = new ClassifierParameters(
+      gw->GetIDNetworkNode(), ue->GetIDNetworkNode(), 0, 100,
+      TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
+  QoSParameters *qos = new QoSParameters();
 
-  CBR *app = new CBR ();
-  app->SetSource (gw);
-  app->SetDestination (ue);
-  app->SetApplicationID (1);
-  app->SetSize (500);
-  app->SetInterval (0.01);
+  app->SetClassifierParameters(cp);
+  app->SetQoSParameters(qos);
 
-  ClassifierParameters *cp = new ClassifierParameters (gw->GetIDNetworkNode(),
-                                                      ue->GetIDNetworkNode(),
-                                                      0,
-                                                      100,
-                                                      TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP);
-  QoSParameters *qos = new QoSParameters ();
+  app->SetStartTime(0.01);
+  app->SetStopTime(0.1);
 
-  app->SetClassifierParameters (cp);
-  app->SetQoSParameters (qos);
-
-  app->SetStartTime (0.01);
-  app->SetStopTime (0.1);
-
-  Simulator::Init()->Run ();
+  Simulator::Init()->Run();
 }

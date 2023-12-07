@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef HOMANAGER_H_
 #define HOMANAGER_H_
 
@@ -27,13 +26,13 @@ class UserEquipment;
 class NetworkNode;
 
 class HoManager {
-public:
-	HoManager();
-	virtual ~HoManager();
+ public:
+  HoManager();
+  virtual ~HoManager();
 
-	virtual bool CheckHandoverNeed (UserEquipment* ue) = 0;
+  virtual bool CheckHandoverNeed(UserEquipment* ue) = 0;
 
-	NetworkNode* m_target;
+  NetworkNode* m_target;
 };
 
 #endif /* HOMANAGER_H_ */

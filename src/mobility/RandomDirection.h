@@ -24,13 +24,12 @@
 
 #include "Mobility.h"
 
-class RandomDirection :public Mobility {
-public:
-	RandomDirection();
-	virtual ~RandomDirection();
+class RandomDirection : public Mobility {
+ public:
+  RandomDirection();
+  virtual ~RandomDirection();
 
-	void
-	UpdatePosition (double time);
+  void UpdatePosition(double time);
 };
 
 #endif /* LINEARTRAJECTORY_H_ */

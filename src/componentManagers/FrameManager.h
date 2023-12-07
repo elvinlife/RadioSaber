@@ -19,103 +19,77 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef FRAMEMANAGER_H_
 #define FRAMEMANAGER_H_
 
 #include <iostream>
-#include "NetworkManager.h"
+
 #include "../core/eventScheduler/simulator.h"
+#include "NetworkManager.h"
 #include "TDDConfiguration.h"
 
-
- /*
-   * LTE Frame Structure:
-   *
-   *  ** Frame structure type 1 (FS1): FDD
-   *    ...
-   *  ** Frame structure type 2 (FS2): TDD
-   *    ...
-   */
-
+/*
+ * LTE Frame Structure:
+ *
+ *  ** Frame structure type 1 (FS1): FDD
+ *    ...
+ *  ** Frame structure type 2 (FS2): TDD
+ *    ...
+ */
 
 class FrameManager {
-public:
-	enum FrameStructure
-	  {
-		FRAME_STRUCTURE_FDD,
-		FRAME_STRUCTURE_TDD
-	  };
-private:
-	FrameStructure m_frameStructure;
+ public:
+  enum FrameStructure { FRAME_STRUCTURE_FDD, FRAME_STRUCTURE_TDD };
 
-	int m_TDDFrameConfiguration;
+ private:
+  FrameStructure m_frameStructure;
 
-	int m_nbFrames;
-	int m_nbSubframes;
-	unsigned long m_TTICounter;
+  int m_TDDFrameConfiguration;
 
-	FrameManager();
-	static FrameManager *ptr;
+  int m_nbFrames;
+  int m_nbSubframes;
+  unsigned long m_TTICounter;
 
-public:
-	//FrameManager();
-	virtual ~FrameManager();
+  FrameManager();
+  static FrameManager* ptr;
 
-	static FrameManager*
-	Init (void)
-	  {
-		if (ptr==NULL)
-	      {
-		    ptr = new FrameManager;
-	   	  }
-		return ptr;
-	  }
+ public:
+  // FrameManager();
+  virtual ~FrameManager();
 
-	void
-	SetFrameStructure (FrameStructure frameStructure);
-	FrameStructure
-	GetFrameStructure (void) const;
+  static FrameManager* Init(void) {
+    if (ptr == NULL) {
+      ptr = new FrameManager;
+    }
+    return ptr;
+  }
 
-	void
-	SetTDDFrameConfiguration (int configuration);
-	int
-	GetTDDFrameConfiguration (void) const;
+  void SetFrameStructure(FrameStructure frameStructure);
+  FrameStructure GetFrameStructure(void) const;
 
-	int
-	GetSubFrameType (int nbSubFrame);
+  void SetTDDFrameConfiguration(int configuration);
+  int GetTDDFrameConfiguration(void) const;
 
-	void
-	UpdateNbFrames (void);
-	int
-	GetNbFrames (void) const;
-	void
-	UpdateNbSubframes (void);
-	void
-	ResetNbSubframes (void);
-	int
-	GetNbSubframes (void) const;
-	void
-	UpdateTTIcounter (void);
-	unsigned long
-	GetTTICounter (void) const;
+  int GetSubFrameType(int nbSubFrame);
 
-	void
-	Start (void);
-	void
-	StartFrame (void);
-	void
-	StopFrame (void);
-	void
-	StartSubframe (void);
-	void
-	StopSubframe (void);
+  void UpdateNbFrames(void);
+  int GetNbFrames(void) const;
+  void UpdateNbSubframes(void);
+  void ResetNbSubframes(void);
+  int GetNbSubframes(void) const;
+  void UpdateTTIcounter(void);
+  unsigned long GetTTICounter(void) const;
 
-	NetworkManager* GetNetworkManager (void);
+  void Start(void);
+  void StartFrame(void);
+  void StopFrame(void);
+  void StartSubframe(void);
+  void StopSubframe(void);
 
-	void UpdateUserPosition(void);
-	void ResourceAllocation(void);
+  NetworkManager* GetNetworkManager(void);
+
+  void UpdateUserPosition(void);
+  void ResourceAllocation(void);
 };
 
 #endif /* FRAMEMANAGER_H_ */

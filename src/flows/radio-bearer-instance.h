@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef RADIO_BEARER_INSTANCE_H_
 #define RADIO_BEARER_INSTANCE_H_
 
@@ -32,46 +31,42 @@ class Packet;
 class RlcEntity;
 
 class RadioBearerInstance {
-public:
-	RadioBearerInstance();
-	virtual ~RadioBearerInstance();
+ public:
+  RadioBearerInstance();
+  virtual ~RadioBearerInstance();
 
-	void Destory (void);
+  void Destory(void);
 
-	void SetSource (NetworkNode* src);
-	void SetDestination (NetworkNode* dst);
-	NetworkNode* GetSource (void);
-	NetworkNode* GetDestination (void);
+  void SetSource(NetworkNode* src);
+  void SetDestination(NetworkNode* dst);
+  NetworkNode* GetSource(void);
+  NetworkNode* GetDestination(void);
 
-	void SetRlcEntity (RlcEntity *rlc);
-	RlcEntity* GetRlcEntity (void);
+  void SetRlcEntity(RlcEntity* rlc);
+  RlcEntity* GetRlcEntity(void);
 
-	void SetClassifierParameters (ClassifierParameters* cp);
-	ClassifierParameters* GetClassifierParameters (void);
+  void SetClassifierParameters(ClassifierParameters* cp);
+  ClassifierParameters* GetClassifierParameters(void);
 
-	void SetQoSParameters (QoSParameters *parameters);
-	QoSParameters* GetQoSParameters (void) const;
+  void SetQoSParameters(QoSParameters* parameters);
+  QoSParameters* GetQoSParameters(void) const;
 
-	enum BearerQoSType
-	  {
-		BEARER_TYPE_GBR, BEARER_TYPE_NGBR
-	  };
+  enum BearerQoSType { BEARER_TYPE_GBR, BEARER_TYPE_NGBR };
 
-	void SetBearerQoSType (BearerQoSType bearerQoSType);
-	BearerQoSType GetBearerQoSType (void) const;
+  void SetBearerQoSType(BearerQoSType bearerQoSType);
+  BearerQoSType GetBearerQoSType(void) const;
 
-private:
-	NetworkNode* m_src;
-	NetworkNode* m_dst;
+ private:
+  NetworkNode* m_src;
+  NetworkNode* m_dst;
 
-	ClassifierParameters* m_classifierParameters;
+  ClassifierParameters* m_classifierParameters;
 
-	RlcEntity *m_rlc;
+  RlcEntity* m_rlc;
 
-	//QoS
-	QoSParameters *m_qosParameters;
-	BearerQoSType m_type;
-
+  // QoS
+  QoSParameters* m_qosParameters;
+  BearerQoSType m_type;
 };
 
 #endif /* RADIO_BEARER_INSTANCE_H_ */

@@ -30,12 +30,12 @@
 
 #include "cqi-manager.h"
 
-class WidebandCqiManager: public CqiManager {
-public:
-	WidebandCqiManager();
-	virtual ~WidebandCqiManager();
+class WidebandCqiManager : public CqiManager {
+ public:
+  WidebandCqiManager();
+  virtual ~WidebandCqiManager();
 
-	virtual void CreateCqiFeedbacks (std::vector<double> sinr);
+  virtual void CreateCqiFeedbacks(std::vector<double> sinr);
 };
 
 #endif /* WIDEBANDCQIMANAGER_H_ */

@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef LTECHANNEL_H_
 #define LTECHANNEL_H_
 
@@ -31,31 +30,32 @@ class TransmittedSignal;
 class PropagationLossModel;
 
 class LteChannel {
-public:
-	LteChannel();
-	virtual ~LteChannel();
+ public:
+  LteChannel();
+  virtual ~LteChannel();
 
-    void StartTx (PacketBurst* p, TransmittedSignal* txSignal, NetworkNode* src);
-    void StartRx (PacketBurst* p, TransmittedSignal* psd, NetworkNode* src);
+  void StartTx(PacketBurst* p, TransmittedSignal* txSignal, NetworkNode* src);
+  void StartRx(PacketBurst* p, TransmittedSignal* psd, NetworkNode* src);
 
-    void AddDevice (NetworkNode* d);
-    void DelDevice (NetworkNode* d);
-    bool IsAttached (NetworkNode* d);
+  void AddDevice(NetworkNode* d);
+  void DelDevice(NetworkNode* d);
+  bool IsAttached(NetworkNode* d);
 
-    std::vector<NetworkNode*>* GetDevices (void);
+  std::vector<NetworkNode*>* GetDevices(void);
 
-    void SetPropagationLossModel (PropagationLossModel* m);
-    PropagationLossModel* GetPropagationLossModel (void);
+  void SetPropagationLossModel(PropagationLossModel* m);
+  PropagationLossModel* GetPropagationLossModel(void);
 
-    void SetChannelId (int id);
-    int GetChannelId (void);
+  void SetChannelId(int id);
+  int GetChannelId(void);
 
-private:
-    std::vector<NetworkNode*> *m_attachedDevices; //list of devices attached to the channel
+ private:
+  std::vector<NetworkNode*>*
+      m_attachedDevices;  // list of devices attached to the channel
 
-    PropagationLossModel* m_propagationLossModel;
+  PropagationLossModel* m_propagationLossModel;
 
-    int m_channelId;
+  int m_channelId;
 };
 
 #endif /* LTECHANNEL_H_ */

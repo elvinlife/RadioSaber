@@ -19,8 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef TDDCONFIGURATION_H_
 #define TDDCONFIGURATION_H_
 
@@ -29,43 +27,27 @@
  * Each radio frame consists of two half-frames.
  * Each half-frame consists of five subframes of length .
  */
-enum SubFrameType
-	  {
-		SUBFRAME_FOR_DOWNLINK,	// code 0
-		SUBFRAME_FOR_UPLINK,	// code 1
-		SPECIAL_SUBFRAME		// code 2
-	  };
-
-static int TDDConfiguration[7][10] = {
- {
-   0, 2, 1, 1, 1, 0, 2, 1, 1, 1
- },
-
- {
-   0, 2, 1, 1, 0, 0, 2, 1, 1, 0
- },
-
- {
-   0, 2, 1, 0, 0, 0, 2, 1, 0, 0
- },
-
- {
-   0, 2, 1, 1, 1, 0, 0, 0, 0, 0
- },
-
- {
-   0, 2, 1, 1, 0, 0, 0, 0, 0, 0
- },
-
- {
-   0, 2, 1, 0, 0, 0, 0, 0, 0, 0
- },
-
- {
-   0, 2, 1, 1, 1, 0, 2, 1, 1, 0
- },
-
+enum SubFrameType {
+  SUBFRAME_FOR_DOWNLINK,  // code 0
+  SUBFRAME_FOR_UPLINK,    // code 1
+  SPECIAL_SUBFRAME        // code 2
 };
 
+static int TDDConfiguration[7][10] = {
+    {0, 2, 1, 1, 1, 0, 2, 1, 1, 1},
+
+    {0, 2, 1, 1, 0, 0, 2, 1, 1, 0},
+
+    {0, 2, 1, 0, 0, 0, 2, 1, 0, 0},
+
+    {0, 2, 1, 1, 1, 0, 0, 0, 0, 0},
+
+    {0, 2, 1, 1, 0, 0, 0, 0, 0, 0},
+
+    {0, 2, 1, 0, 0, 0, 0, 0, 0, 0},
+
+    {0, 2, 1, 1, 1, 0, 2, 1, 1, 0},
+
+};
 
 #endif /* TDDCONFIGURATION_H_ */

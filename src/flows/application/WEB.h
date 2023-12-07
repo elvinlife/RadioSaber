@@ -19,58 +19,65 @@
  * Author: Gbolly Aiyetoro <g.aiyetoro@gmail.com>
  */
 
-
 #ifndef WEB_H_
 #define WEB_H_
 
 #include "Application.h"
 
 class WEB : public Application {
-public:
-	WEB();
-	virtual ~WEB();
+ public:
+  WEB();
+  virtual ~WEB();
 
-	void DoStart (void);
-	void DoStop (void);
+  void DoStart(void);
+  void DoStop(void);
 
-    void ScheduleTransmit (double time);
-    void Send (void);
+  void ScheduleTransmit(double time);
+  void Send(void);
 
-    int GetSize (void) const;
+  int GetSize(void) const;
 
-
-private:
-	double m_interval;
-	int m_size;
-	bool m_stateON;
-	double m_stateDuration;
-	double m_endState;
+ private:
+  double m_interval;
+  int m_size;
+  bool m_stateON;
+  double m_stateDuration;
+  double m_endState;
 };
 
 class Random {
-	public:
-	Random();
-	~Random();
+ public:
+  Random();
+  ~Random();
 
-	int Uniform(int a, int b); 						// Generate random variants in Integer between interval (a, b)
+  int Uniform(
+      int a,
+      int b);  // Generate random variants in Integer between interval (a, b)
 
-	double Uniform(double a, double b);				// Generate double random variants with Uniform distribution
+  double Uniform(
+      double a,
+      double b);  // Generate double random variants with Uniform distribution
 
-	void ReInit();									// Change the seed of random number generation
+  void ReInit();  // Change the seed of random number generation
 
-	int Binomial(int n, double p);					// Generate random variants in Binomial distribution
+  int Binomial(int n,
+               double p);  // Generate random variants in Binomial distribution
 
-	double Exponential(double lamda);				// Generate random variants with Exponential distribution
+  double Exponential(
+      double lamda);  // Generate random variants with Exponential distribution
 
-	int Geometric(double p);						// Generate random variants with Geometric distribution
+  int Geometric(
+      double p);  // Generate random variants with Geometric distribution
 
-	double Pareto(double a, double k);				// Generate random variants with Pareto distribution
+  double Pareto(double a,
+                double k);  // Generate random variants with Pareto distribution
 
-	double Normal(int n, double Mu, double Theta);	// Generate random variants with Normal distribution
+  double Normal(
+      int n, double Mu,
+      double Theta);  // Generate random variants with Normal distribution
 
-	int Poisson(double lamda);	 					// Generate random variants with Poisson distribution
-
+  int Poisson(
+      double lamda);  // Generate random variants with Poisson distribution
 };
-
 
 #endif /* WEB_H_ */

@@ -19,27 +19,27 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef DOWNLINKPACKETSCHEDULER_H_
 #define DOWNLINKPACKETSCHEDULER_H_
 
 #include "packet-scheduler.h"
 
-class DownlinkPacketScheduler: public PacketScheduler {
-public:
-	DownlinkPacketScheduler();
-	virtual ~DownlinkPacketScheduler();
+class DownlinkPacketScheduler : public PacketScheduler {
+ public:
+  DownlinkPacketScheduler();
+  virtual ~DownlinkPacketScheduler();
 
-	void SelectFlowsToSchedule ();
+  void SelectFlowsToSchedule();
 
-	virtual void DoSchedule (void);
-	virtual void DoStopSchedule (void);
+  virtual void DoSchedule(void);
+  virtual void DoStopSchedule(void);
 
-	virtual void RBsAllocation ();
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel) = 0;
+  virtual void RBsAllocation();
+  virtual double ComputeSchedulingMetric(RadioBearer *bearer,
+                                         double spectralEfficiency,
+                                         int subChannel) = 0;
 
-	void UpdateAverageTransmissionRate (void);
-
+  void UpdateAverageTransmissionRate(void);
 };
 
 #endif /* DOWNLINKPACKETSCHEDULER_H_ */

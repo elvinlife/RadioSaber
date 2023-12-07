@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef ENB_LTE_PHY_H_
 #define ENB_LTE_PHY_H_
 
@@ -27,21 +26,20 @@
 
 class IdealControlMessage;
 
-class EnbLtePhy :public LtePhy {
-public:
-	EnbLtePhy();
-	virtual ~EnbLtePhy();
+class EnbLtePhy : public LtePhy {
+ public:
+  EnbLtePhy();
+  virtual ~EnbLtePhy();
 
-	virtual void DoSetBandwidthManager (void);
+  virtual void DoSetBandwidthManager(void);
 
-	virtual void StartTx (PacketBurst* p);
-	virtual void StartRx (PacketBurst* p, TransmittedSignal* txSignal);
+  virtual void StartTx(PacketBurst* p);
+  virtual void StartRx(PacketBurst* p, TransmittedSignal* txSignal);
 
-	virtual void SendIdealControlMessage (IdealControlMessage *msg);
-	virtual void ReceiveIdealControlMessage (IdealControlMessage *msg);
+  virtual void SendIdealControlMessage(IdealControlMessage* msg);
+  virtual void ReceiveIdealControlMessage(IdealControlMessage* msg);
 
-    void ReceiveReferenceSymbols (NetworkNode* n, TransmittedSignal* s);
-
+  void ReceiveReferenceSymbols(NetworkNode* n, TransmittedSignal* s);
 };
 
 #endif /* ENB_LTE_PHY_H_ */

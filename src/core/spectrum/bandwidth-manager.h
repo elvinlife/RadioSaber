@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef BandwidthManager_H_
 #define BandwidthManager_H_
 
@@ -31,48 +30,47 @@
  * See information on TR 36.101 - Table 5.5-1
  */
 class BandwidthManager {
-public:
-	BandwidthManager();
-	BandwidthManager(double ulBw, double dlBw, int ulOffset, int dlOffset);
-	BandwidthManager(double ulBw, double dlBw, int ulOffset, int dlOffset, bool tddTrue);
-	virtual ~BandwidthManager();
+ public:
+  BandwidthManager();
+  BandwidthManager(double ulBw, double dlBw, int ulOffset, int dlOffset);
+  BandwidthManager(double ulBw, double dlBw, int ulOffset, int dlOffset,
+                   bool tddTrue);
+  virtual ~BandwidthManager();
 
-	void SetDlSubChannels (std::vector<double> s);
-	std::vector<double> GetDlSubChannels (void);
+  void SetDlSubChannels(std::vector<double> s);
+  std::vector<double> GetDlSubChannels(void);
 
-	void SetUlSubChannels (std::vector<double> s);
-	std::vector<double> GetUlSubChannels (void);
+  void SetUlSubChannels(std::vector<double> s);
+  std::vector<double> GetUlSubChannels(void);
 
+  void SetOperativeSubBand(int s);
+  int GetOperativeSubBand(void);
 
-	void SetOperativeSubBand (int s);
-	int GetOperativeSubBand (void);
+  void SetUlBandwidth(double b);
+  void SetDlBandwidth(double b);
+  void SetUlOffsetBw(int o);
+  void SetDlOffsetBw(int o);
 
-	void SetUlBandwidth (double b);
-	void SetDlBandwidth (double b);
-	void SetUlOffsetBw (int o);
-	void SetDlOffsetBw (int o);
+  double GetUlBandwidth(void);
+  double GetDlBandwidth(void);
+  int GetUlOffsetBw(void);
+  int GetDlOffsetBw(void);
 
-	double GetUlBandwidth (void);
-	double GetDlBandwidth (void);
-	int GetUlOffsetBw (void);
-	int GetDlOffsetBw (void);
+  BandwidthManager* Copy();
 
+  void Print(void);
 
-	BandwidthManager* Copy ();
+ private:
+  std::vector<double> m_dlSubChannels;
+  std::vector<double> m_ulSubChannels;
 
-	void Print (void);
+  int m_operativeSubBand;
 
-private:
-	std::vector<double> m_dlSubChannels;
-	std::vector<double> m_ulSubChannels;
+  double m_ulBandwidth;
+  double m_dlBandwidth;
 
-	int m_operativeSubBand;
-
-	double m_ulBandwidth;
-	double m_dlBandwidth;
-
-	int m_ulOffsetBw;
-	int m_dlOffsetBw;
+  int m_ulOffsetBw;
+  int m_dlOffsetBw;
 };
 
 #endif /* BandwidthManager_H_ */

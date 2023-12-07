@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef LTE_PHY_H_
 #define LTE_PHY_H_
 
@@ -33,54 +32,55 @@ class Interference;
 class ErrorModel;
 
 class LtePhy {
-public:
-	LtePhy();
-	virtual ~LtePhy();
+ public:
+  LtePhy();
+  virtual ~LtePhy();
 
-	void Destroy (void);
+  void Destroy(void);
 
-	virtual void StartTx (PacketBurst* p) = 0;
-	virtual void StartRx (PacketBurst* p, TransmittedSignal* txSignal) = 0;
+  virtual void StartTx(PacketBurst* p) = 0;
+  virtual void StartRx(PacketBurst* p, TransmittedSignal* txSignal) = 0;
 
-	void SetDevice (NetworkNode* d);
-	NetworkNode* GetDevice (void);
+  void SetDevice(NetworkNode* d);
+  NetworkNode* GetDevice(void);
 
-	void SetDlChannel (LteChannel* c);
-	LteChannel* GetDlChannel (void);
-	void SetUlChannel (LteChannel* c);
-	LteChannel* GetUlChannel (void);
+  void SetDlChannel(LteChannel* c);
+  LteChannel* GetDlChannel(void);
+  void SetUlChannel(LteChannel* c);
+  LteChannel* GetUlChannel(void);
 
-	void SetBandwidthManager (BandwidthManager* s);
-	BandwidthManager* GetBandwidthManager (void);
-	virtual void DoSetBandwidthManager (void) = 0;
+  void SetBandwidthManager(BandwidthManager* s);
+  BandwidthManager* GetBandwidthManager(void);
+  virtual void DoSetBandwidthManager(void) = 0;
 
-	void SetTxPower (double p);
-	double GetTxPower (void);
+  void SetTxPower(double p);
+  double GetTxPower(void);
 
-	void SetTxSignal (TransmittedSignal* txSignal);
-	TransmittedSignal* GetTxSignal (void);
+  void SetTxSignal(TransmittedSignal* txSignal);
+  TransmittedSignal* GetTxSignal(void);
 
-	virtual void SendIdealControlMessage (IdealControlMessage *msg) = 0;
-	virtual void ReceiveIdealControlMessage (IdealControlMessage *msg) = 0;
+  virtual void SendIdealControlMessage(IdealControlMessage* msg) = 0;
+  virtual void ReceiveIdealControlMessage(IdealControlMessage* msg) = 0;
 
-	void SetInterference (Interference* interference);
-	void SetErrorModel (ErrorModel* e);
+  void SetInterference(Interference* interference);
+  void SetErrorModel(ErrorModel* e);
 
-	Interference* GetInterference (void);
-	ErrorModel* GetErrorModel (void);
+  Interference* GetInterference(void);
+  ErrorModel* GetErrorModel(void);
 
-private:
-    NetworkNode* m_device;
-    LteChannel* m_dlChannel;
-    LteChannel* m_ulChannel;
+ private:
+  NetworkNode* m_device;
+  LteChannel* m_dlChannel;
+  LteChannel* m_ulChannel;
 
-    BandwidthManager* m_bandwidthManager; //Description of the UL and DL available BandwidthManager
+  BandwidthManager* m_bandwidthManager;  // Description of the UL and DL
+                                         // available BandwidthManager
 
-    double m_txPower;
-    TransmittedSignal* m_txSignal;
+  double m_txPower;
+  TransmittedSignal* m_txSignal;
 
-    Interference *m_interference;
-    ErrorModel *m_errorModel;
+  Interference* m_interference;
+  ErrorModel* m_errorModel;
 };
 
 #endif /* LTE_PHY_H_ */

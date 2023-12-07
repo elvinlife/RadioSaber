@@ -19,24 +19,21 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef RANDOMWALK_H_
 #define RANDOMWALK_H_
 
 #include "Mobility.h"
 
-class RandomWalk :public Mobility {
-public:
-	RandomWalk();
-	virtual ~RandomWalk();
+class RandomWalk : public Mobility {
+ public:
+  RandomWalk();
+  virtual ~RandomWalk();
 
-	void
-    UpdatePosition (double time);
+  void UpdatePosition(double time);
 
-private:
-	double m_interval;
-	double m_lastTimeDirectionChange;
+ private:
+  double m_interval;
+  double m_lastTimeDirectionChange;
 };
 
 #endif /* RANDOMWALK_H_ */

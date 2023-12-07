@@ -19,24 +19,25 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef ROUNDROBIN_UPLINK_PACKET_SCHEDULER_H_
 #define ROUNDROBIN_UPLINK_PACKET_SCHEDULER_H_
 
 #include "uplink-packet-scheduler.h"
 
 class RoundRobinUplinkPacketScheduler : public UplinkPacketScheduler {
-public:
-	RoundRobinUplinkPacketScheduler ();
-	virtual ~RoundRobinUplinkPacketScheduler();
+ public:
+  RoundRobinUplinkPacketScheduler();
+  virtual ~RoundRobinUplinkPacketScheduler();
 
-	void RBsAllocation ();
+  void RBsAllocation();
 
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
-    virtual double ComputeSchedulingMetric (UserToSchedule* user, int subchannel);
+  virtual double ComputeSchedulingMetric(RadioBearer* bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
+  virtual double ComputeSchedulingMetric(UserToSchedule* user, int subchannel);
 
-private:
-    int m_roundRobinId;
+ private:
+  int m_roundRobinId;
 };
 
 #endif /* ROUNDROBIN_UPLINK_PACKET_SCHEDULER_H_ */

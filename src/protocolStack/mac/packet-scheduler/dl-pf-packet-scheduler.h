@@ -19,26 +19,28 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef DLPFPACKETSCHEDULER_H_
 #define DLPFPACKETSCHEDULER_H_
 
-#include "downlink-packet-scheduler.h"
 #include <vector>
 
+#include "downlink-packet-scheduler.h"
+
 class DL_PF_PacketScheduler : public DownlinkPacketScheduler {
-private:
-  std::vector<int>      user_to_slice_;
-	int                   num_slices_ = 1;
+ private:
+  std::vector<int> user_to_slice_;
+  int num_slices_ = 1;
 
-	const double	beta_ = 0.1;
+  const double beta_ = 0.1;
 
-public:
-	DL_PF_PacketScheduler(std::string);
-	virtual ~DL_PF_PacketScheduler();
+ public:
+  DL_PF_PacketScheduler(std::string);
+  virtual ~DL_PF_PacketScheduler();
 
-	virtual void DoStopSchedule (void);
-	virtual double ComputeSchedulingMetric (RadioBearer *bearer, double spectralEfficiency, int subChannel);
+  virtual void DoStopSchedule(void);
+  virtual double ComputeSchedulingMetric(RadioBearer *bearer,
+                                         double spectralEfficiency,
+                                         int subChannel);
 };
 
 #endif /* DLPFPACKETSCHEDULER_H_ */

@@ -19,51 +19,51 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef AMRLCENTITY_H_
 #define AMRLCENTITY_H_
 
-#include "rlc-entity.h"
-#include "am-state-variables.h"
 #include <vector>
+
+#include "am-state-variables.h"
+#include "rlc-entity.h"
 
 class PacketBurst;
 class Packet;
 class AmdRecord;
 class ArqRlcIdealControlMessage;
 
-class AmRlcEntity: public RlcEntity {
-public:
-	AmRlcEntity();
-	virtual ~AmRlcEntity();
+class AmRlcEntity : public RlcEntity {
+ public:
+  AmRlcEntity();
+  virtual ~AmRlcEntity();
 
-	virtual PacketBurst* TransmissionProcedure (int availableBytes);
-	virtual void ReceptionProcedure (Packet* p);
-	void ReceptionProcedureEnd ();
+  virtual PacketBurst* TransmissionProcedure(int availableBytes);
+  virtual void ReceptionProcedure(Packet* p);
+  void ReceptionProcedureEnd();
 
-	AmStateVariables* GetAmStateVariables ();
+  AmStateVariables* GetAmStateVariables();
 
-	std::vector<AmdRecord*>* GetSentAMDs (void);
-	std::vector<AmdRecord*>* GetReceivedAMDs (void);
+  std::vector<AmdRecord*>* GetSentAMDs(void);
+  std::vector<AmdRecord*>* GetReceivedAMDs(void);
 
-	void InsertAMDIntoReceptionList (AmdRecord* amd);
+  void InsertAMDIntoReceptionList(AmdRecord* amd);
 
-	void SendArqRlcIdealControlMessage (ArqRlcIdealControlMessage msg);
-	void ReceiveArqRlcIdealControlMessage (ArqRlcIdealControlMessage msg);
+  void SendArqRlcIdealControlMessage(ArqRlcIdealControlMessage msg);
+  void ReceiveArqRlcIdealControlMessage(ArqRlcIdealControlMessage msg);
 
-	void ClearPacketList (void);
+  void ClearPacketList(void);
 
-	void PrintSentAMDs (void);
-	void PrintReceivedAMDs (void);
+  void PrintSentAMDs(void);
+  void PrintReceivedAMDs(void);
 
-	void CheckForDropPackets (double maxDelay, int bearerID);
+  void CheckForDropPackets(double maxDelay, int bearerID);
 
-	int GetSizeOfUnaknowledgedAmd (void);
+  int GetSizeOfUnaknowledgedAmd(void);
 
-private:
-	AmStateVariables* m_amStateVariables;
-	std::vector<AmdRecord*> *m_sentAMDs;
-	std::vector <AmdRecord*> *m_receivedAMDs;
+ private:
+  AmStateVariables* m_amStateVariables;
+  std::vector<AmdRecord*>* m_sentAMDs;
+  std::vector<AmdRecord*>* m_receivedAMDs;
 };
 
 #endif /* AMRLCENTITY_H_ */

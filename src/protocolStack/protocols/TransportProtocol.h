@@ -19,20 +19,18 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef TRANSPORTPROTOCOL_H_
 #define TRANSPORTPROTOCOL_H_
 
 class TransportProtocol {
-public:
-	enum TransportProtocolType
-	  {
-		TRANSPORT_PROTOCOL_TYPE_TCP,
-		TRANSPORT_PROTOCOL_TYPE_UDP
-	  };
+ public:
+  enum TransportProtocolType {
+    TRANSPORT_PROTOCOL_TYPE_TCP,
+    TRANSPORT_PROTOCOL_TYPE_UDP
+  };
 
-	TransportProtocol();
-	virtual ~TransportProtocol();
+  TransportProtocol();
+  virtual ~TransportProtocol();
 };
 
 #endif /* TRANSPORTPROTOCOL_H_ */

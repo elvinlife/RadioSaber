@@ -19,47 +19,45 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef CONTROL_PLANE_PROTOCOL_STACK_H_
 #define CONTROL_PLANE_PROTOCOL_STACK_H_
 
-#include "packet/Packet.h"
-#include "packet/Header.h"
-#include "packet/PacketTAGs.h"
-#include "protocols/TransportProtocol.h"
 #include <vector>
-#include "nas/nas-entity.h"
-#include "rrc/rrc-entity.h"
-#include "rlc/rlc-entity.h"
-#include "mac/mac-entity.h"
+
 #include "mac/enb-mac-entity.h"
 #include "mac/henb-mac-entity.h"
+#include "mac/mac-entity.h"
 #include "mac/ue-mac-entity.h"
+#include "nas/nas-entity.h"
+#include "packet/Header.h"
+#include "packet/Packet.h"
+#include "packet/PacketTAGs.h"
 #include "pdcp/pdcp-entity.h"
-
+#include "protocols/TransportProtocol.h"
+#include "rlc/rlc-entity.h"
+#include "rrc/rrc-entity.h"
 
 class ProtocolStack {
-public:
-	ProtocolStack();
-	ProtocolStack(NetworkNode* device);
-	virtual ~ProtocolStack();
+ public:
+  ProtocolStack();
+  ProtocolStack(NetworkNode* device);
+  virtual ~ProtocolStack();
 
-	NasEntity* GetNasEntity (void);
-	RrcEntity* GetRrcEntity (void);
-	MacEntity* GetMacEntity (void);
-	PdcpEntity* GetPdcpEntity (void);
+  NasEntity* GetNasEntity(void);
+  RrcEntity* GetRrcEntity(void);
+  MacEntity* GetMacEntity(void);
+  PdcpEntity* GetPdcpEntity(void);
 
-	void  SetNasEntity (NasEntity* e);
-	void  SetRrcEntity (RrcEntity* e);
-	void  SetMacEntity (MacEntity* e);
-	void  SetPdcpEntity (PdcpEntity* e);
+  void SetNasEntity(NasEntity* e);
+  void SetRrcEntity(RrcEntity* e);
+  void SetMacEntity(MacEntity* e);
+  void SetPdcpEntity(PdcpEntity* e);
 
-private:
-
-	NasEntity* m_nas; //NAS entity for this node
-	RrcEntity* m_rrc; //RRC entity for this node
-	PdcpEntity* m_pdcp; //PDCP Entity
-	MacEntity* m_mac; //MAC entity for this node
+ private:
+  NasEntity* m_nas;    // NAS entity for this node
+  RrcEntity* m_rrc;    // RRC entity for this node
+  PdcpEntity* m_pdcp;  // PDCP Entity
+  MacEntity* m_mac;    // MAC entity for this node
 };
 
 #endif /* CONTROL_PLANE_PROTOCOL_STACK_H_ */

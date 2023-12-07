@@ -19,53 +19,49 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #include "../channel/LteChannel.h"
-#include "../phy/enb-lte-phy.h"
-#include "../phy/ue-lte-phy.h"
-#include "../core/spectrum/bandwidth-manager.h"
-#include "../networkTopology/Cell.h"
-#include "../protocolStack/packet/packet-burst.h"
-#include "../protocolStack/packet/Packet.h"
-#include "../core/eventScheduler/simulator.h"
-#include "../load-parameters.h"
-#include "../flows/application/CBR.h"
-#include "../device/IPClassifier/ClassifierParameters.h"
-#include "../flows/QoS/QoSParameters.h"
-#include "../device/Gateway.h"
-#include "../flows/radio-bearer.h"
 #include "../channel/propagation-model/channel-realization-helper.h"
 #include "../channel/propagation-model/propagation-loss-model.h"
-#include "../protocolStack/mac/packet-scheduler/mt-uplink-packet-scheduler.h"
 #include "../componentManagers/FlowsManager.h"
+#include "../core/eventScheduler/simulator.h"
+#include "../core/spectrum/bandwidth-manager.h"
+#include "../device/Gateway.h"
+#include "../device/IPClassifier/ClassifierParameters.h"
+#include "../flows/QoS/QoSParameters.h"
+#include "../flows/application/CBR.h"
+#include "../flows/radio-bearer.h"
+#include "../load-parameters.h"
+#include "../networkTopology/Cell.h"
+#include "../phy/enb-lte-phy.h"
+#include "../phy/ue-lte-phy.h"
+#include "../protocolStack/mac/packet-scheduler/mt-uplink-packet-scheduler.h"
+#include "../protocolStack/packet/Packet.h"
+#include "../protocolStack/packet/packet-burst.h"
 
-static void TestUplinkMaximumThroughput ()
-{
-
-  srand (time(NULL));
+static void TestUplinkMaximumThroughput() {
+  srand(time(NULL));
 
   // CREATE COMPONENT MANAGERS
-  Simulator *simulator = Simulator::Init();
-  FrameManager *frameManager = FrameManager::Init();
+  Simulator* simulator = Simulator::Init();
+  FrameManager* frameManager = FrameManager::Init();
   NetworkManager* networkManager = NetworkManager::Init();
-  FlowsManager* flowsManager = FlowsManager::Init ();
+  FlowsManager* flowsManager = FlowsManager::Init();
 
+  // Create devices
+  Cell* cell = new Cell(0, 1, 0.35, 0, 0);
+  LteChannel* dlCh = new LteChannel();
+  LteChannel* ulCh = new LteChannel();
+  BandwidthManager* spectrum = new BandwidthManager(5, 5, 0, 0);
 
-  //Create devices
-  Cell *cell = new Cell (0, 1, 0.35, 0, 0);
-  LteChannel *dlCh = new LteChannel ();
-  LteChannel *ulCh = new LteChannel ();
-  BandwidthManager* spectrum = new BandwidthManager (5, 5, 0, 0);
-
-  //Create ENodeB
-  ENodeB* enb = new ENodeB (1, cell);
-  enb->GetPhy ()->SetDlChannel (dlCh);
-  enb->GetPhy ()->SetUlChannel (ulCh);
-  enb->GetPhy ()->SetBandwidthManager (spectrum->Copy ());
-  enb->SetULScheduler (ENodeB::ULScheduler_TYPE_MAXIMUM_THROUGHPUT);
-  enb->SetDLScheduler (ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR);
-  networkManager->GetENodeBContainer ()->push_back (enb);
-  ulCh->AddDevice (enb);
+  // Create ENodeB
+  ENodeB* enb = new ENodeB(1, cell);
+  enb->GetPhy()->SetDlChannel(dlCh);
+  enb->GetPhy()->SetUlChannel(ulCh);
+  enb->GetPhy()->SetBandwidthManager(spectrum->Copy());
+  enb->SetULScheduler(ENodeB::ULScheduler_TYPE_MAXIMUM_THROUGHPUT);
+  enb->SetDLScheduler(ENodeB::DLScheduler_TYPE_PROPORTIONAL_FAIR);
+  networkManager->GetENodeBContainer()->push_back(enb);
+  ulCh->AddDevice(enb);
 
   int nbUEs = 4;
   int idUe = 100;
@@ -73,63 +69,64 @@ static void TestUplinkMaximumThroughput ()
   int srcPort = 0;
   int dstPort = 100;
 
-  for (int i = 0; i < nbUEs; i++)
-    {
-	  double posX = (double)(rand() %1000);
-	  double posY = (double)(rand() %1000);
-	  double speedDirection = (double)(rand() %360) * ((2*3.14)/360);
-	  double speed = 30;
+  for (int i = 0; i < nbUEs; i++) {
+    double posX = (double)(rand() % 1000);
+    double posY = (double)(rand() % 1000);
+    double speedDirection = (double)(rand() % 360) * ((2 * 3.14) / 360);
+    double speed = 30;
 
+    UserEquipment* ue = new UserEquipment(idUe, posX, posY, speed,
+                                          speedDirection, enb->GetCell(), enb,
+                                          0,  // handover false!
+                                          Mobility::RANDOM_DIRECTION);
 
-	  UserEquipment* ue = new UserEquipment (idUe,
-			                                 posX, posY, speed, speedDirection,
-											 enb->GetCell (),
-											 enb,
-			                                 0, //handover false!
-			                                 Mobility::RANDOM_DIRECTION);
+    networkManager->GetUserEquipmentContainer()->push_back(ue);
+    ue->SetTargetNode(enb);
+    enb->RegisterUserEquipment(ue);
 
+    std::cout << "Created UE - id " << idUe << " position " << posX << " "
+              << posY << " direction " << speedDirection << std::endl;
 
-	  networkManager->GetUserEquipmentContainer ()->push_back (ue);
-	  ue->SetTargetNode (enb);
-	  enb->RegisterUserEquipment (ue);
+    ue->GetPhy()->SetDlChannel(enb->GetPhy()->GetDlChannel());
+    ue->GetPhy()->SetUlChannel(enb->GetPhy()->GetUlChannel());
 
-	  std::cout << "Created UE - id " << idUe << " position " << posX << " " << posY << " direction " << speedDirection << std::endl;
+    FullbandCqiManager* cqiManager = new FullbandCqiManager();
+    cqiManager->SetCqiReportingMode(CqiManager::PERIODIC);
+    cqiManager->SetReportingInterval(1);
+    ue->SetCqiManager(cqiManager);
+    cqiManager->SetDevice(ue);
 
-	  ue->GetPhy ()->SetDlChannel (enb->GetPhy ()->GetDlChannel ());
-	  ue->GetPhy ()->SetUlChannel (enb->GetPhy ()->GetUlChannel ());
+    WidebandCqiEesmErrorModel* errorModel = new WidebandCqiEesmErrorModel();
+    ue->GetPhy()->SetErrorModel(errorModel);
 
-      FullbandCqiManager *cqiManager = new FullbandCqiManager ();
-      cqiManager->SetCqiReportingMode (CqiManager::PERIODIC);
-      cqiManager->SetReportingInterval (1);
-      ue->SetCqiManager (cqiManager);
-      cqiManager->SetDevice (ue);
+    MacroCellUrbanAreaChannelRealization* c_dl =
+        new MacroCellUrbanAreaChannelRealization(enb, ue);
+    enb->GetPhy()
+        ->GetDlChannel()
+        ->GetPropagationLossModel()
+        ->AddChannelRealization(c_dl);
+    MacroCellUrbanAreaChannelRealization* c_ul =
+        new MacroCellUrbanAreaChannelRealization(ue, enb);
+    enb->GetPhy()
+        ->GetUlChannel()
+        ->GetPropagationLossModel()
+        ->AddChannelRealization(c_ul);
 
-      WidebandCqiEesmErrorModel *errorModel = new WidebandCqiEesmErrorModel ();
-      ue->GetPhy ()->SetErrorModel (errorModel);
+    ue->GetPhy()->GetDlChannel()->AddDevice(ue);
 
-	  MacroCellUrbanAreaChannelRealization* c_dl = new MacroCellUrbanAreaChannelRealization (enb, ue);
-	  enb->GetPhy ()->GetDlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_dl);
-	  MacroCellUrbanAreaChannelRealization* c_ul = new MacroCellUrbanAreaChannelRealization (ue, enb);
-	  enb->GetPhy ()->GetUlChannel ()->GetPropagationLossModel ()->AddChannelRealization (c_ul);
+    double startTime = (double)(rand() % 1);  // s
+    double stopTime = (double)(rand() % 2);   // s
+    QoSParameters* qos = new QoSParameters();
+    Application* be = flowsManager->CreateApplication(
+        applicationID, ue, enb, srcPort, dstPort,
+        TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP,
+        Application::APPLICATION_TYPE_INFINITE_BUFFER, qos, startTime,
+        stopTime);
+    idUe++;
+    applicationID++;
+    dstPort++;
+  }
 
-	  ue->GetPhy ()->GetDlChannel ()->AddDevice (ue);
-
-	  double startTime = (double)(rand() %1); //s
-	  double stopTime =  (double)(rand() %2);  //s
-	  QoSParameters *qos = new QoSParameters ();
-	  Application* be = flowsManager->CreateApplication (applicationID,
-		                                   			     ue, enb,
-									   				     srcPort, dstPort, TransportProtocol::TRANSPORT_PROTOCOL_TYPE_UDP ,
-														 Application::APPLICATION_TYPE_INFINITE_BUFFER,
-														 qos,
-														 startTime, stopTime);
-	  idUe++;
-	  applicationID++;
-	  dstPort++;
-    }
-
-
-  Simulator::Init ()->SetStop (5);
-  Simulator::Init()->Run ();
+  Simulator::Init()->SetStop(5);
+  Simulator::Init()->Run();
 }
-

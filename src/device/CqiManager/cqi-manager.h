@@ -27,46 +27,41 @@
 class NetworkNode;
 
 class CqiManager {
-public:
+ public:
+  enum CQIReportingMode { PERIODIC, APERIODIC };
 
-    enum CQIReportingMode
-      {
-        PERIODIC,
-        APERIODIC
-      };
+  CqiManager();
+  virtual ~CqiManager();
 
-	CqiManager();
-	virtual ~CqiManager();
+  void SetDevice(NetworkNode* d);
+  NetworkNode* GetDevice(void);
 
-	void SetDevice (NetworkNode* d);
-	NetworkNode* GetDevice (void);
+  void SetCqiReportingMode(CQIReportingMode m);
+  CQIReportingMode GetCqiReportingMode(void);
 
-	void SetCqiReportingMode (CQIReportingMode m);
-	CQIReportingMode GetCqiReportingMode (void);
+  void SetSendCqi(bool b);
+  bool GetSendCqi(void);
 
-	void SetSendCqi (bool b);
-	bool GetSendCqi (void);
+  void SetReportingInterval(int i);
+  int GetReportingInterval(void);
 
-	void SetReportingInterval (int i);
-	int GetReportingInterval (void);
+  void SetLastSent();
+  long int GetLastSent(void);
 
-	void SetLastSent ();
-	long int GetLastSent (void);
+  virtual void CreateCqiFeedbacks(std::vector<double> sinr) = 0;
 
-	virtual void CreateCqiFeedbacks (std::vector<double> sinr) = 0;
+  bool NeedToSendFeedbacks(void);
 
-	bool NeedToSendFeedbacks (void);
+ private:
+  CQIReportingMode m_reportingMode;
 
-private:
-	CQIReportingMode m_reportingMode;
+  bool m_sendCqi;  // Used with aperiodic reporting. It is set to true by the
+                   // eNB !
 
-	bool m_sendCqi; //Used with aperiodic reporting. It is set to true by the eNB !
+  int m_reportingInterval;
+  long int m_lastSent;
 
-	int m_reportingInterval;
-	long int m_lastSent;
-
-	NetworkNode* m_device;
-
+  NetworkNode* m_device;
 };
 
 #endif /* CQIMANAGER_H_ */

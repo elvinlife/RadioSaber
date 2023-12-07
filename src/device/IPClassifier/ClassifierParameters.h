@@ -19,56 +19,39 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef CLASSIFIERPARAMETERS_H_
 #define CLASSIFIERPARAMETERS_H_
 
 #include "../../protocolStack/protocols/TransportProtocol.h"
 
-
 class ClassifierParameters {
-public:
-	ClassifierParameters();
-	ClassifierParameters(int sourceID,
-						 int destinationID,
-						 int sourcePort,
-						 int destinationPort,
-						 TransportProtocol::TransportProtocolType protocol);
-	virtual ~ClassifierParameters();
+ public:
+  ClassifierParameters();
+  ClassifierParameters(int sourceID, int destinationID, int sourcePort,
+                       int destinationPort,
+                       TransportProtocol::TransportProtocolType protocol);
+  virtual ~ClassifierParameters();
 
-	void
-	SetSourceID(int id);
-	int
-	GetSourceID(void);
-	void
-	SetDestinationID(int id);
-	int
-	GetDestinationID(void);
-	void
-	SetSourcePort(int port);
-	int
-	GetSourcePort(void);
-	void
-	SetDestinationPort(int port);
-	int
-	GetDestinationPort(void);
-	void
-	SetTransportProtocol(TransportProtocol::TransportProtocolType protocol);
-	TransportProtocol::TransportProtocolType
-	GetTransportProtocol(void);
+  void SetSourceID(int id);
+  int GetSourceID(void);
+  void SetDestinationID(int id);
+  int GetDestinationID(void);
+  void SetSourcePort(int port);
+  int GetSourcePort(void);
+  void SetDestinationPort(int port);
+  int GetDestinationPort(void);
+  void SetTransportProtocol(TransportProtocol::TransportProtocolType protocol);
+  TransportProtocol::TransportProtocolType GetTransportProtocol(void);
 
-//Debug
-	void
-	Print();
+  // Debug
+  void Print();
 
-private:
-	int m_sourceID;
-	int m_destinationID;
-	int m_sourcePort;
-	int m_destinationPort;
-	TransportProtocol::TransportProtocolType m_protocolType;
-
+ private:
+  int m_sourceID;
+  int m_destinationID;
+  int m_sourcePort;
+  int m_destinationPort;
+  TransportProtocol::TransportProtocolType m_protocolType;
 };
 
 #endif /* CLASSIFIERPARAMETERS_H_ */

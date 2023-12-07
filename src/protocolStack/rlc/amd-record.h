@@ -25,15 +25,15 @@
 class Packet;
 
 class AmdRecord {
-public:
-	AmdRecord (Packet* p, int sn);
-	virtual ~AmdRecord();
+ public:
+  AmdRecord(Packet* p, int sn);
+  virtual ~AmdRecord();
 
-	Packet* m_packet;
-	int m_sn; //sequence number
-	int m_retx_count;
+  Packet* m_packet;
+  int m_sn;  // sequence number
+  int m_retx_count;
 
-	bool m_toRetransmit;
+  bool m_toRetransmit;
 };
 
 #endif /* AMDRECORD_H_ */

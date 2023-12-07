@@ -19,28 +19,28 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef UMRLCENTITY_H_
 #define UMRLCENTITY_H_
 
-#include "rlc-entity.h"
-#include <vector>
 #include <unordered_map>
+#include <vector>
+
+#include "rlc-entity.h"
 
 class PacketBurst;
 
-class UmRlcEntity: public RlcEntity {
-public:
-	UmRlcEntity();
-	virtual ~UmRlcEntity();
+class UmRlcEntity : public RlcEntity {
+ public:
+  UmRlcEntity();
+  virtual ~UmRlcEntity();
 
-	virtual PacketBurst* TransmissionProcedure (int availableBytes);
-	virtual void ReceptionProcedure (Packet* p);
+  virtual PacketBurst* TransmissionProcedure(int availableBytes);
+  virtual void ReceptionProcedure(Packet* p);
 
-	void ClearIncomingPackets (void);
+  void ClearIncomingPackets(void);
 
-private:
-	std::vector <Packet*> m_incomingPacket;
+ private:
+  std::vector<Packet*> m_incomingPacket;
 };
 
 #endif /* UMRLCENTITY_H_ */

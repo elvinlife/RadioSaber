@@ -19,8 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef CLASSIFIER_H_
 #define CLASSIFIER_H_
 
@@ -30,20 +28,18 @@ class ClassifierParameters;
 class NetworkNode;
 
 class Classifier {
-private:
+ private:
+ public:
+  Classifier();
+  virtual ~Classifier();
 
-public:
-	Classifier();
-	virtual ~Classifier();
+  void SetDevice(NetworkNode* d);
+  NetworkNode* GetDevice(void);
 
-	void SetDevice (NetworkNode* d);
-	NetworkNode* GetDevice (void);
+  void Classify(Packet* p);
 
-	void Classify (Packet* p);
-
-
-private:
-	NetworkNode* m_device;
+ private:
+  NetworkNode* m_device;
 };
 
 #endif /* CLASSIFIER_H_ */

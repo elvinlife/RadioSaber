@@ -24,20 +24,13 @@
 
 #include "Building.h"
 
-
 class DualStripe : public Building {
-public:
-	DualStripe ();
-	DualStripe (int idBuilding,
-			 int type,
-		     int nbFloors,
-		     double side_X,
-		     double side_Y,
-		     double center_X,
-		     double center_Y);
+ public:
+  DualStripe();
+  DualStripe(int idBuilding, int type, int nbFloors, double side_X,
+             double side_Y, double center_X, double center_Y);
 
-	virtual ~DualStripe();
-
+  virtual ~DualStripe();
 };
 
 #endif /* DUALSTRIPE_H_ */

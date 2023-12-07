@@ -24,48 +24,34 @@
 
 #include <vector>
 
-
 class Building;
 class CartesianCoordinates;
 
-
 class Street {
-public:
+ public:
+  Street(int streetID, CartesianCoordinates* center, double theta,
+         int nbBuilding, int building_type, double street_width,
+         double building_distance, double apartmentSide);
 
-	Street ( int streetID,
-			 CartesianCoordinates* center,
-			 double theta,
-			 int nbBuilding,
-			 int building_type,
-			 double street_width,
-			 double building_distance,
-			 double apartmentSide);
+  virtual ~Street();
 
-	virtual ~Street();
+  void AddBuilding(Building* building);
 
-	void
-	AddBuilding (Building* building);
+  std::vector<CartesianCoordinates*>* GetBuildingDistributionInStreet(void);
 
-	std::vector<CartesianCoordinates*>*
-	GetBuildingDistributionInStreet ( void );
+ private:
+  int m_streetID;
 
-private:
+  CartesianCoordinates* m_centerPosition;
+  double m_thetaStreet;  // angle theta for street inclination in the scenario
 
-	int m_streetID;
+  int m_nbBuildings;  // number of Buildings on one side of the street
+  double m_streetWidth;
+  double m_buildingDistance;
+  int m_buildingTypeInStreet;
+  double m_apartmentSide;
 
-	CartesianCoordinates* m_centerPosition;
-	double m_thetaStreet; // angle theta for street inclination in the scenario
-
-	int m_nbBuildings; // number of Buildings on one side of the street
-	double m_streetWidth;
-	double m_buildingDistance;
-	int m_buildingTypeInStreet;
-	double m_apartmentSide;
-
-	std::vector<Building*>* m_buildingsInStreet;
-
-
-
+  std::vector<Building*>* m_buildingsInStreet;
 };
 
 #endif /* STREET_H_ */

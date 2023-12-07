@@ -19,7 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef MicroCellAreaChannelRealization_H_
 #define MicroCellAreaChannelRealization_H_
 
@@ -28,24 +27,23 @@
 
 class NetworkNode;
 
-class MicroCellAreaChannelRealization: public ChannelRealization {
-public:
-	MicroCellAreaChannelRealization (NetworkNode* src, NetworkNode* dst);
-	virtual ~MicroCellAreaChannelRealization ();
-	void SetPenetrationLoss (double pnl);
-	double GetPenetrationLoss (void);
-	double GetPathLoss (void);
-	void SetShadowing (double sh);
-	double GetShadowing (void);
-	virtual void UpdateModels (void);
+class MicroCellAreaChannelRealization : public ChannelRealization {
+ public:
+  MicroCellAreaChannelRealization(NetworkNode* src, NetworkNode* dst);
+  virtual ~MicroCellAreaChannelRealization();
+  void SetPenetrationLoss(double pnl);
+  double GetPenetrationLoss(void);
+  double GetPathLoss(void);
+  void SetShadowing(double sh);
+  double GetShadowing(void);
+  virtual void UpdateModels(void);
 
-	virtual std::vector<double> GetLoss ();
+  virtual std::vector<double> GetLoss();
 
-
-private:
-	double m_penetrationLoss;
-	double m_pathLoss;
-	double m_shadowing;
+ private:
+  double m_penetrationLoss;
+  double m_pathLoss;
+  double m_shadowing;
 };
 
 #endif /* MicroCellAreaChannelRealization_H_ */

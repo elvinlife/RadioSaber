@@ -24,24 +24,17 @@
 
 #include "ENodeB.h"
 
-
 class HeNodeB : public ENodeB {
-public:
+ public:
+  HeNodeB(int idElement, Femtocell* cell);
 
-	HeNodeB (int idElement,
-			Femtocell *cell);
+  virtual ~HeNodeB();
 
-	virtual ~HeNodeB();
+  void SetFemtoCell(Femtocell* cell);
+  Femtocell* GetFemtoCell(void);
 
-	void
-	SetFemtoCell (Femtocell *cell);
-	Femtocell*
-	GetFemtoCell (void);
-
-private:
-
-	Femtocell* m_femtocell;
+ private:
+  Femtocell* m_femtocell;
 };
-
 
 #endif /* HENODEB_H_ */

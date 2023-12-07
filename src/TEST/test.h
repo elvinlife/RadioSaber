@@ -19,38 +19,37 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-#include "test-attach-to-the-channel.h"
-#include "test-start-application.h"
-#include "test-enqueue-packet.h"
-#include "test-dl-transmission.h"
-#include "test-downlink-proportiona-fair.h"
-#include "test-propagation-loss-model.h"
-#include "test-cqi-feedbacks.h"
-#include "test-multi-cell.h"
-#include "test-frequency-reuse.h"
-#include "test-mobility-models.h"
-#include "test-amc-mapping.h"
-#include "test-uplink-maximumthroughput.h"
+#include <stdlib.h>
 
+#include <cstring>
+#include <fstream>
 #include <iostream>
 #include <queue>
-#include <fstream>
-#include <stdlib.h>
-#include <cstring>
 
-static void Test ()
-{
+#include "test-amc-mapping.h"
+#include "test-attach-to-the-channel.h"
+#include "test-cqi-feedbacks.h"
+#include "test-dl-transmission.h"
+#include "test-downlink-proportiona-fair.h"
+#include "test-enqueue-packet.h"
+#include "test-frequency-reuse.h"
+#include "test-mobility-models.h"
+#include "test-multi-cell.h"
+#include "test-propagation-loss-model.h"
+#include "test-start-application.h"
+#include "test-uplink-maximumthroughput.h"
 
-	/*
-	TestSendPacketToTheChannel ();
-	TestStartApplication ();
-	TestEnqueuePackets ();
-	TestDlTransmission ();
-	TestPropagationLossModel ();
-	TestCqiFeedbacks ();
-	TestMultiCell ();
-	TestFrequencyReuse ();
-    */
+static void Test() {
+  /*
+  TestSendPacketToTheChannel ();
+  TestStartApplication ();
+  TestEnqueuePackets ();
+  TestDlTransmission ();
+  TestPropagationLossModel ();
+  TestCqiFeedbacks ();
+  TestMultiCell ();
+  TestFrequencyReuse ();
+*/
 
-	TestUplinkMaximumThroughput ();
+  TestUplinkMaximumThroughput();
 }

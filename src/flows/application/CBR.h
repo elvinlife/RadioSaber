@@ -19,39 +19,30 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef CBR_H_
 #define CBR_H_
 
 #include "Application.h"
 
 class CBR : public Application {
-public:
-	CBR();
-	virtual ~CBR();
+ public:
+  CBR();
+  virtual ~CBR();
 
-	virtual void DoStart (void);
-	virtual void DoStop (void);
+  virtual void DoStart(void);
+  virtual void DoStop(void);
 
-    void
-    ScheduleTransmit (double time);
-    void
-    Send (void);
+  void ScheduleTransmit(double time);
+  void Send(void);
 
-    void
-    SetSize(int size);
-    int
-    GetSize (void) const;
-    void
-    SetInterval(double interval);
-    double
-    GetInterval (void) const;
+  void SetSize(int size);
+  int GetSize(void) const;
+  void SetInterval(double interval);
+  double GetInterval(void) const;
 
-private:
-
-	double m_interval;
-	int m_size;
+ private:
+  double m_interval;
+  int m_size;
 };
 
 #endif /* CBR_H_ */

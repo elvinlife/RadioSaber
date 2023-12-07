@@ -1,6 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2011 Communications Research Laboratory, Ilmenau University of Technology
+ * Copyright (c) 2011 Communications Research Laboratory, Ilmenau University of
+ * Technology
  *
  * This file is part of LTE-Sim
  *
@@ -26,17 +27,14 @@
 
 #include "Mobility.h"
 
-class Manhattan :public Mobility {
-public:
-	Manhattan();
-	virtual ~Manhattan();
+class Manhattan : public Mobility {
+ public:
+  Manhattan();
+  virtual ~Manhattan();
 
-	void
-	UpdatePosition (double time);
+  void UpdatePosition(double time);
 
-	void
-	ForceManhattanGrid (CartesianCoordinates *newpos);
-
+  void ForceManhattanGrid(CartesianCoordinates *newpos);
 };
 
 #endif /* MANHATTAN_H_ */

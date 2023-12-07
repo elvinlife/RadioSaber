@@ -25,22 +25,15 @@
 #include "Cell.h"
 
 class Femtocell : public Cell {
-public:
+ public:
+  Femtocell(int idCell, double side, double X, double Y);
+  virtual ~Femtocell();
 
-	Femtocell(int idCell,
-		 double side,
-		 double X,
-		 double Y);
-	virtual ~Femtocell();
+  void SetSide(double side);
+  double GetSide(void);
 
-	void
-	SetSide ( double side );
-	double
-	GetSide ( void );
-
-private:
-
-	double m_side;
+ private:
+  double m_side;
 };
 
 #endif /* FEMTOCELL_H_ */

@@ -19,11 +19,11 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
 #ifndef RLC_ENTITY_H
 #define RLC_ENTITY_H
 
 #include <list>
+
 #include "../../load-parameters.h"
 
 class NetworkNode;
@@ -38,47 +38,41 @@ class Packet;
  * For a RLC entity configured at the eNB, there is a peer RLC entity
  * configured at the UE and vice versa.
  */
-class RlcEntity
-{
-public:
+class RlcEntity {
+ public:
+  RlcEntity(void);
+  RlcEntity(NetworkNode* d);
+  virtual ~RlcEntity(void);
 
-  RlcEntity (void);
-  RlcEntity (NetworkNode* d);
-  virtual ~RlcEntity (void);
+  void Destroy(void);
 
-  void Destroy (void);
+  enum RlcMode { TM_RLC_MODE, UM_RLC_MODE, AM_RLC_MODE };
 
-  enum RlcMode
-  {
-    TM_RLC_MODE, UM_RLC_MODE, AM_RLC_MODE
-  };
+  void SetDevice(NetworkNode* d);
+  NetworkNode* GetDevice(void);
 
-  void SetDevice (NetworkNode* d);
-  NetworkNode* GetDevice (void);
+  void SetRadioBearer(RadioBearerInstance* b);
+  RadioBearerInstance* GetRadioBearerInstance(void);
 
-  void SetRadioBearer (RadioBearerInstance *b);
-  RadioBearerInstance* GetRadioBearerInstance (void);
+  virtual PacketBurst* TransmissionProcedure(int availableBytes) = 0;
+  virtual void ReceptionProcedure(Packet* p) = 0;
 
-  virtual PacketBurst* TransmissionProcedure (int availableBytes) = 0;
-  virtual void ReceptionProcedure (Packet* p) = 0;
+  void SetRlcEntityIndex(int i);
+  int GetRlcEntityIndex(void);
 
-  void SetRlcEntityIndex (int i);
-  int GetRlcEntityIndex (void);
+  void SetRlcPduSequenceNumber(int sn);
+  int GetRlcPduSequenceNumber(void);
 
-  void SetRlcPduSequenceNumber (int sn);
-  int GetRlcPduSequenceNumber (void);
+  void SetRlcMode(RlcMode mode);
+  RlcMode GetRlcModel(void);
 
-  void SetRlcMode (RlcMode mode);
-  RlcMode GetRlcModel (void);
-
-private:
+ private:
   RlcMode m_rlcMode;
   NetworkNode* m_device;
-  RadioBearerInstance *m_bearer;
+  RadioBearerInstance* m_bearer;
 
   int m_rlcEntityIndex;
   int m_rlcPduSequenceNumber;
 };
-
 
 #endif /* RLC_ENTITY_H */

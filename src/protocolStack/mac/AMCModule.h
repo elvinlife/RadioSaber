@@ -19,8 +19,6 @@
  * Author: Giuseppe Piro <g.piro@poliba.it>
  */
 
-
-
 #ifndef AMCModule_H_
 #define AMCModule_H_
 
@@ -30,30 +28,21 @@
  */
 
 class AMCModule {
-public:
-	AMCModule();
-	virtual ~AMCModule();
+ public:
+  AMCModule();
+  virtual ~AMCModule();
 
-	int
-	GetCQIFromEfficiency (double sinr);
-	int
-	GetMCSIndexFromEfficiency(double spectralEfficiency);
-	int
-	GetMCSFromCQI (int cqi);
-	int
-	GetCQIFromMCS (int mcs);
-	int
-	GetTBSizeFromMCS (int mcs);
-	int
-	GetTBSizeFromMCS (int mcs, int nbRBs);
-	double
-	GetEfficiencyFromCQI (int cqi);
-	int
-    GetCQIFromSinr (double sinr);
-	double
-	GetSinrFromCQI (int cqi);
+  int GetCQIFromEfficiency(double sinr);
+  int GetMCSIndexFromEfficiency(double spectralEfficiency);
+  int GetMCSFromCQI(int cqi);
+  int GetCQIFromMCS(int mcs);
+  int GetTBSizeFromMCS(int mcs);
+  int GetTBSizeFromMCS(int mcs, int nbRBs);
+  double GetEfficiencyFromCQI(int cqi);
+  int GetCQIFromSinr(double sinr);
+  double GetSinrFromCQI(int cqi);
 
-    std::vector<int> CreateCqiFeedbacks (std::vector<double>& sinr);
+  std::vector<int> CreateCqiFeedbacks(std::vector<double>& sinr);
 };
 
 #endif /* AMCModule_H_ */
