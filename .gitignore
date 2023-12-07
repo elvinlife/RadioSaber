@@ -46,4 +46,5 @@ TOOLS/make_sum
 
 *.pdf
 src/load-parameters.h
-pbecc-traces-noise0/mapping.config
+cqi-traces-noise0/mapping.config
+!cqi-traces-noise0/*.log
